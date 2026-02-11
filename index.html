@@ -302,6 +302,40 @@
       display: block;
     }
 
+    /* Upgrade CTA after results */
+    .upgrade-cta {
+      display: none;
+      margin-top: 40px;
+      padding: 32px;
+      background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+      border-radius: 16px;
+      text-align: center;
+      color: white;
+    }
+    
+    .upgrade-cta.visible {
+      display: block;
+    }
+    
+    .upgrade-cta h3 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    
+    .upgrade-cta p {
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+    
+    .upgrade-cta .btn {
+      background: white;
+      color: var(--accent);
+    }
+    
+    .upgrade-cta .btn:hover {
+      background: var(--gray-50);
+    }
+
     /* Loading */
     .loading {
       display: none;
@@ -374,6 +408,7 @@
     @media (max-width: 768px) {
       .cards { grid-template-columns: 1fr; }
       .screenshots { grid-template-columns: 1fr; }
+      .pricing-cards { grid-template-columns: 1fr !important; }
     }
     
     .card {
@@ -399,6 +434,89 @@
     
     .card h3 { font-size: 16px; margin-bottom: 6px; }
     .card p { color: var(--gray-400); font-size: 14px; }
+
+    /* Pricing */
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .pricing-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: 16px;
+      padding: 32px;
+      position: relative;
+    }
+    
+    .pricing-card.popular {
+      border: 2px solid var(--accent);
+    }
+    
+    .pricing-card.popular::before {
+      content: 'Most Popular';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+    
+    .pricing-card h3 {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    
+    .pricing-card .price {
+      font-size: 36px;
+      font-weight: 700;
+      margin: 16px 0;
+    }
+    
+    .pricing-card .price span {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--gray-400);
+    }
+    
+    .pricing-card .description {
+      font-size: 14px;
+      color: var(--gray-400);
+      margin-bottom: 24px;
+    }
+    
+    .pricing-card ul {
+      list-style: none;
+      margin-bottom: 24px;
+    }
+    
+    .pricing-card li {
+      font-size: 14px;
+      color: var(--gray-600);
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .pricing-card li svg {
+      width: 16px;
+      height: 16px;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+    
+    .pricing-card .btn {
+      width: 100%;
+    }
 
     /* Footer */
     footer {
@@ -428,7 +546,8 @@
       <a href="#" class="logo">Vibe<span>QA</span></a>
       <div class="nav-links">
         <a href="#features">Features</a>
-        <a href="#" class="btn btn-primary" onclick="document.getElementById('url-input').focus()">Run Test</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#" class="btn btn-primary" onclick="document.getElementById('url-input').focus()">Run Free Test</a>
       </div>
     </div>
   </nav>
@@ -437,7 +556,7 @@
     <div class="container">
       <div class="hero-label">
         <span class="dot"></span>
-        Free test — no signup required
+        First test free — no signup required
       </div>
       <h1>Find bugs before your users do</h1>
       <p class="hero-subtitle">Automated testing for indie builders. Paste your URL, get a detailed report in minutes.</p>
@@ -462,6 +581,12 @@
         </div>
         <div class="issue-list" id="issue-list"></div>
         <div class="screenshots" id="screenshots"></div>
+        
+        <div class="upgrade-cta" id="upgrade-cta">
+          <h3>Want deeper insights?</h3>
+          <p>Upgrade to Pro for AI-powered UX analysis, scheduled monitoring, and priority support.</p>
+          <a href="#pricing" class="btn btn-large">See Plans</a>
+        </div>
       </div>
     </div>
   </section>
@@ -508,6 +633,61 @@
     </div>
   </section>
 
+  <section id="pricing" class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Pricing</div>
+        <h2 class="section-title">Simple, transparent pricing</h2>
+        <p class="section-subtitle">Start free, upgrade when you need more</p>
+      </div>
+      <div class="pricing-cards">
+        <div class="pricing-card">
+          <h3>Free</h3>
+          <div class="price">$0</div>
+          <p class="description">Perfect for trying it out</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 1 scan per day</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Basic checks (links, mobile, errors)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Desktop & mobile screenshots</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> No signup required</li>
+          </ul>
+          <button class="btn btn-secondary btn-large" onclick="document.getElementById('url-input').focus(); window.scrollTo({top:0,behavior:'smooth'})">Try Free</button>
+        </div>
+        
+        <div class="pricing-card popular">
+          <h3>Pro</h3>
+          <div class="price">$29<span>/mo</span></div>
+          <p class="description">For indie builders shipping regularly</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 30 scans per month</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> AI-powered UX analysis</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Scheduled monitoring (daily)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Slack notifications</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Report history (30 days)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Email support</li>
+          </ul>
+          <button class="btn btn-accent btn-large" onclick="alert('Coming soon! Join the waitlist.')">Get Started</button>
+        </div>
+        
+        <div class="pricing-card">
+          <h3>Team</h3>
+          <div class="price">$79<span>/mo</span></div>
+          <p class="description">For agencies and growing teams</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Unlimited scans</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 5 team members</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> AI-powered UX analysis</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Scheduled monitoring (hourly)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Slack + webhook integrations</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Report history (90 days)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Priority support</li>
+          </ul>
+          <button class="btn btn-secondary btn-large" onclick="alert('Coming soon! Join the waitlist.')">Contact Us</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <footer>
     <div class="container">
       <a href="#" class="logo">Vibe<span>QA</span></a>
@@ -526,6 +706,7 @@
       const loading = document.getElementById('loading');
       const loadingText = document.getElementById('loading-text');
       const results = document.getElementById('results');
+      const upgradeCta = document.getElementById('upgrade-cta');
       
       let url = urlInput.value.trim();
       
@@ -545,6 +726,7 @@
       scanBtn.textContent = 'Scanning...';
       loading.classList.add('visible');
       results.classList.remove('visible');
+      upgradeCta.classList.remove('visible');
       loadingText.textContent = 'Starting scan...';
 
       try {
@@ -611,6 +793,7 @@
       const summary = document.getElementById('results-summary');
       const issueList = document.getElementById('issue-list');
       const screenshots = document.getElementById('screenshots');
+      const upgradeCta = document.getElementById('upgrade-cta');
       
       // Summary badges
       summary.innerHTML = '';
@@ -623,6 +806,9 @@
         }
         if (scan.summary.info > 0) {
           summary.innerHTML += `<span class="summary-badge info">${scan.summary.info} Info</span>`;
+        }
+        if (scan.summary.critical === 0 && scan.summary.warnings === 0 && scan.summary.info === 0) {
+          summary.innerHTML = `<span class="summary-badge" style="background:#DCFCE7;color:#16A34A">All Clear!</span>`;
         }
       }
       
@@ -659,6 +845,7 @@
       }
       
       results.classList.add('visible');
+      upgradeCta.classList.add('visible');
       results.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
