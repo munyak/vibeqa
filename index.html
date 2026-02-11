@@ -7,41 +7,42 @@
   <meta name="description" content="Find bugs before your users do. Automated testing built for Cursor, Bolt, v0, and Replit builders. First test free.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
     :root {
-      --white: #FAFAFA;
-      --black: #0A0A0A;
-      --gray-50: #F7F7F7;
-      --gray-100: #E8E8E8;
-      --gray-200: #D4D4D4;
-      --gray-400: #9A9A9A;
-      --gray-500: #6B6B6B;
-      --gray-600: #4A4A4A;
-      --gray-800: #1F1F1F;
-      --accent: #5046E5;
-      --accent-light: #6C63FF;
-      --accent-glow: rgba(80, 70, 229, 0.15);
-      --green: #10B981;
-      --orange: #F59E0B;
+      --white: #FFFFFF;
+      --off-white: #FAFAFA;
+      --black: #09090B;
+      --gray-50: #F4F4F5;
+      --gray-100: #E4E4E7;
+      --gray-200: #D4D4D8;
+      --gray-300: #A1A1AA;
+      --gray-400: #71717A;
+      --gray-500: #52525B;
+      --gray-600: #3F3F46;
+      --gray-900: #18181B;
+      --accent: #6366F1;
+      --accent-dark: #4F46E5;
+      --green: #22C55E;
     }
     
     html { scroll-behavior: smooth; }
     
     body {
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--white);
       color: var(--black);
       line-height: 1.6;
       font-size: 16px;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     
-    h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; line-height: 1.1; letter-spacing: -0.02em; }
+    h1, h2, h3, h4 { line-height: 1.2; letter-spacing: -0.025em; font-weight: 600; }
     
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
     
     /* Navigation */
     nav {
@@ -50,8 +51,9 @@
       left: 0;
       right: 0;
       z-index: 100;
-      background: rgba(250, 250, 250, 0.8);
-      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--gray-100);
     }
     
@@ -59,33 +61,34 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 72px;
+      height: 64px;
     }
     
     .logo {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
       color: var(--black);
       text-decoration: none;
+      letter-spacing: -0.02em;
     }
     
     .logo span { color: var(--accent); }
     
-    .nav-links { display: flex; align-items: center; gap: 40px; }
-    .nav-links a { color: var(--gray-600); text-decoration: none; font-size: 15px; font-weight: 500; transition: color 0.2s; }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { color: var(--gray-500); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.15s; }
     .nav-links a:hover { color: var(--black); }
     
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 14px 28px;
-      border-radius: 100px;
-      font-weight: 600;
-      font-size: 15px;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
       text-decoration: none;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       cursor: pointer;
       border: none;
     }
@@ -96,452 +99,376 @@
     }
     
     .btn-primary:hover {
-      background: var(--gray-800);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      background: var(--gray-900);
     }
     
     .btn-secondary {
-      background: var(--white);
-      color: var(--black);
-      border: 1.5px solid var(--gray-200);
+      background: transparent;
+      color: var(--gray-600);
+      border: 1px solid var(--gray-200);
     }
     
     .btn-secondary:hover {
-      border-color: var(--gray-400);
       background: var(--gray-50);
+      border-color: var(--gray-300);
     }
     
-    .btn-large { padding: 18px 36px; font-size: 17px; }
+    .btn-large { 
+      padding: 14px 28px; 
+      font-size: 15px;
+      border-radius: 10px;
+    }
     
     .btn-accent {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      background: var(--accent);
       color: var(--white);
     }
     
     .btn-accent:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(80, 70, 229, 0.3);
+      background: var(--accent-dark);
     }
-    
-    /* Hero Section */
+
+    /* Hero */
     .hero {
-      padding: 160px 0 120px;
-      position: relative;
-      overflow: hidden;
+      padding: 140px 0 100px;
+      text-align: center;
     }
     
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 800px;
-      height: 800px;
-      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    
-    .hero .container {
-      position: relative;
-      z-index: 1;
-    }
-    
-    .hero-badge {
+    .hero-label {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 16px 8px 10px;
-      background: linear-gradient(135deg, var(--accent-glow) 0%, rgba(80, 70, 229, 0.05) 100%);
-      border: 1px solid rgba(80, 70, 229, 0.2);
+      padding: 6px 14px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
       border-radius: 100px;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 32px;
-    }
-    
-    .hero h1 {
-      font-size: clamp(48px, 8vw, 80px);
-      font-weight: 700;
-      max-width: 900px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
       margin-bottom: 24px;
     }
     
-    .hero h1 .highlight {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .hero-label .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+    }
+    
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 700;
+      max-width: 720px;
+      margin: 0 auto 20px;
+      letter-spacing: -0.03em;
     }
     
     .hero-subtitle {
-      font-size: 20px;
-      color: var(--gray-500);
-      max-width: 560px;
-      margin-bottom: 48px;
+      font-size: 18px;
+      color: var(--gray-400);
+      max-width: 520px;
+      margin: 0 auto 40px;
       line-height: 1.7;
     }
     
-    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
-    
-    .hero-cta-note {
-      font-size: 14px;
-      color: var(--gray-500);
-      margin-left: 8px;
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
     
-    .hero-stats {
+    .hero-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--gray-400);
+    }
+    
+    /* Metrics */
+    .metrics {
       display: flex;
-      gap: 48px;
+      justify-content: center;
+      gap: 64px;
       margin-top: 80px;
       padding-top: 48px;
       border-top: 1px solid var(--gray-100);
     }
     
-    .stat { text-align: left; }
-    .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; color: var(--black); }
-    .stat-label { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+    .metric { text-align: center; }
+    .metric-value { font-size: 32px; font-weight: 700; color: var(--black); letter-spacing: -0.02em; }
+    .metric-label { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
     
-    /* Problem Section */
-    .problem {
-      padding: 120px 0;
+    /* Section */
+    .section {
+      padding: 100px 0;
+    }
+    
+    .section-alt {
       background: var(--gray-50);
+    }
+    
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
     }
     
     .section-label {
       font-size: 13px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.05em;
       color: var(--accent);
-      margin-bottom: 16px;
-    }
-    
-    .section-title {
-      font-size: clamp(32px, 5vw, 48px);
-      font-weight: 700;
-      margin-bottom: 24px;
-      max-width: 700px;
-    }
-    
-    .section-subtitle {
-      font-size: 18px;
-      color: var(--gray-500);
-      max-width: 600px;
-      margin-bottom: 64px;
-    }
-    
-    .problem-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-    }
-    
-    @media (max-width: 768px) {
-      .problem-grid { grid-template-columns: 1fr; }
-    }
-    
-    .problem-card {
-      background: var(--white);
-      padding: 40px;
-      border-radius: 24px;
-      border: 1px solid var(--gray-100);
-      transition: all 0.3s ease;
-    }
-    
-    .problem-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-    }
-    
-    .problem-icon {
-      width: 56px;
-      height: 56px;
-      background: var(--accent-glow);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      margin-bottom: 24px;
-    }
-    
-    .problem-card h3 {
-      font-size: 20px;
-      font-weight: 600;
       margin-bottom: 12px;
     }
     
-    .problem-card p {
-      color: var(--gray-500);
-      font-size: 15px;
-      line-height: 1.7;
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.025em;
     }
     
-    /* How It Works */
-    .how-it-works {
-      padding: 120px 0;
+    .section-subtitle {
+      font-size: 17px;
+      color: var(--gray-400);
+      max-width: 480px;
+      margin: 0 auto;
     }
     
-    .how-it-works .section-title { text-align: center; margin: 0 auto 24px; }
-    .how-it-works .section-subtitle { text-align: center; margin: 0 auto 80px; }
-    
-    .steps {
+    /* Cards */
+    .cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 64px;
-      position: relative;
-    }
-    
-    .steps::before {
-      content: '';
-      position: absolute;
-      top: 40px;
-      left: calc(16.66% + 40px);
-      right: calc(16.66% + 40px);
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
-      opacity: 0.3;
+      gap: 24px;
     }
     
     @media (max-width: 768px) {
-      .steps { grid-template-columns: 1fr; gap: 48px; }
-      .steps::before { display: none; }
+      .cards { grid-template-columns: 1fr; }
+    }
+    
+    .card {
+      background: var(--white);
+      padding: 32px;
+      border-radius: 16px;
+      border: 1px solid var(--gray-100);
+    }
+    
+    .section-alt .card {
+      background: var(--white);
+    }
+    
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gray-50);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--gray-600);
+    }
+    
+    .card-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .card p {
+      color: var(--gray-400);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    /* Steps */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+    }
+    
+    @media (max-width: 768px) {
+      .steps { grid-template-columns: 1fr; gap: 40px; }
     }
     
     .step { text-align: center; }
     
     .step-number {
-      width: 80px;
-      height: 80px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      width: 56px;
+      height: 56px;
+      background: var(--black);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 32px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 600;
       color: var(--white);
-      margin: 0 auto 32px;
-      position: relative;
-      z-index: 1;
+      margin: 0 auto 24px;
     }
     
     .step h3 {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    
-    .step p {
-      color: var(--gray-500);
-      font-size: 15px;
-      max-width: 280px;
-      margin: 0 auto;
-    }
-    
-    /* Pricing */
-    .pricing {
-      padding: 120px 0;
-      background: var(--gray-50);
-    }
-    
-    .pricing .section-title { text-align: center; margin: 0 auto 16px; }
-    .pricing .section-subtitle { text-align: center; margin: 0 auto 64px; }
-    
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    
-    @media (max-width: 900px) {
-      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
-    }
-    
-    .pricing-card {
-      background: var(--white);
-      padding: 48px 40px;
-      border-radius: 24px;
-      border: 2px solid var(--gray-100);
-      position: relative;
-      transition: all 0.3s ease;
-    }
-    
-    .pricing-card:hover {
-      border-color: var(--gray-200);
-    }
-    
-    .pricing-card.featured {
-      border-color: var(--accent);
-      transform: scale(1.02);
-    }
-    
-    .pricing-card.featured:hover {
-      transform: scale(1.04);
-    }
-    
-    .pricing-card.free {
-      border-color: var(--green);
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, var(--white) 100%);
-    }
-    
-    .pricing-badge {
-      position: absolute;
-      top: -14px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-      color: var(--white);
-      padding: 6px 20px;
-      border-radius: 100px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    
-    .pricing-badge.free-badge {
-      background: var(--green);
-    }
-    
-    .pricing-name {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 600;
       margin-bottom: 8px;
     }
     
-    .pricing-desc {
+    .step p {
+      color: var(--gray-400);
       font-size: 14px;
-      color: var(--gray-500);
-      margin-bottom: 24px;
+      max-width: 260px;
+      margin: 0 auto;
+    }
+    
+    /* Pricing */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 900px) {
+      .pricing-grid { grid-template-columns: 1fr; max-width: 360px; }
+    }
+    
+    .pricing-card {
+      background: var(--white);
+      padding: 40px 32px;
+      border-radius: 16px;
+      border: 1px solid var(--gray-100);
+      position: relative;
+    }
+    
+    .pricing-card.featured {
+      border: 2px solid var(--accent);
+    }
+    
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--white);
+      padding: 4px 16px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .pricing-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .pricing-desc {
+      font-size: 13px;
+      color: var(--gray-400);
+      margin-bottom: 20px;
     }
     
     .pricing-price {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 48px;
+      font-size: 40px;
       font-weight: 700;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
     }
     
     .pricing-price span {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 400;
-      color: var(--gray-500);
+      color: var(--gray-400);
     }
     
     .pricing-features {
       list-style: none;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
     
     .pricing-features li {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      font-size: 15px;
-      color: var(--gray-600);
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: var(--gray-500);
     }
     
-    .pricing-features li::before {
-      content: '✓';
-      width: 20px;
-      height: 20px;
-      background: var(--accent-glow);
-      color: var(--accent);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
+    .pricing-features li svg {
+      width: 16px;
+      height: 16px;
+      color: var(--gray-400);
       flex-shrink: 0;
-    }
-    
-    .pricing-card.free .pricing-features li::before {
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--green);
     }
     
     .pricing-card .btn { width: 100%; }
     
-    /* What You Get */
-    .what-you-get {
-      padding: 120px 0;
-    }
-    
-    .what-you-get .section-title { text-align: center; margin: 0 auto 64px; }
-    
+    /* Features Grid */
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-      max-width: 800px;
-      margin: 0 auto;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
     
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 480px) {
       .features-grid { grid-template-columns: 1fr; }
     }
     
     .feature {
-      padding: 32px;
+      padding: 24px;
       border: 1px solid var(--gray-100);
-      border-radius: 20px;
-      transition: all 0.3s ease;
+      border-radius: 12px;
     }
     
-    .feature:hover {
-      border-color: var(--accent);
-      background: var(--accent-glow);
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--gray-50);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--gray-500);
     }
     
-    .feature-icon { font-size: 32px; margin-bottom: 16px; }
-    .feature h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .feature p { font-size: 14px; color: var(--gray-500); }
+    .feature-icon svg { width: 20px; height: 20px; }
     
-    /* CTA Section */
+    .feature h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .feature p { font-size: 13px; color: var(--gray-400); }
+    
+    /* CTA */
     .cta {
-      padding: 120px 0;
+      padding: 100px 0;
       background: var(--black);
-      color: var(--white);
       text-align: center;
-      position: relative;
-      overflow: hidden;
     }
-    
-    .cta::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-      opacity: 0.15;
-      pointer-events: none;
-    }
-    
-    .cta .container { position: relative; z-index: 1; }
     
     .cta h2 {
-      font-size: clamp(36px, 6vw, 56px);
+      font-size: clamp(28px, 4vw, 40px);
       font-weight: 700;
-      margin-bottom: 24px;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
+      color: var(--white);
+      margin-bottom: 16px;
+      letter-spacing: -0.025em;
     }
     
     .cta p {
-      font-size: 18px;
+      font-size: 16px;
       color: var(--gray-400);
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
     
     .cta .btn-accent:hover {
@@ -551,7 +478,7 @@
     
     /* Footer */
     footer {
-      padding: 48px 0;
+      padding: 40px 0;
       border-top: 1px solid var(--gray-100);
     }
     
@@ -562,22 +489,19 @@
     }
     
     footer p {
-      font-size: 14px;
-      color: var(--gray-500);
+      font-size: 13px;
+      color: var(--gray-400);
     }
     
     @media (max-width: 640px) {
-      footer .container { flex-direction: column; gap: 16px; text-align: center; }
+      footer .container { flex-direction: column; gap: 12px; }
       .nav-links { display: none; }
-      .hero-stats { flex-direction: column; gap: 24px; }
-      .hero-cta { flex-direction: column; align-items: stretch; }
-      .hero-cta-note { margin: 8px 0 0; text-align: center; }
+      .metrics { flex-direction: column; gap: 32px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Navigation -->
   <nav>
     <div class="container">
       <a href="#" class="logo">Vibe<span>QA</span></a>
@@ -589,195 +513,200 @@
     </div>
   </nav>
 
-  <!-- Hero -->
   <section class="hero">
     <div class="container">
-      <div class="hero-badge">✨ First test is free — no credit card</div>
-      <h1>Ship fast.<br><span class="highlight">Ship confident.</span></h1>
-      <p class="hero-subtitle">Automated bug detection for indie builders. Catch broken checkouts, dead links, and UX issues before your users do. Built for the vibe coding era.</p>
+      <div class="hero-label">
+        <span class="dot"></span>
+        First test free — no credit card
+      </div>
+      <h1>Find bugs before your users do</h1>
+      <p class="hero-subtitle">Automated testing for indie builders. Catch broken flows, dead links, and UX issues in minutes. Built for the vibe coding era.</p>
       <div class="hero-cta">
         <a href="#pricing" class="btn btn-accent btn-large">Run Free Test</a>
-        <a href="#how" class="btn btn-secondary btn-large">See How It Works</a>
+        <a href="#how" class="btn btn-secondary btn-large">How It Works</a>
       </div>
-      <p class="hero-cta-note">No signup required. Results in minutes.</p>
-      <div class="hero-stats">
-        <div class="stat">
-          <div class="stat-value">&lt;5 min</div>
-          <div class="stat-label">Average scan time</div>
+      <p class="hero-note">No signup required. Results in minutes.</p>
+      
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-value">&lt;5 min</div>
+          <div class="metric-label">Scan time</div>
         </div>
-        <div class="stat">
-          <div class="stat-value">50+</div>
-          <div class="stat-label">Automated checks</div>
+        <div class="metric">
+          <div class="metric-value">50+</div>
+          <div class="metric-label">Automated checks</div>
         </div>
-        <div class="stat">
-          <div class="stat-value">100%</div>
-          <div class="stat-label">Actionable reports</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Problem -->
-  <section class="problem">
-    <div class="container">
-      <div class="section-label">The Problem</div>
-      <h2 class="section-title">Vibe coding is fast. Until your checkout is broken.</h2>
-      <p class="section-subtitle">AI helps you build in hours. But speed creates blind spots that cost you customers.</p>
-      <div class="problem-grid">
-        <div class="problem-card">
-          <div class="problem-icon">🚀</div>
-          <h3>You Ship in Hours</h3>
-          <p>Cursor, Bolt, and v0 let you build MVPs faster than ever. But when you're moving fast, you miss things. Critical things.</p>
-        </div>
-        <div class="problem-card">
-          <div class="problem-icon">🐛</div>
-          <h3>Bugs Slip Through</h3>
-          <p>Broken checkout flows. Dead links. Forms that don't submit. Mobile layouts that look terrible. You don't see them — your users do.</p>
-        </div>
-        <div class="problem-card">
-          <div class="problem-icon">💸</div>
-          <h3>Revenue Lost</h3>
-          <p>Every bug costs you customers. One broken checkout can mean hundreds in lost sales before you even notice something's wrong.</p>
+        <div class="metric">
+          <div class="metric-value">100%</div>
+          <div class="metric-label">Actionable</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- How It Works -->
-  <section id="how" class="how-it-works">
+  <section class="section section-alt">
     <div class="container">
-      <div class="section-label">How It Works</div>
-      <h2 class="section-title">QA that fits how you build</h2>
-      <p class="section-subtitle">Paste your URL. Get a bug report. Ship with confidence.</p>
+      <div class="section-header">
+        <div class="section-label">The Problem</div>
+        <h2 class="section-title">Speed creates blind spots</h2>
+        <p class="section-subtitle">AI lets you build fast. But fast means bugs slip through.</p>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h3>You ship in hours</h3>
+          <p>Cursor and v0 let you build MVPs overnight. But speed means less testing and more assumptions.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          </div>
+          <h3>Bugs slip through</h3>
+          <p>Broken checkouts. Dead links. Forms that fail silently. You don't see them — your users do.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>Revenue lost</h3>
+          <p>Every bug costs customers. One broken checkout can mean hundreds in lost sales.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">Three steps to confident shipping</h2>
+        <p class="section-subtitle">Paste URL. Get report. Fix issues. Ship.</p>
+      </div>
       <div class="steps">
         <div class="step">
           <div class="step-number">1</div>
-          <h3>Paste Your URL</h3>
-          <p>Just drop in your site URL. No signup, no config, no SDK to install.</p>
+          <h3>Paste your URL</h3>
+          <p>Drop in your site URL. No signup, no config, no SDK required.</p>
         </div>
         <div class="step">
           <div class="step-number">2</div>
-          <h3>Automated Scan</h3>
-          <p>We crawl your site, test critical flows, check responsiveness, and hunt for bugs.</p>
+          <h3>Automated scan</h3>
+          <p>We crawl your site, test critical flows, and check for common issues.</p>
         </div>
         <div class="step">
           <div class="step-number">3</div>
-          <h3>Get Your Report</h3>
-          <p>Actionable bug report with screenshots, severity ratings, and fix suggestions.</p>
+          <h3>Get your report</h3>
+          <p>Actionable findings with screenshots and severity ratings.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Pricing -->
-  <section id="pricing" class="pricing">
+  <section id="pricing" class="section section-alt">
     <div class="container">
-      <div class="section-label">Simple Pricing</div>
-      <h2 class="section-title">Start free. Pay when you need more.</h2>
-      <p class="section-subtitle">Your first test is on us. Upgrade when VibeQA becomes part of your workflow.</p>
+      <div class="section-header">
+        <div class="section-label">Pricing</div>
+        <h2 class="section-title">Start free. Pay when you need more.</h2>
+        <p class="section-subtitle">Your first test is on us.</p>
+      </div>
       <div class="pricing-grid">
-        <div class="pricing-card free">
-          <div class="pricing-badge free-badge">Start Here</div>
-          <div class="pricing-name">Free Test</div>
-          <div class="pricing-desc">Try it out, no strings attached</div>
+        <div class="pricing-card">
+          <div class="pricing-name">Free</div>
+          <div class="pricing-desc">Try it out</div>
           <div class="pricing-price">$0</div>
           <ul class="pricing-features">
-            <li>1 full site scan</li>
-            <li>Core bug detection</li>
-            <li>Basic report</li>
-            <li>No signup required</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 1 full scan</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Core checks</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Basic report</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> No signup</li>
           </ul>
-          <a href="mailto:hello@vibeqa.com?subject=Free Test Request&body=URL to test:" class="btn btn-primary">Run Free Test</a>
+          <a href="mailto:hello@vibeqa.com?subject=Free Test&body=URL:" class="btn btn-primary">Run Free Test</a>
         </div>
         <div class="pricing-card featured">
-          <div class="pricing-badge">Most Popular</div>
+          <div class="pricing-badge">Popular</div>
           <div class="pricing-name">Pro</div>
-          <div class="pricing-desc">For builders who ship weekly</div>
+          <div class="pricing-desc">For weekly shippers</div>
           <div class="pricing-price">$29<span>/mo</span></div>
           <ul class="pricing-features">
-            <li>10 scans per month</li>
-            <li>Deep flow testing</li>
-            <li>Mobile + Desktop</li>
-            <li>Priority reports</li>
-            <li>Slack notifications</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 10 scans/month</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Deep flow testing</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Mobile + Desktop</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Slack alerts</li>
           </ul>
-          <a href="mailto:hello@vibeqa.com?subject=Pro Plan Interest" class="btn btn-accent">Get Started</a>
+          <a href="mailto:hello@vibeqa.com?subject=Pro Plan" class="btn btn-accent">Get Started</a>
         </div>
         <div class="pricing-card">
           <div class="pricing-name">Team</div>
-          <div class="pricing-desc">For agencies and teams</div>
+          <div class="pricing-desc">For agencies</div>
           <div class="pricing-price">$99<span>/mo</span></div>
           <ul class="pricing-features">
-            <li>Unlimited scans</li>
-            <li>Multiple projects</li>
-            <li>CI/CD integration</li>
-            <li>Custom test flows</li>
-            <li>API access</li>
-            <li>Priority support</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Unlimited scans</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Multiple projects</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> CI/CD integration</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> API access</li>
           </ul>
-          <a href="mailto:hello@vibeqa.com?subject=Team Plan Interest" class="btn btn-secondary">Contact Us</a>
+          <a href="mailto:hello@vibeqa.com?subject=Team Plan" class="btn btn-secondary">Contact Us</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- What You Get -->
-  <section class="what-you-get">
+  <section class="section">
     <div class="container">
-      <h2 class="section-title">What we check</h2>
+      <div class="section-header">
+        <h2 class="section-title">What we check</h2>
+      </div>
       <div class="features-grid">
         <div class="feature">
-          <div class="feature-icon">🔗</div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
           <h3>Broken Links</h3>
-          <p>Dead links, 404s, and redirect chains that hurt UX and SEO</p>
+          <p>Dead links and 404s</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">📱</div>
-          <h3>Mobile Responsiveness</h3>
-          <p>Layout issues, overflow, and touch targets that break on phones</p>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+          <h3>Mobile</h3>
+          <p>Responsive issues</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">🛒</div>
-          <h3>Checkout Flows</h3>
-          <p>Form validation, payment buttons, and cart functionality</p>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+          <h3>Checkout</h3>
+          <p>Payment flow issues</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">⚡</div>
-          <h3>Performance Issues</h3>
-          <p>Slow loads, large images, and render-blocking resources</p>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <h3>Performance</h3>
+          <p>Slow load times</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">🔐</div>
-          <h3>Basic Security</h3>
-          <p>Missing HTTPS, exposed endpoints, and common vulnerabilities</p>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <h3>Security</h3>
+          <p>Common vulnerabilities</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">♿</div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></div>
           <h3>Accessibility</h3>
-          <p>Missing alt text, contrast issues, and keyboard navigation</p>
+          <p>A11y issues</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
   <section class="cta">
     <div class="container">
-      <h2>Your next deploy is 5 minutes from bulletproof.</h2>
+      <h2>Ship with confidence</h2>
       <p>First test free. No credit card. No signup.</p>
-      <a href="#pricing" class="btn btn-accent btn-large">Run Free Test Now</a>
+      <a href="#pricing" class="btn btn-accent btn-large">Run Free Test</a>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer>
     <div class="container">
       <a href="#" class="logo">Vibe<span>QA</span></a>
-      <p>Built for builders who ship fast.</p>
       <p>© 2026 VibeQA</p>
     </div>
   </footer>
 
 </body>
 </html>
-<!-- deployed Wed Feb 11 02:13:26 PST 2026 -->
