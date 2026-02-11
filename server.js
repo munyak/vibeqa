@@ -204,7 +204,7 @@ async function runScan(scanId, url) {
 
     // Mobile responsiveness check
     await page.setViewport({ width: 375, height: 667 }); // iPhone SE
-    await page.waitForTimeout(500);
+    await new Promise(r => setTimeout(r, 500));
     
     const mobileScreenshot = await page.screenshot({ encoding: 'base64', fullPage: false });
     screenshots.push({ name: 'Mobile View', data: mobileScreenshot });
