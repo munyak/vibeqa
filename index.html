@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VibeQA — Ship With Confidence</title>
-  <meta name="description" content="Real humans test your app before your users find the bugs. Built for Cursor, Bolt, v0, and Replit builders. Results in 24 hours.">
+  <title>VibeQA — Automated Testing for Indie Builders</title>
+  <meta name="description" content="Find bugs before your users do. Automated testing built for Cursor, Bolt, v0, and Replit builders. First test free.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +39,6 @@
       -webkit-font-smoothing: antialiased;
     }
     
-    /* Typography */
     h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; line-height: 1.1; letter-spacing: -0.02em; }
     
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -115,6 +114,16 @@
     
     .btn-large { padding: 18px 36px; font-size: 17px; }
     
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      color: var(--white);
+    }
+    
+    .btn-accent:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(80, 70, 229, 0.3);
+    }
+    
     /* Hero Section */
     .hero {
       padding: 160px 0 120px;
@@ -144,26 +153,13 @@
       align-items: center;
       gap: 8px;
       padding: 8px 16px 8px 10px;
-      background: var(--gray-50);
-      border: 1px solid var(--gray-100);
+      background: linear-gradient(135deg, var(--accent-glow) 0%, rgba(80, 70, 229, 0.05) 100%);
+      border: 1px solid rgba(80, 70, 229, 0.2);
       border-radius: 100px;
       font-size: 14px;
-      color: var(--gray-600);
+      font-weight: 600;
+      color: var(--accent);
       margin-bottom: 32px;
-    }
-    
-    .hero-badge::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
     }
     
     .hero h1 {
@@ -188,7 +184,13 @@
       line-height: 1.7;
     }
     
-    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+    
+    .hero-cta-note {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-left: 8px;
+    }
     
     .hero-stats {
       display: flex;
@@ -384,6 +386,11 @@
       transform: scale(1.04);
     }
     
+    .pricing-card.free {
+      border-color: var(--green);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, var(--white) 100%);
+    }
+    
     .pricing-badge {
       position: absolute;
       top: -14px;
@@ -395,6 +402,10 @@
       border-radius: 100px;
       font-size: 13px;
       font-weight: 600;
+    }
+    
+    .pricing-badge.free-badge {
+      background: var(--green);
     }
     
     .pricing-name {
@@ -451,16 +462,21 @@
       flex-shrink: 0;
     }
     
+    .pricing-card.free .pricing-features li::before {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+    }
+    
     .pricing-card .btn { width: 100%; }
     
-    /* Use Cases */
-    .use-cases {
+    /* What You Get */
+    .what-you-get {
       padding: 120px 0;
     }
     
-    .use-cases .section-title { text-align: center; margin: 0 auto 64px; }
+    .what-you-get .section-title { text-align: center; margin: 0 auto 64px; }
     
-    .use-cases-grid {
+    .features-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 24px;
@@ -469,24 +485,24 @@
     }
     
     @media (max-width: 640px) {
-      .use-cases-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
     }
     
-    .use-case {
+    .feature {
       padding: 32px;
       border: 1px solid var(--gray-100);
       border-radius: 20px;
       transition: all 0.3s ease;
     }
     
-    .use-case:hover {
+    .feature:hover {
       border-color: var(--accent);
       background: var(--accent-glow);
     }
     
-    .use-case-icon { font-size: 32px; margin-bottom: 16px; }
-    .use-case h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .use-case p { font-size: 14px; color: var(--gray-500); }
+    .feature-icon { font-size: 32px; margin-bottom: 16px; }
+    .feature h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .feature p { font-size: 14px; color: var(--gray-500); }
     
     /* CTA Section */
     .cta {
@@ -528,13 +544,9 @@
       margin-bottom: 40px;
     }
     
-    .cta .btn-primary {
+    .cta .btn-accent:hover {
       background: var(--white);
       color: var(--black);
-    }
-    
-    .cta .btn-primary:hover {
-      background: var(--gray-100);
     }
     
     /* Footer */
@@ -558,6 +570,8 @@
       footer .container { flex-direction: column; gap: 16px; text-align: center; }
       .nav-links { display: none; }
       .hero-stats { flex-direction: column; gap: 24px; }
+      .hero-cta { flex-direction: column; align-items: stretch; }
+      .hero-cta-note { margin: 8px 0 0; text-align: center; }
     }
   </style>
 </head>
@@ -570,7 +584,7 @@
       <div class="nav-links">
         <a href="#how">How It Works</a>
         <a href="#pricing">Pricing</a>
-        <a href="#pricing" class="btn btn-primary">Get Started</a>
+        <a href="#pricing" class="btn btn-primary">Start Free</a>
       </div>
     </div>
   </nav>
@@ -578,25 +592,26 @@
   <!-- Hero -->
   <section class="hero">
     <div class="container">
-      <div class="hero-badge">Now accepting early customers</div>
+      <div class="hero-badge">✨ First test is free — no credit card</div>
       <h1>Ship fast.<br><span class="highlight">Ship confident.</span></h1>
-      <p class="hero-subtitle">Real humans test your app and find the bugs before your users do. Built for Cursor, Bolt, and v0 builders. Results in 24 hours.</p>
+      <p class="hero-subtitle">Automated bug detection for indie builders. Catch broken checkouts, dead links, and UX issues before your users do. Built for the vibe coding era.</p>
       <div class="hero-cta">
-        <a href="#pricing" class="btn btn-primary btn-large">Start Testing — $49</a>
+        <a href="#pricing" class="btn btn-accent btn-large">Run Free Test</a>
         <a href="#how" class="btn btn-secondary btn-large">See How It Works</a>
       </div>
+      <p class="hero-cta-note">No signup required. Results in minutes.</p>
       <div class="hero-stats">
         <div class="stat">
-          <div class="stat-value">24hr</div>
-          <div class="stat-label">Average turnaround</div>
+          <div class="stat-value">&lt;5 min</div>
+          <div class="stat-label">Average scan time</div>
         </div>
         <div class="stat">
-          <div class="stat-value">3-10</div>
-          <div class="stat-label">Real human testers</div>
+          <div class="stat-value">50+</div>
+          <div class="stat-label">Automated checks</div>
         </div>
         <div class="stat">
           <div class="stat-value">100%</div>
-          <div class="stat-label">Video recorded</div>
+          <div class="stat-label">Actionable reports</div>
         </div>
       </div>
     </div>
@@ -612,17 +627,17 @@
         <div class="problem-card">
           <div class="problem-icon">🚀</div>
           <h3>You Ship in Hours</h3>
-          <p>Cursor and AI let you build MVPs faster than ever. But when you're moving fast, you miss things. Critical things.</p>
+          <p>Cursor, Bolt, and v0 let you build MVPs faster than ever. But when you're moving fast, you miss things. Critical things.</p>
         </div>
         <div class="problem-card">
           <div class="problem-icon">🐛</div>
           <h3>Bugs Slip Through</h3>
-          <p>50% checkout failure. Broken mobile layouts. Forms that don't submit. You don't see them — your users do.</p>
+          <p>Broken checkout flows. Dead links. Forms that don't submit. Mobile layouts that look terrible. You don't see them — your users do.</p>
         </div>
         <div class="problem-card">
           <div class="problem-icon">💸</div>
           <h3>Revenue Lost</h3>
-          <p>Every bug costs you customers. One broken checkout flow can mean hundreds in lost sales before you even notice.</p>
+          <p>Every bug costs you customers. One broken checkout can mean hundreds in lost sales before you even notice something's wrong.</p>
         </div>
       </div>
     </div>
@@ -633,22 +648,22 @@
     <div class="container">
       <div class="section-label">How It Works</div>
       <h2 class="section-title">QA that fits how you build</h2>
-      <p class="section-subtitle">Three steps. Real humans. Real bugs found. No enterprise nonsense.</p>
+      <p class="section-subtitle">Paste your URL. Get a bug report. Ship with confidence.</p>
       <div class="steps">
         <div class="step">
           <div class="step-number">1</div>
-          <h3>Submit Your URL</h3>
-          <p>Tell us what to test: "checkout flow", "signup process", or "full user journey"</p>
+          <h3>Paste Your URL</h3>
+          <p>Just drop in your site URL. No signup, no config, no SDK to install.</p>
         </div>
         <div class="step">
           <div class="step-number">2</div>
-          <h3>Real Humans Test</h3>
-          <p>3-10 testers use your app like real customers. Every session screen recorded.</p>
+          <h3>Automated Scan</h3>
+          <p>We crawl your site, test critical flows, check responsiveness, and hunt for bugs.</p>
         </div>
         <div class="step">
           <div class="step-number">3</div>
-          <h3>Get Bug Reports</h3>
-          <p>Detailed reports with videos, screenshots, and exact steps to reproduce. In 24 hours.</p>
+          <h3>Get Your Report</h3>
+          <p>Actionable bug report with screenshots, severity ratings, and fix suggestions.</p>
         </div>
       </div>
     </div>
@@ -658,77 +673,88 @@
   <section id="pricing" class="pricing">
     <div class="container">
       <div class="section-label">Simple Pricing</div>
-      <h2 class="section-title">No subscriptions. Pay when you ship.</h2>
-      <p class="section-subtitle">One test, one price. No hidden fees, no monthly commitments.</p>
+      <h2 class="section-title">Start free. Pay when you need more.</h2>
+      <p class="section-subtitle">Your first test is on us. Upgrade when VibeQA becomes part of your workflow.</p>
       <div class="pricing-grid">
-        <div class="pricing-card">
-          <div class="pricing-name">Quick Check</div>
-          <div class="pricing-desc">Sanity check before launch</div>
-          <div class="pricing-price">$49</div>
+        <div class="pricing-card free">
+          <div class="pricing-badge free-badge">Start Here</div>
+          <div class="pricing-name">Free Test</div>
+          <div class="pricing-desc">Try it out, no strings attached</div>
+          <div class="pricing-price">$0</div>
           <ul class="pricing-features">
-            <li>3 testers</li>
-            <li>1 user flow</li>
-            <li>24h turnaround</li>
-            <li>Bug report + screenshots</li>
+            <li>1 full site scan</li>
+            <li>Core bug detection</li>
+            <li>Basic report</li>
+            <li>No signup required</li>
           </ul>
-          <a href="mailto:hello@vibeqa.com?subject=Quick Check" class="btn btn-secondary">Get Started</a>
+          <a href="mailto:hello@vibeqa.com?subject=Free Test Request&body=URL to test:" class="btn btn-primary">Run Free Test</a>
         </div>
         <div class="pricing-card featured">
           <div class="pricing-badge">Most Popular</div>
-          <div class="pricing-name">Full Flow</div>
-          <div class="pricing-desc">Complete user journey test</div>
-          <div class="pricing-price">$149</div>
+          <div class="pricing-name">Pro</div>
+          <div class="pricing-desc">For builders who ship weekly</div>
+          <div class="pricing-price">$29<span>/mo</span></div>
           <ul class="pricing-features">
-            <li>5 testers</li>
-            <li>Full user journey</li>
-            <li>24h turnaround</li>
-            <li>Video recordings</li>
-            <li>UX feedback included</li>
+            <li>10 scans per month</li>
+            <li>Deep flow testing</li>
+            <li>Mobile + Desktop</li>
+            <li>Priority reports</li>
+            <li>Slack notifications</li>
           </ul>
-          <a href="mailto:hello@vibeqa.com?subject=Full Flow" class="btn btn-primary">Get Started</a>
+          <a href="mailto:hello@vibeqa.com?subject=Pro Plan Interest" class="btn btn-accent">Get Started</a>
         </div>
         <div class="pricing-card">
-          <div class="pricing-name">Launch Ready</div>
-          <div class="pricing-desc">Ship with full confidence</div>
-          <div class="pricing-price">$299</div>
+          <div class="pricing-name">Team</div>
+          <div class="pricing-desc">For agencies and teams</div>
+          <div class="pricing-price">$99<span>/mo</span></div>
           <ul class="pricing-features">
-            <li>10 testers</li>
-            <li>Mobile + Desktop</li>
-            <li>48h turnaround</li>
-            <li>Video recordings</li>
-            <li>Regression after fixes</li>
+            <li>Unlimited scans</li>
+            <li>Multiple projects</li>
+            <li>CI/CD integration</li>
+            <li>Custom test flows</li>
+            <li>API access</li>
             <li>Priority support</li>
           </ul>
-          <a href="mailto:hello@vibeqa.com?subject=Launch Ready" class="btn btn-secondary">Get Started</a>
+          <a href="mailto:hello@vibeqa.com?subject=Team Plan Interest" class="btn btn-secondary">Contact Us</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Use Cases -->
-  <section class="use-cases">
+  <!-- What You Get -->
+  <section class="what-you-get">
     <div class="container">
-      <h2 class="section-title">Perfect for</h2>
-      <div class="use-cases-grid">
-        <div class="use-case">
-          <div class="use-case-icon">🎯</div>
-          <h3>Pre-Launch Check</h3>
-          <p>"Test my checkout before I announce on Twitter"</p>
+      <h2 class="section-title">What we check</h2>
+      <div class="features-grid">
+        <div class="feature">
+          <div class="feature-icon">🔗</div>
+          <h3>Broken Links</h3>
+          <p>Dead links, 404s, and redirect chains that hurt UX and SEO</p>
         </div>
-        <div class="use-case">
-          <div class="use-case-icon">📱</div>
-          <h3>Mobile Sanity</h3>
-          <p>"Does this actually work on phones?"</p>
+        <div class="feature">
+          <div class="feature-icon">📱</div>
+          <h3>Mobile Responsiveness</h3>
+          <p>Layout issues, overflow, and touch targets that break on phones</p>
         </div>
-        <div class="use-case">
-          <div class="use-case-icon">🔄</div>
-          <h3>Post-Deploy Verify</h3>
-          <p>"Just pushed a big update — make sure nothing broke"</p>
+        <div class="feature">
+          <div class="feature-icon">🛒</div>
+          <h3>Checkout Flows</h3>
+          <p>Form validation, payment buttons, and cart functionality</p>
         </div>
-        <div class="use-case">
-          <div class="use-case-icon">👀</div>
-          <h3>Fresh Eyes</h3>
-          <p>"I've stared at this too long, what am I missing?"</p>
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h3>Performance Issues</h3>
+          <p>Slow loads, large images, and render-blocking resources</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔐</div>
+          <h3>Basic Security</h3>
+          <p>Missing HTTPS, exposed endpoints, and common vulnerabilities</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">♿</div>
+          <h3>Accessibility</h3>
+          <p>Missing alt text, contrast issues, and keyboard navigation</p>
         </div>
       </div>
     </div>
@@ -737,9 +763,9 @@
   <!-- CTA -->
   <section class="cta">
     <div class="container">
-      <h2>Your next deploy is 24 hours from bulletproof.</h2>
-      <p>Stop shipping bugs. Start shipping confidence.</p>
-      <a href="#pricing" class="btn btn-primary btn-large">Test My App Now</a>
+      <h2>Your next deploy is 5 minutes from bulletproof.</h2>
+      <p>First test free. No credit card. No signup.</p>
+      <a href="#pricing" class="btn btn-accent btn-large">Run Free Test Now</a>
     </div>
   </section>
 
