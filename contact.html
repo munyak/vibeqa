@@ -16,6 +16,7 @@
       --gray-100: #E4E4E7;
       --gray-200: #D4D4D8;
       --gray-400: #71717A;
+      --gray-500: #52525B;
       --gray-600: #3F3F46;
       --accent: #6366F1;
       --accent-dark: #4F46E5;
@@ -29,13 +30,15 @@
       -webkit-font-smoothing: antialiased;
     }
     .container { max-width: 720px; margin: 0 auto; padding: 60px 24px; }
-    h1 { font-size: 32px; margin-bottom: 16px; letter-spacing: -0.025em; }
+    h1 { font-size: 32px; margin-bottom: 16px; letter-spacing: -0.025em; font-weight: 700; }
     .subtitle { color: var(--gray-400); margin-bottom: 40px; font-size: 17px; }
-    h2 { font-size: 18px; margin: 32px 0 12px; letter-spacing: -0.025em; }
+    h2 { font-size: 18px; margin: 32px 0 12px; letter-spacing: -0.025em; font-weight: 600; }
     p { margin-bottom: 16px; color: var(--gray-600); }
-    a { color: var(--accent); }
-    .back { display: inline-block; margin-bottom: 24px; color: var(--gray-400); text-decoration: none; font-size: 14px; }
-    .back:hover { color: var(--black); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; color: var(--gray-400); text-decoration: none; font-size: 14px; }
+    .back:hover { color: var(--black); text-decoration: none; }
+    .back svg { width: 16px; height: 16px; }
     
     .contact-cards {
       display: grid;
@@ -45,14 +48,39 @@
     }
     
     .contact-card {
-      background: var(--gray-50);
-      padding: 24px;
+      background: var(--white);
+      padding: 28px;
       border-radius: 12px;
+      border: 1px solid var(--gray-100);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    
+    .contact-card:hover {
+      border-color: var(--gray-200);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    .contact-card-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--gray-50);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--gray-500);
+    }
+    
+    .contact-card-icon svg {
+      width: 22px;
+      height: 22px;
     }
     
     .contact-card h3 {
-      font-size: 16px;
-      margin-bottom: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
     }
     
     .contact-card p {
@@ -63,8 +91,13 @@
     .contact-form {
       background: var(--gray-50);
       padding: 32px;
-      border-radius: 12px;
-      margin-top: 40px;
+      border-radius: 16px;
+      margin-top: 48px;
+    }
+    
+    .contact-form h2 {
+      margin-top: 0;
+      margin-bottom: 24px;
     }
     
     .form-group {
@@ -76,6 +109,7 @@
       font-size: 14px;
       font-weight: 500;
       margin-bottom: 6px;
+      color: var(--black);
     }
     
     .form-group input,
@@ -89,12 +123,18 @@
       font-family: inherit;
       background: var(--white);
       outline: none;
+      transition: border-color 0.15s;
     }
     
     .form-group input:focus,
     .form-group textarea:focus,
     .form-group select:focus {
       border-color: var(--accent);
+    }
+    
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--gray-400);
     }
     
     .form-group textarea {
@@ -120,47 +160,72 @@
     
     .btn:hover {
       background: var(--accent-dark);
+      text-decoration: none;
+    }
+    
+    .address {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--gray-100);
+    }
+    
+    .response-time {
+      margin-top: 32px;
+      padding: 20px 24px;
+      background: var(--gray-50);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--gray-600);
     }
     
     @media (max-width: 640px) {
       .contact-cards { grid-template-columns: 1fr; }
+      .contact-form { padding: 24px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="/" class="back">← Back to VibeQA</a>
+    <a href="/" class="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to VibeQA
+    </a>
     <h1>Contact Us</h1>
     <p class="subtitle">Have a question, feedback, or need support? We'd love to hear from you.</p>
 
     <div class="contact-cards">
       <div class="contact-card">
-        <h3>📧 General Inquiries</h3>
+        <div class="contact-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <h3>General Inquiries</h3>
         <p><a href="mailto:hello@vibeqa.io">hello@vibeqa.io</a></p>
       </div>
       <div class="contact-card">
-        <h3>🛠 Technical Support</h3>
+        <div class="contact-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <h3>Technical Support</h3>
         <p><a href="mailto:support@vibeqa.io">support@vibeqa.io</a></p>
       </div>
       <div class="contact-card">
-        <h3>💼 Sales & Enterprise</h3>
+        <div class="contact-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <h3>Sales & Enterprise</h3>
         <p><a href="mailto:sales@vibeqa.io">sales@vibeqa.io</a></p>
       </div>
       <div class="contact-card">
-        <h3>🔒 Privacy & Legal</h3>
+        <div class="contact-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Privacy & Legal</h3>
         <p><a href="mailto:legal@vibeqa.io">legal@vibeqa.io</a></p>
       </div>
     </div>
 
-    <h2>Business Address</h2>
-    <p>
-      VibeQA<br>
-      Los Angeles, CA<br>
-      United States
-    </p>
-
     <div class="contact-form">
-      <h2 style="margin-top:0">Send us a message</h2>
+      <h2>Send us a message</h2>
       <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
         <div class="form-group">
           <label>Your Email</label>
@@ -185,8 +250,18 @@
       </form>
     </div>
 
-    <h2>Response Time</h2>
-    <p>We aim to respond to all inquiries within 24-48 hours during business days. Pro and Team plan customers receive priority support with faster response times.</p>
+    <div class="address">
+      <h2>Business Address</h2>
+      <p>
+        VibeQA<br>
+        Los Angeles, CA<br>
+        United States
+      </p>
+    </div>
+
+    <div class="response-time">
+      <strong>Response Time:</strong> We aim to respond to all inquiries within 24-48 hours during business days. Pro and Team plan customers receive priority support.
+    </div>
   </div>
 </body>
 </html>
