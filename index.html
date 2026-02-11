@@ -532,6 +532,21 @@
     
     footer p { font-size: 13px; color: var(--gray-400); }
     
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    
+    .footer-links a {
+      color: var(--gray-400);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    
+    .footer-links a:hover {
+      color: var(--black);
+    }
+    
     @media (max-width: 640px) {
       footer .container { flex-direction: column; gap: 12px; }
       .nav-links { display: none; }
@@ -825,7 +840,12 @@
 
   <footer>
     <div class="container">
-      <a href="#" class="logo">Vibe<span>QA</span></a>
+      <a href="/" class="logo">Vibe<span>QA</span></a>
+      <div class="footer-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/contact.html">Contact</a>
+      </div>
       <p>© 2026 VibeQA</p>
     </div>
   </footer>
