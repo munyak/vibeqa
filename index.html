@@ -537,6 +537,106 @@
       .nav-links { display: none; }
       .scanner-input { flex-direction: column; }
     }
+
+    /* Auth Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-overlay.visible {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--white);
+      padding: 32px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      margin: 24px;
+    }
+    
+    .modal h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .modal .subtitle {
+      color: var(--gray-400);
+      margin-bottom: 24px;
+    }
+    
+    .modal .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .modal label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    
+    .modal input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+    }
+    
+    .modal input:focus {
+      border-color: var(--accent);
+    }
+    
+    .modal .btn {
+      width: 100%;
+      margin-top: 8px;
+    }
+    
+    .modal .switch-mode {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--gray-400);
+    }
+    
+    .modal .switch-mode a {
+      color: var(--accent);
+      cursor: pointer;
+    }
+    
+    .modal .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--gray-400);
+    }
+    
+    .modal-inner {
+      position: relative;
+    }
+    
+    .modal .error {
+      color: var(--red);
+      font-size: 14px;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -547,10 +647,45 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#pricing">Pricing</a>
-        <a href="#" class="btn btn-primary" onclick="document.getElementById('url-input').focus()">Run Free Test</a>
+        <a href="#" class="btn btn-secondary" id="login-nav-btn" onclick="showAuthModal('login')">Log in</a>
+        <a href="#" class="btn btn-primary" id="signup-nav-btn" onclick="showAuthModal('signup')">Sign up</a>
+        <a href="/dashboard.html" class="btn btn-primary" id="dashboard-nav-btn" style="display:none">Dashboard</a>
       </div>
     </div>
   </nav>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal">
+      <div class="modal-inner">
+        <button class="close-btn" onclick="hideAuthModal()">&times;</button>
+        <h2 id="auth-title">Sign up</h2>
+        <p class="subtitle" id="auth-subtitle">Create an account to save your scans</p>
+        
+        <form onsubmit="handleAuth(event)">
+          <div class="form-group" id="name-group">
+            <label>Name</label>
+            <input type="text" id="auth-name" placeholder="Your name" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="auth-email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="auth-password" placeholder="••••••••" required minlength="8" />
+          </div>
+          <div class="error" id="auth-error"></div>
+          <button type="submit" class="btn btn-accent btn-large" id="auth-submit">Sign up</button>
+        </form>
+        
+        <div class="switch-mode">
+          <span id="auth-switch-text">Already have an account?</span>
+          <a onclick="toggleAuthMode()" id="auth-switch-link">Log in</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <section class="hero">
     <div class="container">
@@ -666,7 +801,7 @@
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Report history (30 days)</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Email support</li>
           </ul>
-          <button class="btn btn-accent btn-large" onclick="alert('Coming soon! Join the waitlist.')">Get Started</button>
+          <button class="btn btn-accent btn-large" onclick="selectPlan('pro')">Get Started</button>
         </div>
         
         <div class="pricing-card">
@@ -682,7 +817,7 @@
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Report history (90 days)</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Priority support</li>
           </ul>
-          <button class="btn btn-secondary btn-large" onclick="alert('Coming soon! Join the waitlist.')">Contact Us</button>
+          <button class="btn btn-secondary btn-large" onclick="selectPlan('team')">Get Started</button>
         </div>
       </div>
     </div>
@@ -859,6 +994,144 @@
     document.getElementById('url-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') startScan();
     });
+
+    // Auth functionality
+    let authMode = 'signup';
+    let selectedPlan = null;
+    let token = localStorage.getItem('vibeqa_token');
+
+    function checkAuth() {
+      if (token) {
+        document.getElementById('login-nav-btn').style.display = 'none';
+        document.getElementById('signup-nav-btn').style.display = 'none';
+        document.getElementById('dashboard-nav-btn').style.display = 'inline-flex';
+      }
+    }
+
+    function showAuthModal(mode) {
+      authMode = mode;
+      updateAuthModal();
+      document.getElementById('auth-modal').classList.add('visible');
+      document.getElementById('auth-error').textContent = '';
+    }
+
+    function hideAuthModal() {
+      document.getElementById('auth-modal').classList.remove('visible');
+      selectedPlan = null;
+    }
+
+    function toggleAuthMode() {
+      authMode = authMode === 'signup' ? 'login' : 'signup';
+      updateAuthModal();
+    }
+
+    function updateAuthModal() {
+      const isSignup = authMode === 'signup';
+      document.getElementById('auth-title').textContent = isSignup ? 'Sign up' : 'Log in';
+      document.getElementById('auth-subtitle').textContent = isSignup 
+        ? (selectedPlan ? `Create an account to get ${selectedPlan} plan` : 'Create an account to save your scans')
+        : 'Welcome back';
+      document.getElementById('name-group').style.display = isSignup ? 'block' : 'none';
+      document.getElementById('auth-submit').textContent = isSignup ? 'Sign up' : 'Log in';
+      document.getElementById('auth-switch-text').textContent = isSignup ? 'Already have an account?' : "Don't have an account?";
+      document.getElementById('auth-switch-link').textContent = isSignup ? 'Log in' : 'Sign up';
+      document.getElementById('auth-error').textContent = '';
+    }
+
+    async function handleAuth(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const name = document.getElementById('auth-name').value;
+      const errorEl = document.getElementById('auth-error');
+      const submitBtn = document.getElementById('auth-submit');
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Please wait...';
+      errorEl.textContent = '';
+
+      try {
+        const endpoint = authMode === 'signup' ? '/api/auth/register' : '/api/auth/login';
+        const body = authMode === 'signup' ? { email, password, name } : { email, password };
+        
+        const res = await fetch(`${API_URL}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Authentication failed');
+        }
+        
+        // Save token
+        localStorage.setItem('vibeqa_token', data.token);
+        token = data.token;
+        
+        hideAuthModal();
+        checkAuth();
+        
+        // If they selected a plan, proceed to checkout
+        if (selectedPlan && selectedPlan !== 'free') {
+          await checkout(selectedPlan);
+        } else {
+          window.location.href = '/dashboard.html';
+        }
+        
+      } catch (err) {
+        errorEl.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = authMode === 'signup' ? 'Sign up' : 'Log in';
+      }
+    }
+
+    function selectPlan(plan) {
+      if (token) {
+        // Already logged in, go straight to checkout
+        checkout(plan);
+      } else {
+        // Show signup with plan context
+        selectedPlan = plan;
+        showAuthModal('signup');
+      }
+    }
+
+    async function checkout(plan) {
+      try {
+        const res = await fetch(`${API_URL}/api/billing/checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ plan })
+        });
+        
+        const data = await res.json();
+        
+        if (data.url) {
+          window.location.href = data.url;
+        } else if (data.demo) {
+          alert(data.message);
+          window.location.href = '/dashboard.html';
+        } else {
+          throw new Error(data.error || 'Checkout failed');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('auth-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'auth-modal') hideAuthModal();
+    });
+
+    // Check auth on load
+    checkAuth();
   </script>
 
 </body>

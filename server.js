@@ -1,15 +1,37 @@
 const express = require('express');
 const cors = require('cors');
 const puppeteer = require('puppeteer');
-const { OpenAI } = require('openai');
 const path = require('path');
 
+// Routes
+const authRoutes = require('./src/routes/auth');
+const billingRoutes = require('./src/routes/billing');
+const { authMiddleware } = require('./src/middleware/auth');
+const { User } = require('./src/models/user');
+
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
+app.use(authMiddleware);
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/billing', billingRoutes);
+
+// OpenAI for AI analysis (optional)
+let openai = null;
+if (process.env.OPENAI_API_KEY) {
+  const { OpenAI } = require('openai');
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 // Store scan results
 const scans = new Map();
@@ -29,12 +51,30 @@ app.post('/api/scan', async (req, res) => {
     return res.status(400).json({ error: 'Invalid URL format' });
   }
 
+  // Check scan limits for authenticated users
+  if (req.user) {
+    const canScan = await User.canScan(req.user.id);
+    if (!canScan) {
+      return res.status(429).json({ 
+        error: 'Scan limit reached',
+        message: 'Upgrade your plan for more scans',
+        upgrade: true
+      });
+    }
+    await User.incrementScanCount(req.user.id);
+  }
+
   const scanId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
   
   // Start scan in background
-  scans.set(scanId, { status: 'scanning', url, startedAt: new Date().toISOString() });
+  scans.set(scanId, { 
+    status: 'scanning', 
+    url, 
+    userId: req.user?.id || 'anonymous',
+    startedAt: new Date().toISOString() 
+  });
   
-  runScan(scanId, url).catch(err => {
+  runScan(scanId, url, req.user?.plan || 'free').catch(err => {
     console.error('Scan error:', err);
     scans.set(scanId, { 
       status: 'error', 
@@ -55,7 +95,26 @@ app.get('/api/scan/:scanId', (req, res) => {
   res.json(scan);
 });
 
-async function runScan(scanId, url) {
+// Get user's scan history
+app.get('/api/scans', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  const userScans = [];
+  for (const [scanId, scan] of scans.entries()) {
+    if (scan.userId === req.user.id) {
+      userScans.push({ scanId, ...scan });
+    }
+  }
+  
+  // Sort by date, newest first
+  userScans.sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
+  
+  res.json(userScans.slice(0, 50)); // Last 50 scans
+});
+
+async function runScan(scanId, url, plan) {
   const issues = [];
   const screenshots = [];
   let browser;
@@ -285,14 +344,16 @@ async function runScan(scanId, url) {
       });
     }
 
-    // Use AI to analyze screenshots for UX issues
-    try {
-      const aiAnalysis = await analyzeWithAI(url, desktopScreenshot, issues);
-      if (aiAnalysis && aiAnalysis.length > 0) {
-        issues.push(...aiAnalysis);
+    // Use AI to analyze screenshots for UX issues (Pro/Team plans only)
+    if (openai && (plan === 'pro' || plan === 'team')) {
+      try {
+        const aiAnalysis = await analyzeWithAI(url, desktopScreenshot, issues);
+        if (aiAnalysis && aiAnalysis.length > 0) {
+          issues.push(...aiAnalysis);
+        }
+      } catch (err) {
+        console.log('AI analysis skipped:', err.message);
       }
-    } catch (err) {
-      console.log('AI analysis skipped:', err.message);
     }
 
     console.log(`[${scanId}] Scan complete. Found ${issues.length} issues.`);
@@ -358,4 +419,6 @@ Return empty array [] if no significant issues found.`
 const PORT = process.env.PORT || 3847;
 app.listen(PORT, () => {
   console.log(`VibeQA server running on http://localhost:${PORT}`);
+  console.log(`Stripe: ${process.env.STRIPE_SECRET_KEY ? 'configured' : 'demo mode'}`);
+  console.log(`OpenAI: ${process.env.OPENAI_API_KEY ? 'configured' : 'disabled'}`);
 });
