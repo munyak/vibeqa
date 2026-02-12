@@ -605,6 +605,11 @@
           Webhooks
           <span class="badge pro">Pro</span>
         </button>
+        <button class="sidebar-item" onclick="showSection('schedules')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Scheduled Scans
+          <span class="badge pro">Pro</span>
+        </button>
       </div>
       
       <div class="sidebar-section">
@@ -864,8 +869,76 @@
         
         <div class="settings-card" id="webhooks-section">
           <h2>Webhook Endpoints</h2>
-          <p>We'll send a POST request to these URLs when scans complete.</p>
-          <button class="btn btn-secondary" disabled>Add Webhook (Coming Soon)</button>
+          <p>We'll send a POST request to these URLs when scans complete. Pro: 3 webhooks, Team: 10.</p>
+          
+          <form onsubmit="createWebhook(event)" style="display:flex;gap:12px;margin-bottom:20px">
+            <input type="url" id="new-webhook-url" placeholder="https://your-server.com/webhook" style="flex:1" required>
+            <button type="submit" class="btn btn-primary">Add Webhook</button>
+          </form>
+          
+          <div class="api-key-list" id="webhooks-list">
+            <div class="api-key-empty">No webhooks configured yet.</div>
+          </div>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Webhook Payload</h2>
+          <p>Example payload sent to your endpoint:</p>
+          <pre style="background:var(--gray-100);padding:16px;border-radius:8px;font-size:13px;overflow-x:auto">{
+  "event": "scan.complete",
+  "timestamp": "2026-02-12T12:00:00.000Z",
+  "data": {
+    "scanId": "abc123",
+    "url": "https://example.com",
+    "summary": {
+      "critical": 0,
+      "warnings": 2,
+      "info": 5,
+      "loadTime": "1.5s"
+    },
+    "issues": [...]
+  }
+}</pre>
+        </div>
+      </section>
+
+      <!-- Scheduled Scans Section -->
+      <section class="settings-section" id="section-schedules">
+        <div class="settings-header">
+          <h1>Scheduled Monitoring</h1>
+          <p>Automatically scan your sites on a schedule</p>
+        </div>
+        
+        <div id="schedules-upgrade-banner" class="upgrade-banner" style="display:none">
+          <div>
+            <h3>Unlock Scheduled Scans</h3>
+            <p>Upgrade to Pro to schedule automatic daily or weekly scans</p>
+          </div>
+          <a href="/#pricing" class="btn">Upgrade to Pro</a>
+        </div>
+        
+        <div class="settings-card" id="schedules-section">
+          <h2>Scheduled Scans</h2>
+          <p>Pro: 3 schedules, Team: 10. Get notified when issues are detected.</p>
+          
+          <form onsubmit="createSchedule(event)" style="margin-bottom:20px">
+            <div class="form-row" style="margin-bottom:12px">
+              <div class="form-group" style="margin-bottom:0">
+                <input type="url" id="new-schedule-url" placeholder="https://your-site.com" required>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <select id="new-schedule-frequency">
+                  <option value="daily">Daily (9am)</option>
+                  <option value="weekly">Weekly (Mon 9am)</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Schedule</button>
+          </form>
+          
+          <div class="api-key-list" id="schedules-list">
+            <div class="api-key-empty">No scheduled scans yet.</div>
+          </div>
         </div>
       </section>
 
@@ -1023,6 +1096,29 @@
           document.getElementById('api-keys-section').style.display = 'none';
           document.getElementById('webhooks-upgrade-banner').style.display = 'flex';
           document.getElementById('webhooks-section').style.display = 'none';
+          document.getElementById('schedules-upgrade-banner').style.display = 'flex';
+          document.getElementById('schedules-section').style.display = 'none';
+        } else {
+          // Load webhooks and schedules for paid users
+          loadWebhooks();
+          loadSchedules();
+        }
+        
+        // Check for success/error messages from OAuth callbacks
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success')) {
+          const msg = urlParams.get('success');
+          if (msg === 'github_connected') showAlert('GitHub connected successfully!');
+          if (msg === 'slack_connected') showAlert('Slack connected successfully!');
+          window.history.replaceState({}, '', '/settings.html');
+        }
+        if (urlParams.get('error')) {
+          const err = urlParams.get('error');
+          if (err === 'upgrade_required') showAlert('This integration requires a Pro plan or higher', 'error');
+          else if (err === 'github_not_configured') showAlert('GitHub integration is not configured on the server', 'error');
+          else if (err === 'slack_not_configured') showAlert('Slack integration is not configured on the server', 'error');
+          else showAlert('Failed to connect integration', 'error');
+          window.history.replaceState({}, '', '/settings.html');
         }
         
       } catch (e) {
@@ -1112,7 +1208,43 @@
     }
     
     async function connectIntegration(id) {
-      // In production, this would redirect to OAuth
+      // Redirect to OAuth flow for supported integrations
+      if (id === 'github') {
+        window.location.href = `${API_URL}/api/auth/integrations/github/connect`;
+        return;
+      }
+      if (id === 'slack') {
+        // Show option for OAuth or manual webhook
+        const choice = confirm('Connect via Slack OAuth?\n\nClick OK for OAuth (recommended)\nClick Cancel to enter a webhook URL manually');
+        if (choice) {
+          window.location.href = `${API_URL}/api/auth/integrations/slack/connect`;
+        } else {
+          const webhookUrl = prompt('Enter your Slack Incoming Webhook URL:\n\n(Create one at https://api.slack.com/apps)');
+          if (webhookUrl) {
+            try {
+              const res = await fetch(`${API_URL}/api/auth/integrations/slack/webhook`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ webhookUrl })
+              });
+              if (res.ok) {
+                showAlert('Slack connected successfully!');
+                loadUser();
+              } else {
+                const data = await res.json();
+                showAlert(data.error || 'Failed to connect Slack', 'error');
+              }
+            } catch (e) {
+              showAlert('Failed to connect Slack', 'error');
+            }
+          }
+        }
+        return;
+      }
+      // Other integrations coming soon
       showAlert(`${id} integration coming soon! We'll notify you when it's ready.`, 'info');
     }
     
@@ -1352,6 +1484,239 @@
     function logout() {
       localStorage.removeItem('vibeqa_token');
       window.location.href = '/';
+    }
+    
+    // ============================================
+    // WEBHOOKS
+    // ============================================
+    
+    async function loadWebhooks() {
+      try {
+        const res = await fetch(`${API_URL}/api/webhooks`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const webhooks = await res.json();
+          const container = document.getElementById('webhooks-list');
+          
+          if (webhooks.length === 0) {
+            container.innerHTML = '<div class="api-key-empty">No webhooks configured yet.</div>';
+          } else {
+            container.innerHTML = webhooks.map(wh => `
+              <div class="api-key-item">
+                <div class="api-key-info">
+                  <div class="api-key-name">${wh.url}</div>
+                  <div class="api-key-meta">
+                    ${wh.is_active ? '🟢 Active' : '🔴 Paused'} · 
+                    Events: ${wh.events?.join(', ') || 'scan.complete'}
+                    ${wh.last_triggered_at ? ` · Last triggered: ${new Date(wh.last_triggered_at).toLocaleDateString()}` : ''}
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="testWebhook('${wh.id}')" style="margin-right:8px">Test</button>
+                <button class="btn btn-sm ${wh.is_active ? 'btn-secondary' : 'btn-accent'}" onclick="toggleWebhook('${wh.id}', ${!wh.is_active})" style="margin-right:8px">
+                  ${wh.is_active ? 'Pause' : 'Enable'}
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteWebhook('${wh.id}')">Delete</button>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load webhooks:', e);
+      }
+    }
+    
+    async function createWebhook(e) {
+      e.preventDefault();
+      const url = document.getElementById('new-webhook-url').value;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/webhooks`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ url, events: ['scan.complete'] })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          showAlert('Webhook created! Secret: ' + (data.secret || 'N/A'));
+          document.getElementById('new-webhook-url').value = '';
+          loadWebhooks();
+        } else {
+          showAlert(data.error || 'Failed to create webhook', 'error');
+        }
+      } catch (e) {
+        showAlert('Failed to create webhook', 'error');
+      }
+    }
+    
+    async function testWebhook(id) {
+      try {
+        const res = await fetch(`${API_URL}/api/webhooks/${id}/test`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          showAlert('Test webhook sent successfully!');
+        } else {
+          showAlert(`Webhook test failed: ${data.message || 'Unknown error'}`, 'error');
+        }
+      } catch (e) {
+        showAlert('Failed to test webhook', 'error');
+      }
+    }
+    
+    async function toggleWebhook(id, active) {
+      try {
+        const res = await fetch(`${API_URL}/api/webhooks/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ is_active: active })
+        });
+        
+        if (res.ok) {
+          showAlert(active ? 'Webhook enabled' : 'Webhook paused');
+          loadWebhooks();
+        }
+      } catch (e) {
+        showAlert('Failed to update webhook', 'error');
+      }
+    }
+    
+    async function deleteWebhook(id) {
+      if (!confirm('Delete this webhook?')) return;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/webhooks/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          showAlert('Webhook deleted');
+          loadWebhooks();
+        }
+      } catch (e) {
+        showAlert('Failed to delete webhook', 'error');
+      }
+    }
+    
+    // ============================================
+    // SCHEDULED SCANS
+    // ============================================
+    
+    async function loadSchedules() {
+      try {
+        const res = await fetch(`${API_URL}/api/schedules`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const schedules = await res.json();
+          const container = document.getElementById('schedules-list');
+          
+          if (schedules.length === 0) {
+            container.innerHTML = '<div class="api-key-empty">No scheduled scans yet.</div>';
+          } else {
+            container.innerHTML = schedules.map(ss => `
+              <div class="api-key-item">
+                <div class="api-key-info">
+                  <div class="api-key-name">${ss.url}</div>
+                  <div class="api-key-meta">
+                    ${ss.is_active ? '🟢' : '🔴'} ${ss.schedule.charAt(0).toUpperCase() + ss.schedule.slice(1)} · 
+                    Next run: ${new Date(ss.next_run_at).toLocaleString()}
+                    ${ss.last_run_at ? ` · Last: ${new Date(ss.last_run_at).toLocaleString()}` : ''}
+                  </div>
+                </div>
+                <button class="btn btn-sm ${ss.is_active ? 'btn-secondary' : 'btn-accent'}" onclick="toggleSchedule('${ss.id}', ${!ss.is_active})" style="margin-right:8px">
+                  ${ss.is_active ? 'Pause' : 'Enable'}
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSchedule('${ss.id}')">Delete</button>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load schedules:', e);
+      }
+    }
+    
+    async function createSchedule(e) {
+      e.preventDefault();
+      const url = document.getElementById('new-schedule-url').value;
+      const schedule = document.getElementById('new-schedule-frequency').value;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/schedules`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ url, schedule })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          showAlert(`Scheduled scan created! Next run: ${new Date(data.next_run_at).toLocaleString()}`);
+          document.getElementById('new-schedule-url').value = '';
+          loadSchedules();
+        } else {
+          showAlert(data.error || 'Failed to create schedule', 'error');
+        }
+      } catch (e) {
+        showAlert('Failed to create schedule', 'error');
+      }
+    }
+    
+    async function toggleSchedule(id, active) {
+      try {
+        const res = await fetch(`${API_URL}/api/schedules/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ is_active: active })
+        });
+        
+        if (res.ok) {
+          showAlert(active ? 'Schedule enabled' : 'Schedule paused');
+          loadSchedules();
+        }
+      } catch (e) {
+        showAlert('Failed to update schedule', 'error');
+      }
+    }
+    
+    async function deleteSchedule(id) {
+      if (!confirm('Delete this scheduled scan?')) return;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/schedules/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          showAlert('Schedule deleted');
+          loadSchedules();
+        }
+      } catch (e) {
+        showAlert('Failed to delete schedule', 'error');
+      }
     }
     
     // Initialize

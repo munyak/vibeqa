@@ -580,6 +580,365 @@ function fallbackDeleteApiKey(id, userId) {
 }
 
 // ============================================
+// WEBHOOKS OPERATIONS
+// ============================================
+
+async function createWebhook(userId, { url, events = ['scan.complete'], secret = null }) {
+  if (!supabase) return fallbackCreateWebhook(userId, { url, events, secret });
+  
+  const { data, error } = await supabase
+    .from('webhooks')
+    .insert({
+      user_id: userId,
+      url,
+      events,
+      secret: secret || crypto.randomBytes(16).toString('hex'),
+      is_active: true
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+async function getWebhooksByUserId(userId) {
+  if (!supabase) return fallbackGetWebhooksByUserId(userId);
+  
+  const { data, error } = await supabase
+    .from('webhooks')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+}
+
+async function getActiveWebhooksForEvent(userId, event) {
+  if (!supabase) return fallbackGetActiveWebhooksForEvent(userId, event);
+  
+  const { data, error } = await supabase
+    .from('webhooks')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .contains('events', [event]);
+  
+  if (error) throw error;
+  return data;
+}
+
+async function updateWebhook(id, userId, updates) {
+  if (!supabase) return fallbackUpdateWebhook(id, userId, updates);
+  
+  const { data, error } = await supabase
+    .from('webhooks')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+async function deleteWebhook(id, userId) {
+  if (!supabase) return fallbackDeleteWebhook(id, userId);
+  
+  const { error } = await supabase
+    .from('webhooks')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+  
+  if (error) throw error;
+}
+
+// ============================================
+// SCHEDULED SCANS OPERATIONS
+// ============================================
+
+async function createScheduledScan(userId, { url, projectId = null, schedule, timezone = 'UTC' }) {
+  if (!supabase) return fallbackCreateScheduledScan(userId, { url, projectId, schedule, timezone });
+  
+  const { data, error } = await supabase
+    .from('scheduled_scans')
+    .insert({
+      user_id: userId,
+      project_id: projectId,
+      url,
+      schedule, // 'daily', 'weekly', or cron expression
+      timezone,
+      is_active: true,
+      next_run_at: calculateNextRun(schedule, timezone)
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+async function getScheduledScansByUserId(userId) {
+  if (!supabase) return fallbackGetScheduledScansByUserId(userId);
+  
+  const { data, error } = await supabase
+    .from('scheduled_scans')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+}
+
+async function getDueScheduledScans() {
+  if (!supabase) return fallbackGetDueScheduledScans();
+  
+  const { data, error } = await supabase
+    .from('scheduled_scans')
+    .select('*, users(*)')
+    .eq('is_active', true)
+    .lte('next_run_at', new Date().toISOString());
+  
+  if (error) throw error;
+  return data;
+}
+
+async function updateScheduledScan(id, userId, updates) {
+  if (!supabase) return fallbackUpdateScheduledScan(id, userId, updates);
+  
+  const { data, error } = await supabase
+    .from('scheduled_scans')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+async function deleteScheduledScan(id, userId) {
+  if (!supabase) return fallbackDeleteScheduledScan(id, userId);
+  
+  const { error } = await supabase
+    .from('scheduled_scans')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+  
+  if (error) throw error;
+}
+
+function calculateNextRun(schedule, timezone) {
+  const now = new Date();
+  if (schedule === 'daily') {
+    // Run at 9am in user's timezone, or next day if past 9am
+    const next = new Date(now);
+    next.setHours(9, 0, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    return next.toISOString();
+  } else if (schedule === 'weekly') {
+    // Run on Monday at 9am
+    const next = new Date(now);
+    const dayOfWeek = next.getDay();
+    const daysUntilMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 7 : 8 - dayOfWeek;
+    next.setDate(next.getDate() + daysUntilMonday);
+    next.setHours(9, 0, 0, 0);
+    return next.toISOString();
+  }
+  // Default: run tomorrow
+  const next = new Date(now);
+  next.setDate(next.getDate() + 1);
+  return next.toISOString();
+}
+
+// ============================================
+// INTEGRATIONS (SLACK/GITHUB) OPERATIONS
+// ============================================
+
+async function saveSlackIntegration(userId, { accessToken, teamId, teamName, channelId, channelName, webhookUrl }) {
+  if (!supabase) return fallbackSaveSlackIntegration(userId, { accessToken, teamId, teamName, channelId, channelName, webhookUrl });
+  
+  const integrations = await getUserIntegrations(userId);
+  integrations.slack = {
+    accessToken,
+    teamId,
+    teamName,
+    channelId,
+    channelName,
+    webhookUrl,
+    connectedAt: new Date().toISOString()
+  };
+  
+  await updateUser(userId, { integrations });
+  return integrations.slack;
+}
+
+async function saveGitHubIntegration(userId, { accessToken, username, installationId }) {
+  if (!supabase) return fallbackSaveGitHubIntegration(userId, { accessToken, username, installationId });
+  
+  const integrations = await getUserIntegrations(userId);
+  integrations.github = {
+    accessToken,
+    username,
+    installationId,
+    connectedAt: new Date().toISOString()
+  };
+  
+  await updateUser(userId, { integrations });
+  return integrations.github;
+}
+
+async function getUserIntegrations(userId) {
+  if (!supabase) return fallbackGetUserIntegrations(userId);
+  
+  const { data, error } = await supabase
+    .from('users')
+    .select('integrations')
+    .eq('id', userId)
+    .single();
+  
+  if (error) throw error;
+  return data?.integrations || {};
+}
+
+// ============================================
+// WEBHOOK/SCHEDULED SCAN FALLBACKS
+// ============================================
+
+function fallbackCreateWebhook(userId, { url, events, secret }) {
+  const webhook = {
+    id: crypto.randomUUID(),
+    user_id: userId,
+    url,
+    events,
+    secret: secret || crypto.randomBytes(16).toString('hex'),
+    is_active: true,
+    failure_count: 0,
+    created_at: new Date().toISOString()
+  };
+  if (!inMemoryStore.webhooks) inMemoryStore.webhooks = new Map();
+  inMemoryStore.webhooks.set(webhook.id, webhook);
+  return webhook;
+}
+
+function fallbackGetWebhooksByUserId(userId) {
+  if (!inMemoryStore.webhooks) return [];
+  const webhooks = [];
+  for (const wh of inMemoryStore.webhooks.values()) {
+    if (wh.user_id === userId) webhooks.push(wh);
+  }
+  return webhooks;
+}
+
+function fallbackGetActiveWebhooksForEvent(userId, event) {
+  if (!inMemoryStore.webhooks) return [];
+  const webhooks = [];
+  for (const wh of inMemoryStore.webhooks.values()) {
+    if (wh.user_id === userId && wh.is_active && wh.events.includes(event)) {
+      webhooks.push(wh);
+    }
+  }
+  return webhooks;
+}
+
+function fallbackUpdateWebhook(id, userId, updates) {
+  if (!inMemoryStore.webhooks) return null;
+  const wh = inMemoryStore.webhooks.get(id);
+  if (!wh || wh.user_id !== userId) return null;
+  Object.assign(wh, updates);
+  return wh;
+}
+
+function fallbackDeleteWebhook(id, userId) {
+  if (!inMemoryStore.webhooks) return;
+  const wh = inMemoryStore.webhooks.get(id);
+  if (wh && wh.user_id === userId) inMemoryStore.webhooks.delete(id);
+}
+
+function fallbackCreateScheduledScan(userId, { url, projectId, schedule, timezone }) {
+  const ss = {
+    id: crypto.randomUUID(),
+    user_id: userId,
+    project_id: projectId,
+    url,
+    schedule,
+    timezone,
+    is_active: true,
+    next_run_at: calculateNextRun(schedule, timezone),
+    last_run_at: null,
+    created_at: new Date().toISOString()
+  };
+  if (!inMemoryStore.scheduledScans) inMemoryStore.scheduledScans = new Map();
+  inMemoryStore.scheduledScans.set(ss.id, ss);
+  return ss;
+}
+
+function fallbackGetScheduledScansByUserId(userId) {
+  if (!inMemoryStore.scheduledScans) return [];
+  const scans = [];
+  for (const ss of inMemoryStore.scheduledScans.values()) {
+    if (ss.user_id === userId) scans.push(ss);
+  }
+  return scans;
+}
+
+function fallbackGetDueScheduledScans() {
+  if (!inMemoryStore.scheduledScans) return [];
+  const now = new Date();
+  const due = [];
+  for (const ss of inMemoryStore.scheduledScans.values()) {
+    if (ss.is_active && new Date(ss.next_run_at) <= now) {
+      const user = fallbackGetUserById(ss.user_id);
+      due.push({ ...ss, users: user });
+    }
+  }
+  return due;
+}
+
+function fallbackUpdateScheduledScan(id, userId, updates) {
+  if (!inMemoryStore.scheduledScans) return null;
+  const ss = inMemoryStore.scheduledScans.get(id);
+  if (!ss || ss.user_id !== userId) return null;
+  Object.assign(ss, updates);
+  return ss;
+}
+
+function fallbackDeleteScheduledScan(id, userId) {
+  if (!inMemoryStore.scheduledScans) return;
+  const ss = inMemoryStore.scheduledScans.get(id);
+  if (ss && ss.user_id === userId) inMemoryStore.scheduledScans.delete(id);
+}
+
+function fallbackSaveSlackIntegration(userId, data) {
+  const user = inMemoryStore.users.get(userId);
+  if (!user) return null;
+  if (!user.integrations) user.integrations = {};
+  user.integrations.slack = { ...data, connectedAt: new Date().toISOString() };
+  return user.integrations.slack;
+}
+
+function fallbackSaveGitHubIntegration(userId, data) {
+  const user = inMemoryStore.users.get(userId);
+  if (!user) return null;
+  if (!user.integrations) user.integrations = {};
+  user.integrations.github = { ...data, connectedAt: new Date().toISOString() };
+  return user.integrations.github;
+}
+
+function fallbackGetUserIntegrations(userId) {
+  for (const user of inMemoryStore.users.values()) {
+    if (user.id === userId) return user.integrations || {};
+  }
+  return {};
+}
+
+// ============================================
 // EXPORTS
 // ============================================
 
@@ -615,6 +974,26 @@ module.exports = {
   getApiKeysByUserId,
   validateApiKey,
   deleteApiKey,
+  
+  // Webhooks
+  createWebhook,
+  getWebhooksByUserId,
+  getActiveWebhooksForEvent,
+  updateWebhook,
+  deleteWebhook,
+  
+  // Scheduled Scans
+  createScheduledScan,
+  getScheduledScansByUserId,
+  getDueScheduledScans,
+  updateScheduledScan,
+  deleteScheduledScan,
+  calculateNextRun,
+  
+  // Integrations
+  saveSlackIntegration,
+  saveGitHubIntegration,
+  getUserIntegrations,
   
   // Helpers
   hashPassword,

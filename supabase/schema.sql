@@ -177,6 +177,31 @@ CREATE INDEX idx_usage_events_event ON usage_events(event);
 CREATE INDEX idx_usage_events_created ON usage_events(created_at DESC);
 
 -- ============================================
+-- SCHEDULED SCANS TABLE
+-- ============================================
+CREATE TABLE scheduled_scans (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  url TEXT NOT NULL,
+  schedule TEXT NOT NULL CHECK (schedule IN ('daily', 'weekly')), -- or cron expression
+  timezone TEXT DEFAULT 'UTC',
+  is_active BOOLEAN DEFAULT true,
+  next_run_at TIMESTAMPTZ NOT NULL,
+  last_run_at TIMESTAMPTZ,
+  last_scan_id UUID REFERENCES scans(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_scheduled_scans_user ON scheduled_scans(user_id);
+CREATE INDEX idx_scheduled_scans_next_run ON scheduled_scans(next_run_at) WHERE is_active = true;
+
+CREATE TRIGGER update_scheduled_scans_updated_at
+  BEFORE UPDATE ON scheduled_scans
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 

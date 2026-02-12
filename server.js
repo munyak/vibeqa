@@ -60,12 +60,13 @@ if (process.env.OPENAI_API_KEY) {
   openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
-// Store scan results
-const scans = new Map();
+// In-memory cache for active scans (cleared after completion)
+// Completed scans are persisted to Supabase
+const activeScans = new Map();
 
 // Main scan endpoint
 app.post('/api/scan', async (req, res) => {
-  const { url } = req.body;
+  const { url, projectId } = req.body;
   
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -91,35 +92,86 @@ app.post('/api/scan', async (req, res) => {
     await User.incrementScanCount(req.user.id);
   }
 
-  const scanId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  // Create scan record in database
+  let scanId;
+  const userId = req.user?.id || null;
+  
+  try {
+    if (db.isConfigured && userId) {
+      const scan = await db.createScan({ userId, projectId, url });
+      scanId = scan.id;
+    } else {
+      // Fallback to in-memory ID
+      scanId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+  } catch (err) {
+    console.error('Failed to create scan record:', err);
+    scanId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  }
   
   // Start scan in background
-  scans.set(scanId, { 
+  activeScans.set(scanId, { 
     status: 'scanning', 
     url, 
-    userId: req.user?.id || 'anonymous',
+    userId: userId || 'anonymous',
     startedAt: new Date().toISOString() 
   });
   
-  runScan(scanId, url, req.user?.plan || 'free').catch(err => {
+  runScan(scanId, url, req.user?.plan || 'free', userId).catch(err => {
     console.error('Scan error:', err);
-    scans.set(scanId, { 
+    const errorData = { 
       status: 'error', 
       url, 
       error: err.message 
-    });
+    };
+    activeScans.set(scanId, errorData);
+    
+    // Persist error to DB
+    if (db.isConfigured && userId) {
+      db.updateScan(scanId, {
+        status: 'error',
+        error_message: err.message,
+        completed_at: new Date().toISOString()
+      }).catch(console.error);
+    }
   });
 
   res.json({ scanId, status: 'scanning' });
 });
 
 // Get scan status/results
-app.get('/api/scan/:scanId', (req, res) => {
-  const scan = scans.get(req.params.scanId);
-  if (!scan) {
-    return res.status(404).json({ error: 'Scan not found' });
+app.get('/api/scan/:scanId', async (req, res) => {
+  const { scanId } = req.params;
+  
+  // First check active/in-memory scans
+  const activeScan = activeScans.get(scanId);
+  if (activeScan) {
+    return res.json({ scanId, ...activeScan });
   }
-  res.json(scan);
+  
+  // Then check database for completed scans
+  if (db.isConfigured) {
+    try {
+      const scan = await db.getScanById(scanId);
+      if (scan) {
+        return res.json({
+          scanId: scan.id,
+          status: scan.status,
+          url: scan.url,
+          issues: scan.issues || [],
+          screenshots: scan.screenshots || [],
+          summary: scan.summary || {},
+          error: scan.error_message,
+          startedAt: scan.started_at,
+          completedAt: scan.completed_at
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching scan from DB:', err);
+    }
+  }
+  
+  return res.status(404).json({ error: 'Scan not found' });
 });
 
 // Get user's scan history
@@ -128,20 +180,60 @@ app.get('/api/scans', async (req, res) => {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = parseInt(req.query.offset) || 0;
+  
+  // Get from database
+  if (db.isConfigured) {
+    try {
+      const { scans: dbScans, total } = await db.getUserScans(req.user.id, { limit, offset });
+      
+      // Also include any active in-memory scans
+      const activeUserScans = [];
+      for (const [scanId, scan] of activeScans.entries()) {
+        if (scan.userId === req.user.id && scan.status === 'scanning') {
+          activeUserScans.push({ scanId, ...scan });
+        }
+      }
+      
+      const formattedScans = dbScans.map(s => ({
+        scanId: s.id,
+        status: s.status,
+        url: s.url,
+        issues: s.issues || [],
+        screenshots: s.screenshots || [],
+        summary: s.summary || {},
+        startedAt: s.started_at || s.created_at,
+        completedAt: s.completed_at
+      }));
+      
+      // Merge active scans at the top
+      const allScans = [...activeUserScans, ...formattedScans];
+      
+      return res.json({ 
+        scans: allScans, 
+        total: total + activeUserScans.length,
+        limit,
+        offset 
+      });
+    } catch (err) {
+      console.error('Error fetching scans from DB:', err);
+    }
+  }
+  
+  // Fallback to in-memory
   const userScans = [];
-  for (const [scanId, scan] of scans.entries()) {
+  for (const [scanId, scan] of activeScans.entries()) {
     if (scan.userId === req.user.id) {
       userScans.push({ scanId, ...scan });
     }
   }
   
-  // Sort by date, newest first
   userScans.sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
-  
-  res.json(userScans.slice(0, 50)); // Last 50 scans
+  res.json({ scans: userScans.slice(0, limit), total: userScans.length, limit, offset });
 });
 
-async function runScan(scanId, url, plan) {
+async function runScan(scanId, url, plan, userId = null) {
   const issues = [];
   const screenshots = [];
   let browser;
@@ -651,7 +743,7 @@ if (location.protocol !== 'https:') {
 
     console.log(`[${scanId}] Scan complete. Found ${issues.length} issues.`);
     
-    scans.set(scanId, { 
+    const scanResult = { 
       status: 'complete', 
       url, 
       issues,
@@ -663,10 +755,152 @@ if (location.protocol !== 'https:') {
         loadTime: `${(loadTime / 1000).toFixed(1)}s`
       },
       completedAt: new Date().toISOString()
-    });
+    };
+    
+    // Update in-memory cache
+    activeScans.set(scanId, scanResult);
+    
+    // Persist to database
+    if (db.isConfigured && userId) {
+      try {
+        await db.updateScan(scanId, {
+          status: 'complete',
+          issues: issues,
+          screenshots: screenshots,
+          summary: scanResult.summary,
+          completed_at: scanResult.completedAt
+        });
+        
+        // Clear from active cache after persisting (keep for 5 min for immediate polling)
+        setTimeout(() => activeScans.delete(scanId), 5 * 60 * 1000);
+      } catch (err) {
+        console.error('Failed to persist scan to DB:', err);
+      }
+      
+      // Trigger webhooks for authenticated users
+      triggerWebhooks(userId, 'scan.complete', { scanId, url, summary: scanResult.summary, issues })
+        .catch(err => console.error('Webhook trigger error:', err));
+      
+      // Send Slack notification if configured
+      sendSlackNotification(userId, scanId, url, scanResult.summary, issues)
+        .catch(err => console.error('Slack notification error:', err));
+    }
 
   } finally {
     if (browser) await browser.close();
+  }
+}
+
+// Trigger webhooks for a user event
+async function triggerWebhooks(userId, event, payload) {
+  if (!userId) return;
+  
+  try {
+    const webhooks = await db.getActiveWebhooksForEvent(userId, event);
+    
+    for (const webhook of webhooks) {
+      try {
+        const response = await fetch(webhook.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-VibeQA-Event': event,
+            'X-VibeQA-Signature': webhook.secret ? 
+              require('crypto').createHmac('sha256', webhook.secret).update(JSON.stringify(payload)).digest('hex') : ''
+          },
+          body: JSON.stringify({
+            event,
+            timestamp: new Date().toISOString(),
+            data: payload
+          })
+        });
+        
+        if (!response.ok) {
+          console.log(`Webhook ${webhook.id} returned ${response.status}`);
+          // Increment failure count
+          await db.updateWebhook(webhook.id, userId, { 
+            failure_count: webhook.failure_count + 1,
+            last_triggered_at: new Date().toISOString()
+          });
+        } else {
+          await db.updateWebhook(webhook.id, userId, { 
+            failure_count: 0,
+            last_triggered_at: new Date().toISOString()
+          });
+        }
+      } catch (err) {
+        console.error(`Webhook ${webhook.id} failed:`, err.message);
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching webhooks:', err);
+  }
+}
+
+// Send Slack notification
+async function sendSlackNotification(userId, scanId, url, summary, issues) {
+  if (!userId) return;
+  
+  try {
+    const integrations = await db.getUserIntegrations(userId);
+    const slack = integrations?.slack;
+    
+    if (!slack?.webhookUrl) return;
+    
+    const criticalCount = summary.critical || 0;
+    const warningCount = summary.warnings || 0;
+    const infoCount = summary.info || 0;
+    
+    const emoji = criticalCount > 0 ? '🚨' : warningCount > 0 ? '⚠️' : '✅';
+    const status = criticalCount > 0 ? 'Critical issues found!' : 
+                   warningCount > 0 ? 'Some issues found' : 
+                   'All clear!';
+    
+    const message = {
+      text: `${emoji} VibeQA Scan Complete: ${url}`,
+      blocks: [
+        {
+          type: 'header',
+          text: { type: 'plain_text', text: `${emoji} Scan Complete` }
+        },
+        {
+          type: 'section',
+          text: { 
+            type: 'mrkdwn', 
+            text: `*URL:* <${url}|${url}>\n*Status:* ${status}\n*Load Time:* ${summary.loadTime}` 
+          }
+        },
+        {
+          type: 'section',
+          fields: [
+            { type: 'mrkdwn', text: `*🔴 Critical:* ${criticalCount}` },
+            { type: 'mrkdwn', text: `*🟡 Warnings:* ${warningCount}` },
+            { type: 'mrkdwn', text: `*🔵 Info:* ${infoCount}` }
+          ]
+        }
+      ]
+    };
+    
+    if (criticalCount > 0) {
+      const topIssues = issues.filter(i => i.type === 'critical').slice(0, 3);
+      message.blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Top Issues:*\n' + topIssues.map(i => `• ${i.title}`).join('\n')
+        }
+      });
+    }
+    
+    await fetch(slack.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+    
+    console.log(`[${scanId}] Slack notification sent`);
+  } catch (err) {
+    console.error('Slack notification error:', err);
   }
 }
 
@@ -708,6 +942,308 @@ Return empty array [] if no significant issues found.`
   }
   return [];
 }
+
+// ============================================
+// WEBHOOK MANAGEMENT ENDPOINTS
+// ============================================
+
+const { requireAuth } = require('./src/middleware/auth');
+const PLAN_LIMITS = require('./src/models/user').PLAN_LIMITS;
+
+// Get user's webhooks
+app.get('/api/webhooks', requireAuth, async (req, res) => {
+  try {
+    // Check plan allows webhooks
+    const limits = PLAN_LIMITS[req.user.plan] || PLAN_LIMITS.free;
+    if (limits.webhooks === 0) {
+      return res.status(403).json({ 
+        error: 'Webhooks require Pro or higher',
+        upgrade: true,
+        suggestedPlan: 'pro'
+      });
+    }
+    
+    const webhooks = await db.getWebhooksByUserId(req.user.id);
+    res.json(webhooks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create webhook
+app.post('/api/webhooks', requireAuth, async (req, res) => {
+  try {
+    const limits = PLAN_LIMITS[req.user.plan] || PLAN_LIMITS.free;
+    if (limits.webhooks === 0) {
+      return res.status(403).json({ 
+        error: 'Webhooks require Pro or higher',
+        upgrade: true 
+      });
+    }
+    
+    // Check webhook limit
+    const existing = await db.getWebhooksByUserId(req.user.id);
+    if (existing.length >= limits.webhooks && limits.webhooks !== Infinity) {
+      return res.status(403).json({ 
+        error: `Webhook limit reached (${limits.webhooks}). Upgrade for more.`,
+        upgrade: true
+      });
+    }
+    
+    const { url, events } = req.body;
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+    
+    // Validate URL
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).json({ error: 'Invalid webhook URL' });
+    }
+    
+    const webhook = await db.createWebhook(req.user.id, { 
+      url, 
+      events: events || ['scan.complete'] 
+    });
+    
+    res.json(webhook);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update webhook
+app.put('/api/webhooks/:id', requireAuth, async (req, res) => {
+  try {
+    const { url, events, is_active } = req.body;
+    const updates = {};
+    if (url !== undefined) updates.url = url;
+    if (events !== undefined) updates.events = events;
+    if (is_active !== undefined) updates.is_active = is_active;
+    
+    const webhook = await db.updateWebhook(req.params.id, req.user.id, updates);
+    if (!webhook) {
+      return res.status(404).json({ error: 'Webhook not found' });
+    }
+    res.json(webhook);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete webhook
+app.delete('/api/webhooks/:id', requireAuth, async (req, res) => {
+  try {
+    await db.deleteWebhook(req.params.id, req.user.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Test webhook
+app.post('/api/webhooks/:id/test', requireAuth, async (req, res) => {
+  try {
+    const webhooks = await db.getWebhooksByUserId(req.user.id);
+    const webhook = webhooks.find(w => w.id === req.params.id);
+    
+    if (!webhook) {
+      return res.status(404).json({ error: 'Webhook not found' });
+    }
+    
+    const testPayload = {
+      event: 'test',
+      timestamp: new Date().toISOString(),
+      data: {
+        scanId: 'test-123',
+        url: 'https://example.com',
+        summary: { critical: 0, warnings: 1, info: 2, loadTime: '1.5s' }
+      }
+    };
+    
+    const response = await fetch(webhook.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-VibeQA-Event': 'test',
+        'X-VibeQA-Signature': require('crypto').createHmac('sha256', webhook.secret || '')
+          .update(JSON.stringify(testPayload)).digest('hex')
+      },
+      body: JSON.stringify(testPayload)
+    });
+    
+    res.json({ 
+      success: response.ok, 
+      status: response.status,
+      message: response.ok ? 'Test webhook sent successfully' : 'Webhook returned error'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message, success: false });
+  }
+});
+
+// ============================================
+// SCHEDULED SCANS ENDPOINTS
+// ============================================
+
+// Get user's scheduled scans
+app.get('/api/schedules', requireAuth, async (req, res) => {
+  try {
+    // Scheduled scans require Pro or higher
+    if (req.user.plan === 'free') {
+      return res.status(403).json({ 
+        error: 'Scheduled scans require Pro or higher',
+        upgrade: true,
+        suggestedPlan: 'pro'
+      });
+    }
+    
+    const schedules = await db.getScheduledScansByUserId(req.user.id);
+    res.json(schedules);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create scheduled scan
+app.post('/api/schedules', requireAuth, async (req, res) => {
+  try {
+    if (req.user.plan === 'free') {
+      return res.status(403).json({ 
+        error: 'Scheduled scans require Pro or higher',
+        upgrade: true 
+      });
+    }
+    
+    const { url, schedule, timezone, projectId } = req.body;
+    
+    if (!url || !schedule) {
+      return res.status(400).json({ error: 'URL and schedule are required' });
+    }
+    
+    if (!['daily', 'weekly'].includes(schedule)) {
+      return res.status(400).json({ error: 'Schedule must be daily or weekly' });
+    }
+    
+    // Validate URL
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+    
+    // Pro: 3 scheduled scans, Team: 10, Enterprise: unlimited
+    const limits = { free: 0, pro: 3, team: 10, enterprise: Infinity };
+    const limit = limits[req.user.plan] || 0;
+    
+    const existing = await db.getScheduledScansByUserId(req.user.id);
+    if (existing.length >= limit && limit !== Infinity) {
+      return res.status(403).json({ 
+        error: `Scheduled scan limit reached (${limit}). Upgrade for more.`,
+        upgrade: true
+      });
+    }
+    
+    const scheduled = await db.createScheduledScan(req.user.id, {
+      url,
+      schedule,
+      timezone: timezone || 'UTC',
+      projectId
+    });
+    
+    res.json(scheduled);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update scheduled scan
+app.put('/api/schedules/:id', requireAuth, async (req, res) => {
+  try {
+    const { url, schedule, timezone, is_active } = req.body;
+    const updates = {};
+    if (url !== undefined) updates.url = url;
+    if (schedule !== undefined) {
+      if (!['daily', 'weekly'].includes(schedule)) {
+        return res.status(400).json({ error: 'Schedule must be daily or weekly' });
+      }
+      updates.schedule = schedule;
+      updates.next_run_at = db.calculateNextRun(schedule, timezone || 'UTC');
+    }
+    if (timezone !== undefined) updates.timezone = timezone;
+    if (is_active !== undefined) updates.is_active = is_active;
+    
+    const scheduled = await db.updateScheduledScan(req.params.id, req.user.id, updates);
+    if (!scheduled) {
+      return res.status(404).json({ error: 'Scheduled scan not found' });
+    }
+    res.json(scheduled);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete scheduled scan
+app.delete('/api/schedules/:id', requireAuth, async (req, res) => {
+  try {
+    await db.deleteScheduledScan(req.params.id, req.user.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================
+// SCHEDULED SCAN RUNNER (called by cron/Railway cron job)
+// ============================================
+
+app.post('/api/cron/run-scheduled-scans', async (req, res) => {
+  // Verify cron secret
+  const cronSecret = req.headers['x-cron-secret'] || req.query.secret;
+  if (cronSecret !== process.env.CRON_SECRET && cronSecret !== 'vibeqa-cron-2026') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  
+  try {
+    const dueScans = await db.getDueScheduledScans();
+    console.log(`[CRON] Found ${dueScans.length} scheduled scans to run`);
+    
+    const results = [];
+    
+    for (const scheduled of dueScans) {
+      try {
+        // Create scan record
+        const scan = await db.createScan({
+          userId: scheduled.user_id,
+          projectId: scheduled.project_id,
+          url: scheduled.url
+        });
+        
+        // Start scan in background
+        runScan(scan.id, scheduled.url, scheduled.users?.plan || 'pro', scheduled.user_id)
+          .catch(err => console.error(`Scheduled scan ${scan.id} failed:`, err));
+        
+        // Update scheduled scan
+        await db.updateScheduledScan(scheduled.id, scheduled.user_id, {
+          last_run_at: new Date().toISOString(),
+          last_scan_id: scan.id,
+          next_run_at: db.calculateNextRun(scheduled.schedule, scheduled.timezone)
+        });
+        
+        results.push({ scheduledId: scheduled.id, scanId: scan.id, url: scheduled.url });
+      } catch (err) {
+        console.error(`Failed to run scheduled scan ${scheduled.id}:`, err);
+        results.push({ scheduledId: scheduled.id, error: err.message });
+      }
+    }
+    
+    res.json({ ran: results.length, results });
+  } catch (err) {
+    console.error('Cron job error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 3847;
 app.listen(PORT, () => {
