@@ -4,7 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VibeQA — Automated Testing for Indie Builders</title>
-  <meta name="description" content="Find bugs before your users do. Automated testing built for Cursor, Bolt, v0, and Replit builders. First test free.">
+  <meta name="description" content="Find bugs before your users do. Automated website testing built for Cursor, Bolt, v0, and Replit builders. Scan for broken links, mobile issues, SEO problems, and more. First test free.">
+  
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://vibeqa.io/">
+  <meta property="og:title" content="VibeQA — Automated Testing for Indie Builders">
+  <meta property="og:description" content="Find bugs before your users do. Automated website testing for vibe coders. Scan for broken links, mobile issues, SEO problems, and more.">
+  <meta property="og:image" content="https://vibeqa.io/og-image.svg">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://vibeqa.io/">
+  <meta name="twitter:title" content="VibeQA — Automated Testing for Indie Builders">
+  <meta name="twitter:description" content="Find bugs before your users do. Automated website testing for vibe coders. Scan for broken links, mobile issues, SEO problems, and more.">
+  <meta name="twitter:image" content="https://vibeqa.io/og-image.svg">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -72,15 +90,26 @@
     
     .logo span { color: var(--accent); }
     
-    .nav-links { display: flex; align-items: center; gap: 32px; }
-    .nav-links a { color: var(--gray-500); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a { 
+      color: var(--gray-500); 
+      text-decoration: none; 
+      font-size: 14px; 
+      font-weight: 500; 
+      padding: 10px 8px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
     .nav-links a:hover { color: var(--black); }
     
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 10px 20px;
+      padding: 12px 20px;
+      min-height: 44px;
+      min-width: 44px;
       border-radius: 8px;
       font-weight: 500;
       font-size: 14px;
@@ -166,8 +195,10 @@
     .user-plan-badge.pro { background: #CCFBF1; color: #0F766E; }
     .user-plan-badge.team { background: #FEF3C7; color: #B45309; }
     .dropdown-item {
-      display: block;
-      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      min-height: 44px;
       color: var(--gray-600);
       text-decoration: none;
       font-size: 14px;
@@ -647,6 +678,10 @@
       color: var(--gray-400);
       text-decoration: none;
       font-size: 13px;
+      padding: 10px 8px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
     }
     
     .footer-links a:hover {
