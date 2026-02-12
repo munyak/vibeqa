@@ -899,23 +899,38 @@
       }, 3000);
 
       try {
-        // Run scan (direct response - no polling needed)
+        // Start scan
         const scanRes = await fetch(`${API_URL}/api/scan`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url })
         });
         
-        const scan = await scanRes.json();
+        const scanStart = await scanRes.json();
         
         if (!scanRes.ok) {
-          throw new Error(scan.error || scan.message || 'Scan failed');
+          throw new Error(scanStart.error || scanStart.message || 'Scan failed');
+        }
+        
+        // Poll for results
+        const scanId = scanStart.scanId;
+        let scan = scanStart;
+        let attempts = 0;
+        const maxAttempts = 60; // 2 minutes max
+        
+        while (scan.status === 'scanning' && attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 2000)); // Wait 2 seconds
+          const pollRes = await fetch(`${API_URL}/api/scan/${scanId}`);
+          scan = await pollRes.json();
+          attempts++;
         }
         
         if (scan.status === 'complete') {
           displayResults(scan);
         } else if (scan.status === 'error') {
           throw new Error(scan.error || 'Scan failed');
+        } else if (scan.status === 'scanning') {
+          throw new Error('Scan timed out - try again');
         } else {
           throw new Error('Unexpected response from server');
         }
