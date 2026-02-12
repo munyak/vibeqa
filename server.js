@@ -8,6 +8,7 @@ const authRoutes = require('./src/routes/auth');
 const billingRoutes = require('./src/routes/billing');
 const { authMiddleware } = require('./src/middleware/auth');
 const { User } = require('./src/models/user');
+const db = require('./src/db/supabase');
 
 const app = express();
 
@@ -711,6 +712,7 @@ Return empty array [] if no significant issues found.`
 const PORT = process.env.PORT || 3847;
 app.listen(PORT, () => {
   console.log(`VibeQA server running on http://localhost:${PORT}`);
+  console.log(`Supabase: ${db.isConfigured ? 'connected' : 'in-memory mode'}`);
   console.log(`Stripe: ${process.env.STRIPE_SECRET_KEY ? 'configured' : 'demo mode'}`);
   console.log(`OpenAI: ${process.env.OPENAI_API_KEY ? 'configured' : 'disabled'}`);
 });
