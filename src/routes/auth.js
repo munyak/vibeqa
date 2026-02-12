@@ -73,4 +73,63 @@ router.get('/me', async (req, res) => {
   });
 });
 
+// Update profile
+router.put('/profile', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  const { name } = req.body;
+  
+  try {
+    await User.updateProfile(req.user.id, { name });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Change password
+router.put('/password', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  const { currentPassword, newPassword } = req.body;
+  
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password required' });
+  }
+  
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters' });
+  }
+  
+  try {
+    const verified = await User.verifyPassword(req.user.email, currentPassword);
+    if (!verified) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    
+    await User.updatePassword(req.user.id, newPassword);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Delete account
+router.delete('/account', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  try {
+    await User.delete(req.user.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = router;

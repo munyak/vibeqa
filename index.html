@@ -98,6 +98,87 @@
     .btn-large { padding: 14px 28px; font-size: 15px; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    /* User Menu */
+    .user-menu { position: relative; }
+    .user-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 100px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+    .user-menu-btn:hover { background: var(--gray-100); }
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      min-width: 220px;
+      padding: 8px;
+      z-index: 1000;
+    }
+    .user-dropdown.visible { display: block; }
+    .user-dropdown-header {
+      padding: 12px;
+      border-bottom: 1px solid var(--gray-100);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-dropdown-header span:first-child {
+      font-size: 13px;
+      color: var(--gray-500);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+    .user-plan-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: var(--gray-100);
+      color: var(--gray-600);
+    }
+    .user-plan-badge.pro { background: #EEF2FF; color: var(--accent); }
+    .user-plan-badge.team { background: #FEF3C7; color: #B45309; }
+    .dropdown-item {
+      display: block;
+      padding: 10px 12px;
+      color: var(--gray-600);
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+    .dropdown-item:hover { background: var(--gray-50); color: var(--black); }
+    .dropdown-divider {
+      height: 1px;
+      background: var(--gray-100);
+      margin: 8px 0;
+    }
+
     /* Hero */
     .hero {
       padding: 140px 0 80px;
@@ -194,7 +275,31 @@
       margin-bottom: 24px;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--gray-100);
+      flex-wrap: wrap;
+      gap: 12px;
     }
+    
+    .results-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
+      cursor: pointer;
+    }
+    .btn-copy:hover { background: var(--gray-100); }
+    .btn-copy.copied { background: #DCFCE7; border-color: #86EFAC; color: #16A34A; }
+    .btn-copy svg { width: 14px; height: 14px; }
     
     .results-title {
       font-size: 20px;
@@ -664,7 +769,22 @@
         <a href="#pricing">Pricing</a>
         <a href="#" class="btn btn-secondary" id="login-nav-btn" onclick="showAuthModal('login')">Log in</a>
         <a href="#" class="btn btn-primary" id="signup-nav-btn" onclick="showAuthModal('signup')">Sign up</a>
-        <a href="/dashboard.html" class="btn btn-primary" id="dashboard-nav-btn" style="display:none">Dashboard</a>
+        <div class="user-menu" id="user-menu" style="display:none">
+          <button class="user-menu-btn" onclick="toggleUserMenu()">
+            <span class="user-avatar" id="user-avatar">M</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <span id="user-email-display">user@email.com</span>
+              <span class="user-plan-badge" id="user-plan-badge">Free</span>
+            </div>
+            <a href="/history.html" class="dropdown-item">Scan History</a>
+            <a href="/settings.html" class="dropdown-item">Settings</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item" onclick="logout(); return false;">Log out</a>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
@@ -726,8 +846,16 @@
 
       <div class="results" id="results">
         <div class="results-header">
-          <h2 class="results-title">Scan Results</h2>
-          <div class="results-summary" id="results-summary"></div>
+          <div>
+            <h2 class="results-title">Scan Results</h2>
+            <div class="results-summary" id="results-summary"></div>
+          </div>
+          <div class="results-actions">
+            <button class="btn-copy" onclick="copyAsPrompt()" id="copy-prompt-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy as Prompt
+            </button>
+          </div>
         </div>
         <div class="issue-list" id="issue-list"></div>
         <div class="screenshots" id="screenshots"></div>
@@ -947,6 +1075,7 @@
     }
 
     function displayResults(scan) {
+      lastScanData = scan; // Store for copy function
       const results = document.getElementById('results');
       const summary = document.getElementById('results-summary');
       const issueList = document.getElementById('issue-list');
@@ -1022,13 +1151,57 @@
     let authMode = 'signup';
     let selectedPlan = null;
     let token = localStorage.getItem('vibeqa_token');
+    let currentUser = null;
+    let lastScanData = null;
 
-    function checkAuth() {
+    async function checkAuth() {
       if (token) {
         document.getElementById('login-nav-btn').style.display = 'none';
         document.getElementById('signup-nav-btn').style.display = 'none';
-        document.getElementById('dashboard-nav-btn').style.display = 'inline-flex';
+        document.getElementById('user-menu').style.display = 'block';
+        
+        // Fetch user info
+        try {
+          const res = await fetch(`${API_URL}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            currentUser = await res.json();
+            document.getElementById('user-avatar').textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
+            document.getElementById('user-email-display').textContent = currentUser.email;
+            const badge = document.getElementById('user-plan-badge');
+            badge.textContent = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
+            badge.className = 'user-plan-badge ' + currentUser.plan;
+          } else {
+            // Token invalid, clear it
+            localStorage.removeItem('vibeqa_token');
+            token = null;
+            location.reload();
+          }
+        } catch (e) {
+          console.error('Auth check failed:', e);
+        }
       }
+    }
+
+    function toggleUserMenu() {
+      const dropdown = document.getElementById('user-dropdown');
+      dropdown.classList.toggle('visible');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('user-menu');
+      if (menu && !menu.contains(e.target)) {
+        document.getElementById('user-dropdown')?.classList.remove('visible');
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem('vibeqa_token');
+      token = null;
+      currentUser = null;
+      location.reload();
     }
 
     function showAuthModal(mode) {
@@ -1152,6 +1325,34 @@
     document.getElementById('auth-modal').addEventListener('click', (e) => {
       if (e.target.id === 'auth-modal') hideAuthModal();
     });
+
+    // Copy scan results as a prompt for vibe coding
+    function copyAsPrompt() {
+      if (!lastScanData || !lastScanData.issues) return;
+      
+      const url = lastScanData.url;
+      const issues = lastScanData.issues;
+      
+      let prompt = `I ran a scan on ${url} and found the following issues. Please fix them:\n\n`;
+      
+      issues.forEach((issue, i) => {
+        prompt += `## ${i + 1}. ${issue.title} (${issue.category})\n`;
+        prompt += `**Problem:** ${issue.description}\n`;
+        prompt += `**How to fix:** ${issue.suggestion}\n\n`;
+      });
+      
+      prompt += `---\nPlease implement these fixes. Show me the code changes needed.`;
+      
+      navigator.clipboard.writeText(prompt).then(() => {
+        const btn = document.getElementById('copy-prompt-btn');
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy as Prompt`;
+        }, 2000);
+      });
+    }
 
     // Check auth on load
     checkAuth();

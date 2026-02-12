@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan History — VibeQA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --white: #FFFFFF;
+      --black: #09090B;
+      --gray-50: #F4F4F5;
+      --gray-100: #E4E4E7;
+      --gray-200: #D4D4D8;
+      --gray-300: #A1A1AA;
+      --gray-400: #71717A;
+      --gray-500: #52525B;
+      --gray-600: #3F3F46;
+      --gray-900: #18181B;
+      --accent: #6366F1;
+      --accent-dark: #4F46E5;
+      --green: #22C55E;
+      --red: #EF4444;
+      --yellow: #F59E0B;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--black);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--black);
+      text-decoration: none;
+    }
+    .logo span { color: var(--accent); }
+    
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .nav-links a {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .nav-links a:hover { color: var(--black); }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--black); color: white; }
+    .btn-primary:hover { background: var(--gray-900); }
+    
+    .upgrade-banner {
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: white;
+      padding: 20px 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .upgrade-banner h3 { font-size: 16px; margin-bottom: 4px; }
+    .upgrade-banner p { font-size: 14px; opacity: 0.9; }
+    .upgrade-banner .btn { background: white; color: var(--accent); }
+    
+    .history-list {
+      background: var(--white);
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+    
+    .history-empty {
+      padding: 60px 24px;
+      text-align: center;
+      color: var(--gray-400);
+    }
+    .history-empty svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .history-item {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .history-item:hover { background: var(--gray-50); }
+    .history-item:last-child { border-bottom: none; }
+    
+    .history-item-main {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .history-url {
+      font-weight: 500;
+      font-size: 15px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .history-meta {
+      font-size: 13px;
+      color: var(--gray-400);
+      display: flex;
+      gap: 16px;
+    }
+    
+    .history-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .badge {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .badge-critical { background: #FEE2E2; color: #DC2626; }
+    .badge-warning { background: #FEF3C7; color: #D97706; }
+    .badge-info { background: #E0E7FF; color: #4F46E5; }
+    .badge-success { background: #DCFCE7; color: #16A34A; }
+    
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .filter-bar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .filter-bar input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 20px;
+      overflow-y: auto;
+    }
+    .modal-overlay.visible { display: flex; }
+    
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 700px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+    }
+    
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-400);
+      padding: 4px;
+    }
+    .modal-close:hover { color: var(--black); }
+    
+    .modal-body { padding: 24px; }
+    
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
+      cursor: pointer;
+    }
+    .btn-copy:hover { background: var(--gray-100); }
+    .btn-copy.copied { background: #DCFCE7; border-color: #86EFAC; color: #16A34A; }
+    
+    .issue {
+      padding: 16px;
+      border: 1px solid var(--gray-100);
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .issue.critical { border-left: 3px solid var(--red); }
+    .issue.warning { border-left: 3px solid var(--yellow); }
+    .issue.info { border-left: 3px solid var(--accent); }
+    
+    .issue-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .issue-title { font-weight: 600; font-size: 14px; }
+    .issue-category { font-size: 12px; color: var(--gray-400); }
+    .issue-description { font-size: 13px; color: var(--gray-500); margin-bottom: 8px; white-space: pre-wrap; }
+    .issue-suggestion { font-size: 12px; background: var(--gray-50); padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">Vibe<span>QA</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/settings.html">Settings</a>
+      <a href="#" onclick="logout()">Log out</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Scan History</h1>
+      <a href="/" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New Scan
+      </a>
+    </div>
+    
+    <div class="upgrade-banner" id="upgrade-banner" style="display:none">
+      <div>
+        <h3>Unlock Scan History</h3>
+        <p>Upgrade to Pro or Team to access your full scan history</p>
+      </div>
+      <a href="/#pricing" class="btn">View Plans</a>
+    </div>
+    
+    <div class="filter-bar">
+      <input type="text" placeholder="Search by URL..." id="search-input" oninput="filterScans()">
+    </div>
+    
+    <div class="history-list" id="history-list">
+      <div class="history-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <p>No scans yet. Run your first scan to see history here.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scan Detail Modal -->
+  <div class="modal-overlay" id="scan-modal" onclick="if(event.target.id==='scan-modal')closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Scan Details</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-actions">
+          <button class="btn-copy" onclick="copyAsPrompt()" id="modal-copy-btn">
+            <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy as Prompt
+          </button>
+        </div>
+        <div id="modal-issues"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3847'
+      : 'https://intuitive-insight-production-bb40.up.railway.app';
+    
+    const token = localStorage.getItem('vibeqa_token');
+    let scans = [];
+    let currentScan = null;
+    let currentUser = null;
+    
+    if (!token) {
+      window.location.href = '/?login=1';
+    }
+    
+    async function loadUser() {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          currentUser = await res.json();
+          if (currentUser.plan === 'free') {
+            document.getElementById('upgrade-banner').style.display = 'flex';
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    async function loadScans() {
+      try {
+        const res = await fetch(`${API_URL}/api/scans`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem('vibeqa_token');
+            window.location.href = '/?login=1';
+          }
+          return;
+        }
+        
+        scans = await res.json();
+        renderScans(scans);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    function renderScans(scanList) {
+      const container = document.getElementById('history-list');
+      
+      if (!scanList || scanList.length === 0) {
+        container.innerHTML = `
+          <div class="history-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <p>No scans yet. Run your first scan to see history here.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = scanList.map(scan => {
+        const date = new Date(scan.startedAt || scan.completedAt);
+        const timeAgo = getTimeAgo(date);
+        const critical = scan.summary?.critical || 0;
+        const warnings = scan.summary?.warnings || 0;
+        const info = scan.summary?.info || 0;
+        
+        let badges = '';
+        if (critical > 0) badges += `<span class="badge badge-critical">${critical} Critical</span>`;
+        else if (warnings > 0) badges += `<span class="badge badge-warning">${warnings} Warnings</span>`;
+        else if (info > 0) badges += `<span class="badge badge-info">${info} Info</span>`;
+        else badges += `<span class="badge badge-success">All Clear</span>`;
+        
+        return `
+          <div class="history-item" onclick="showScan('${scan.scanId}')">
+            <div class="history-item-main">
+              <div class="history-url">${escapeHtml(scan.url)}</div>
+              <div class="history-meta">
+                <span>${timeAgo}</span>
+                <span>${scan.summary?.loadTime || 'N/A'}</span>
+              </div>
+            </div>
+            <div class="history-badges">${badges}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function filterScans() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      const filtered = scans.filter(s => s.url.toLowerCase().includes(query));
+      renderScans(filtered);
+    }
+    
+    function showScan(scanId) {
+      currentScan = scans.find(s => s.scanId === scanId);
+      if (!currentScan) return;
+      
+      document.getElementById('modal-title').textContent = currentScan.url;
+      
+      const issuesContainer = document.getElementById('modal-issues');
+      if (currentScan.issues && currentScan.issues.length > 0) {
+        issuesContainer.innerHTML = currentScan.issues.map(issue => `
+          <div class="issue ${issue.type}">
+            <div class="issue-header">
+              <span class="issue-title">${escapeHtml(issue.title)}</span>
+              <span class="issue-category">${escapeHtml(issue.category)}</span>
+            </div>
+            <p class="issue-description">${escapeHtml(issue.description)}</p>
+            <div class="issue-suggestion"><strong>How to fix:</strong> ${escapeHtml(issue.suggestion)}</div>
+          </div>
+        `).join('');
+      } else {
+        issuesContainer.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:20px">No issues found!</p>';
+      }
+      
+      document.getElementById('scan-modal').classList.add('visible');
+    }
+    
+    function closeModal() {
+      document.getElementById('scan-modal').classList.remove('visible');
+      currentScan = null;
+    }
+    
+    function copyAsPrompt() {
+      if (!currentScan || !currentScan.issues) return;
+      
+      let prompt = `I ran a scan on ${currentScan.url} and found the following issues. Please fix them:\n\n`;
+      
+      currentScan.issues.forEach((issue, i) => {
+        prompt += `## ${i + 1}. ${issue.title} (${issue.category})\n`;
+        prompt += `**Problem:** ${issue.description}\n`;
+        prompt += `**How to fix:** ${issue.suggestion}\n\n`;
+      });
+      
+      prompt += `---\nPlease implement these fixes. Show me the code changes needed.`;
+      
+      navigator.clipboard.writeText(prompt).then(() => {
+        const btn = document.getElementById('modal-copy-btn');
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy as Prompt`;
+        }, 2000);
+      });
+    }
+    
+    function getTimeAgo(date) {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      return date.toLocaleDateString();
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function logout() {
+      localStorage.removeItem('vibeqa_token');
+      window.location.href = '/';
+    }
+    
+    // Load data
+    loadUser();
+    loadScans();
+  </script>
+</body>
+</html>

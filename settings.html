@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — VibeQA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --white: #FFFFFF;
+      --black: #09090B;
+      --gray-50: #F4F4F5;
+      --gray-100: #E4E4E7;
+      --gray-200: #D4D4D8;
+      --gray-300: #A1A1AA;
+      --gray-400: #71717A;
+      --gray-500: #52525B;
+      --gray-600: #3F3F46;
+      --gray-900: #18181B;
+      --accent: #6366F1;
+      --accent-dark: #4F46E5;
+      --green: #22C55E;
+      --red: #EF4444;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--black);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--black);
+      text-decoration: none;
+    }
+    .logo span { color: var(--accent); }
+    
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .nav-links a {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .nav-links a:hover { color: var(--black); }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 32px;
+    }
+    
+    .settings-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--gray-200);
+      padding-bottom: 16px;
+    }
+    
+    .settings-nav button {
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-500);
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .settings-nav button:hover { background: var(--gray-100); }
+    .settings-nav button.active { background: var(--black); color: white; }
+    
+    .settings-section {
+      display: none;
+      background: var(--white);
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      padding: 24px;
+    }
+    .settings-section.active { display: block; }
+    
+    .settings-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--gray-600);
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .form-group input:disabled {
+      background: var(--gray-50);
+      color: var(--gray-500);
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary { background: var(--black); color: white; }
+    .btn-primary:hover { background: var(--gray-900); }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+    .btn-danger { background: var(--red); color: white; }
+    
+    .plan-card {
+      border: 2px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .plan-card.current { border-color: var(--accent); background: #F5F3FF; }
+    
+    .plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .plan-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .plan-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: var(--accent);
+      color: white;
+    }
+    
+    .plan-price {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .plan-price span { font-size: 14px; font-weight: 400; color: var(--gray-400); }
+    
+    .plan-features {
+      color: var(--gray-500);
+      font-size: 14px;
+    }
+    
+    .usage-bar {
+      background: var(--gray-100);
+      border-radius: 100px;
+      height: 8px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .usage-bar-fill {
+      background: var(--accent);
+      height: 100%;
+      border-radius: 100px;
+    }
+    
+    .usage-text {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .alert-success { background: #DCFCE7; color: #166534; }
+    .alert-error { background: #FEE2E2; color: #DC2626; }
+    
+    .danger-zone {
+      border: 1px solid var(--red);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 32px;
+    }
+    .danger-zone h3 {
+      color: var(--red);
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .danger-zone p {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">Vibe<span>QA</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/history.html">Scan History</a>
+      <a href="#" onclick="logout()">Log out</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Settings</h1>
+    
+    <div class="settings-nav">
+      <button class="active" onclick="showSection('profile')">Profile</button>
+      <button onclick="showSection('plan')">Plan & Usage</button>
+      <button onclick="showSection('security')">Security</button>
+    </div>
+    
+    <div id="alert-container"></div>
+    
+    <!-- Profile Section -->
+    <div class="settings-section active" id="section-profile">
+      <h2>Profile Information</h2>
+      <form onsubmit="updateProfile(event)">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="profile-name" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="profile-email" disabled>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </form>
+    </div>
+    
+    <!-- Plan Section -->
+    <div class="settings-section" id="section-plan">
+      <h2>Current Plan</h2>
+      <div class="plan-card current" id="current-plan-card">
+        <div class="plan-header">
+          <span class="plan-name" id="plan-name">Free</span>
+          <span class="plan-badge">Current</span>
+        </div>
+        <div class="plan-price" id="plan-price">$0<span>/month</span></div>
+        <div class="plan-features" id="plan-features">1 scan per day</div>
+      </div>
+      
+      <h2 style="margin-top:32px">Usage This Month</h2>
+      <div class="usage-bar">
+        <div class="usage-bar-fill" id="usage-bar" style="width: 0%"></div>
+      </div>
+      <p class="usage-text" id="usage-text">0 scans used</p>
+      
+      <div style="margin-top:24px">
+        <a href="/#pricing" class="btn btn-primary">Upgrade Plan</a>
+      </div>
+    </div>
+    
+    <!-- Security Section -->
+    <div class="settings-section" id="section-security">
+      <h2>Change Password</h2>
+      <form onsubmit="changePassword(event)">
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" id="current-password" required>
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" id="new-password" required minlength="8">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirm-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </form>
+      
+      <div class="danger-zone">
+        <h3>Danger Zone</h3>
+        <p>Once you delete your account, there is no going back. Please be certain.</p>
+        <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3847'
+      : 'https://intuitive-insight-production-bb40.up.railway.app';
+    
+    const token = localStorage.getItem('vibeqa_token');
+    let currentUser = null;
+    
+    if (!token) {
+      window.location.href = '/?login=1';
+    }
+    
+    const planDetails = {
+      free: { name: 'Free', price: '$0', features: '1 scan per day' },
+      pro: { name: 'Pro', price: '$19', features: '30 scans/month, AI analysis, scan history' },
+      team: { name: 'Team', price: '$49', features: 'Unlimited scans, AI analysis, full history, priority support' }
+    };
+    
+    async function loadUser() {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+          localStorage.removeItem('vibeqa_token');
+          window.location.href = '/?login=1';
+          return;
+        }
+        
+        currentUser = await res.json();
+        
+        document.getElementById('profile-name').value = currentUser.name || '';
+        document.getElementById('profile-email').value = currentUser.email;
+        
+        const plan = planDetails[currentUser.plan] || planDetails.free;
+        document.getElementById('plan-name').textContent = plan.name;
+        document.getElementById('plan-price').innerHTML = `${plan.price}<span>/month</span>`;
+        document.getElementById('plan-features').textContent = plan.features;
+        
+        // Usage
+        const limits = { free: 1, pro: 30, team: 999 };
+        const limit = limits[currentUser.plan] || 1;
+        const used = currentUser.scansThisMonth || 0;
+        const pct = Math.min(100, (used / limit) * 100);
+        document.getElementById('usage-bar').style.width = pct + '%';
+        document.getElementById('usage-text').textContent = currentUser.plan === 'team' 
+          ? `${used} scans used (unlimited)`
+          : `${used} of ${limit} scans used`;
+          
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    function showSection(section) {
+      document.querySelectorAll('.settings-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.settings-nav button').forEach(el => el.classList.remove('active'));
+      document.getElementById('section-' + section).classList.add('active');
+      event.target.classList.add('active');
+    }
+    
+    function showAlert(message, type = 'success') {
+      const container = document.getElementById('alert-container');
+      container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+      setTimeout(() => container.innerHTML = '', 5000);
+    }
+    
+    async function updateProfile(e) {
+      e.preventDefault();
+      const name = document.getElementById('profile-name').value;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/auth/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name })
+        });
+        
+        if (res.ok) {
+          showAlert('Profile updated successfully!');
+        } else {
+          const data = await res.json();
+          showAlert(data.error || 'Update failed', 'error');
+        }
+      } catch (e) {
+        showAlert('Update failed', 'error');
+      }
+    }
+    
+    async function changePassword(e) {
+      e.preventDefault();
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (newPassword !== confirmPassword) {
+        showAlert('Passwords do not match', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_URL}/api/auth/password`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+        
+        if (res.ok) {
+          showAlert('Password updated successfully!');
+          document.getElementById('current-password').value = '';
+          document.getElementById('new-password').value = '';
+          document.getElementById('confirm-password').value = '';
+        } else {
+          const data = await res.json();
+          showAlert(data.error || 'Update failed', 'error');
+        }
+      } catch (e) {
+        showAlert('Update failed', 'error');
+      }
+    }
+    
+    async function deleteAccount() {
+      if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+      if (!confirm('Really delete? All your data will be permanently removed.')) return;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/auth/account`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          localStorage.removeItem('vibeqa_token');
+          window.location.href = '/';
+        } else {
+          showAlert('Failed to delete account', 'error');
+        }
+      } catch (e) {
+        showAlert('Failed to delete account', 'error');
+      }
+    }
+    
+    function logout() {
+      localStorage.removeItem('vibeqa_token');
+      window.location.href = '/';
+    }
+    
+    loadUser();
+  </script>
+</body>
+</html>

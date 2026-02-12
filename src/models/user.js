@@ -113,6 +113,36 @@ const User = {
     }
     return false;
   },
+  
+  updateProfile: async (userId, { name }) => {
+    for (const user of users.values()) {
+      if (user.id === userId) {
+        if (name !== undefined) user.name = name;
+        return true;
+      }
+    }
+    return false;
+  },
+  
+  updatePassword: async (userId, newPassword) => {
+    for (const user of users.values()) {
+      if (user.id === userId) {
+        user.passwordHash = hashPassword(newPassword);
+        return true;
+      }
+    }
+    return false;
+  },
+  
+  delete: async (userId) => {
+    for (const [email, user] of users.entries()) {
+      if (user.id === userId) {
+        users.delete(email);
+        return true;
+      }
+    }
+    return false;
+  },
 };
 
 const Session = {
