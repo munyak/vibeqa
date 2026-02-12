@@ -12,18 +12,18 @@
     
     :root {
       --white: #FFFFFF;
-      --black: #09090B;
-      --gray-50: #F4F4F5;
-      --gray-100: #E4E4E7;
-      --gray-200: #D4D4D8;
-      --gray-300: #A1A1AA;
-      --gray-400: #71717A;
-      --gray-500: #52525B;
-      --gray-600: #3F3F46;
-      --gray-900: #18181B;
-      --accent: #6366F1;
-      --accent-dark: #4F46E5;
-      --green: #22C55E;
+      --black: #0F172A;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-900: #1E293B;
+      --accent: #0D9488;
+      --accent-dark: #0F766E;
+      --green: #10B981;
       --red: #EF4444;
     }
     
@@ -342,9 +342,10 @@
     }
     
     const planDetails = {
-      free: { name: 'Free', price: '$0', features: '1 scan per day' },
-      pro: { name: 'Pro', price: '$19', features: '30 scans/month, AI analysis, scan history' },
-      team: { name: 'Team', price: '$49', features: 'Unlimited scans, AI analysis, full history, priority support' }
+      free: { name: 'Free', price: '$0', features: '1 scan/day, 7-day history, basic checks' },
+      pro: { name: 'Pro', price: '$29', features: '100 scans/month, AI analysis, 90-day history, API access, integrations' },
+      team: { name: 'Team', price: '$79', features: 'Unlimited scans, 1-year history, all integrations, team collaboration' },
+      enterprise: { name: 'Enterprise', price: 'Custom', features: 'SSO, SCIM, audit logs, dedicated support, SLA' }
     };
     
     async function loadUser() {
@@ -369,15 +370,46 @@
         document.getElementById('plan-price').innerHTML = `${plan.price}<span>/month</span>`;
         document.getElementById('plan-features').textContent = plan.features;
         
-        // Usage
-        const limits = { free: 1, pro: 30, team: 999 };
-        const limit = limits[currentUser.plan] || 1;
-        const used = currentUser.scansThisMonth || 0;
-        const pct = Math.min(100, (used / limit) * 100);
-        document.getElementById('usage-bar').style.width = pct + '%';
-        document.getElementById('usage-text').textContent = currentUser.plan === 'team' 
-          ? `${used} scans used (unlimited)`
-          : `${used} of ${limit} scans used`;
+        // Usage - fetch detailed stats
+        try {
+          const usageRes = await fetch(`${API_URL}/api/auth/usage`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (usageRes.ok) {
+            const stats = await usageRes.json();
+            const pct = Math.min(100, stats.percentages?.monthlyScans || 0);
+            document.getElementById('usage-bar').style.width = pct + '%';
+            
+            const current = stats.current?.scansThisMonth || 0;
+            const limit = stats.limits?.scansPerMonth;
+            document.getElementById('usage-text').textContent = limit === Infinity 
+              ? `${current} scans used this month (unlimited)`
+              : `${current} of ${limit} scans used this month`;
+            
+            // Show upgrade nudges if any
+            if (stats.upgradeNudges && stats.upgradeNudges.length > 0) {
+              const nudge = stats.upgradeNudges[0];
+              const nudgeHtml = `
+                <div class="alert alert-info" style="background:#CCFBF1;color:#0F766E;margin-top:16px;">
+                  <strong>${nudge.message}</strong>
+                  <a href="/#pricing" class="btn btn-primary" style="margin-left:12px;padding:6px 12px;font-size:13px;">${nudge.cta}</a>
+                </div>
+              `;
+              document.getElementById('usage-text').insertAdjacentHTML('afterend', nudgeHtml);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to load usage stats:', e);
+          // Fallback to basic display
+          const limits = { free: 30, pro: 100, team: Infinity };
+          const limit = limits[currentUser.plan] || 30;
+          const used = currentUser.usage?.scansThisMonth || 0;
+          const pct = Math.min(100, (used / limit) * 100);
+          document.getElementById('usage-bar').style.width = pct + '%';
+          document.getElementById('usage-text').textContent = limit === Infinity 
+            ? `${used} scans used (unlimited)`
+            : `${used} of ${limit} scans used`;
+        }
           
       } catch (e) {
         console.error(e);

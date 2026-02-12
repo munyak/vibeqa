@@ -13,18 +13,19 @@
     
     :root {
       --white: #FFFFFF;
-      --black: #09090B;
-      --gray-50: #F4F4F5;
-      --gray-100: #E4E4E7;
-      --gray-200: #D4D4D8;
-      --gray-300: #A1A1AA;
-      --gray-400: #71717A;
-      --gray-500: #52525B;
-      --gray-600: #3F3F46;
-      --gray-900: #18181B;
-      --accent: #6366F1;
-      --accent-dark: #4F46E5;
-      --green: #22C55E;
+      --black: #0F172A;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-900: #1E293B;
+      --accent: #0D9488;
+      --accent-dark: #0F766E;
+      --accent-light: #14B8A6;
+      --green: #10B981;
       --red: #EF4444;
       --yellow: #F59E0B;
     }
@@ -162,7 +163,7 @@
       background: var(--gray-100);
       color: var(--gray-600);
     }
-    .user-plan-badge.pro { background: #EEF2FF; color: var(--accent); }
+    .user-plan-badge.pro { background: #CCFBF1; color: #0F766E; }
     .user-plan-badge.team { background: #FEF3C7; color: #B45309; }
     .dropdown-item {
       display: block;
@@ -323,7 +324,7 @@
     
     .summary-badge.critical { background: #FEE2E2; color: #DC2626; }
     .summary-badge.warning { background: #FEF3C7; color: #D97706; }
-    .summary-badge.info { background: #E0E7FF; color: #4F46E5; }
+    .summary-badge.info { background: #CCFBF1; color: #0F766E; }
     
     .issue-list {
       display: flex;
@@ -412,7 +413,7 @@
       display: none;
       margin-top: 40px;
       padding: 32px;
-      background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+      background: linear-gradient(135deg, var(--gray-900) 0%, var(--black) 100%);
       border-radius: 16px;
       text-align: center;
       color: white;
@@ -925,11 +926,12 @@
           <p class="description">Perfect for trying it out</p>
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 1 scan per day</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Basic checks (links, mobile, errors)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 7-day scan history</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Basic checks (SEO, mobile, errors)</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Desktop & mobile screenshots</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> No signup required</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Copy as prompt for vibe coding</li>
           </ul>
-          <button class="btn btn-secondary btn-large" onclick="document.getElementById('url-input').focus(); window.scrollTo({top:0,behavior:'smooth'})">Try Free</button>
+          <button class="btn btn-secondary btn-large" onclick="document.getElementById('url-input').focus(); window.scrollTo({top:0,behavior:'smooth'})">Start Free</button>
         </div>
         
         <div class="pricing-card popular">
@@ -937,14 +939,15 @@
           <div class="price">$29<span>/mo</span></div>
           <p class="description">For indie builders shipping regularly</p>
           <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 30 scans per month</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 100 scans per month</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 90-day scan history</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> AI-powered UX analysis</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Scheduled monitoring (daily)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> API access (1,000 requests/mo)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> GitHub integration</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Slack notifications</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Report history (30 days)</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Email support</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 3 webhooks</li>
           </ul>
-          <button class="btn btn-accent btn-large" onclick="selectPlan('pro')">Get Started</button>
+          <button class="btn btn-accent btn-large" onclick="selectPlan('pro')">Start Pro Trial</button>
         </div>
         
         <div class="pricing-card">
@@ -953,14 +956,14 @@
           <p class="description">For agencies and growing teams</p>
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Unlimited scans</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 5 team members</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> AI-powered UX analysis</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Scheduled monitoring (hourly)</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Slack + webhook integrations</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Report history (90 days)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 1-year scan history</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Up to 10 team members</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Full API access (10K requests/mo)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> All integrations (Vercel, Linear, etc.)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Unlimited webhooks</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Priority support</li>
           </ul>
-          <button class="btn btn-secondary btn-large" onclick="selectPlan('team')">Get Started</button>
+          <button class="btn btn-secondary btn-large" onclick="selectPlan('team')">Start Team Trial</button>
         </div>
       </div>
     </div>
