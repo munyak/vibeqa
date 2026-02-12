@@ -23,8 +23,10 @@
       --gray-900: #1E293B;
       --accent: #0D9488;
       --accent-dark: #0F766E;
+      --accent-light: #CCFBF1;
       --green: #10B981;
       --red: #EF4444;
+      --yellow: #F59E0B;
     }
     
     body {
@@ -35,85 +37,153 @@
       min-height: 100vh;
     }
     
+    /* Navigation */
     nav {
       background: var(--white);
-      border-bottom: 1px solid var(--gray-100);
+      border-bottom: 1px solid var(--gray-200);
       padding: 0 24px;
       height: 64px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     
-    .logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--black);
-      text-decoration: none;
-    }
+    .logo { font-size: 20px; font-weight: 700; color: var(--black); text-decoration: none; }
     .logo span { color: var(--accent); }
     
-    .nav-links {
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a { color: var(--gray-500); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .nav-links a:hover { color: var(--black); }
+    
+    /* Layout */
+    .settings-layout {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: calc(100vh - 64px);
+    }
+    
+    /* Sidebar */
+    .settings-sidebar {
+      width: 240px;
+      background: var(--white);
+      border-right: 1px solid var(--gray-200);
+      padding: 24px 0;
+      position: sticky;
+      top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+    }
+    
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+    
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-400);
+      padding: 0 24px;
+      margin-bottom: 8px;
+    }
+    
+    .sidebar-item {
       display: flex;
       align-items: center;
-      gap: 24px;
-    }
-    .nav-links a {
-      color: var(--gray-500);
+      gap: 12px;
+      padding: 10px 24px;
+      color: var(--gray-600);
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
     }
-    .nav-links a:hover { color: var(--black); }
     
-    .container {
+    .sidebar-item:hover { background: var(--gray-50); color: var(--black); }
+    .sidebar-item.active { background: var(--accent-light); color: var(--accent-dark); }
+    .sidebar-item.disabled { opacity: 0.5; cursor: not-allowed; }
+    .sidebar-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    
+    .sidebar-item .badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--gray-100);
+      color: var(--gray-500);
+    }
+    .sidebar-item .badge.pro { background: var(--accent-light); color: var(--accent-dark); }
+    .sidebar-item .badge.team { background: #FEF3C7; color: #B45309; }
+    
+    /* Main Content */
+    .settings-content {
+      flex: 1;
+      padding: 32px 48px;
       max-width: 800px;
-      margin: 0 auto;
-      padding: 40px 24px;
     }
     
-    h1 {
+    .settings-header {
+      margin-bottom: 32px;
+    }
+    
+    .settings-header h1 {
       font-size: 24px;
       font-weight: 600;
-      margin-bottom: 32px;
+      margin-bottom: 4px;
     }
     
-    .settings-nav {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 32px;
-      border-bottom: 1px solid var(--gray-200);
-      padding-bottom: 16px;
-    }
-    
-    .settings-nav button {
-      padding: 8px 16px;
-      background: transparent;
-      border: none;
-      font-size: 14px;
-      font-weight: 500;
+    .settings-header p {
       color: var(--gray-500);
-      cursor: pointer;
-      border-radius: 6px;
+      font-size: 14px;
     }
-    .settings-nav button:hover { background: var(--gray-100); }
-    .settings-nav button.active { background: var(--black); color: white; }
     
+    /* Sections */
     .settings-section {
       display: none;
+    }
+    
+    .settings-section.active {
+      display: block;
+    }
+    
+    .settings-card {
       background: var(--white);
-      border-radius: 12px;
       border: 1px solid var(--gray-200);
+      border-radius: 12px;
       padding: 24px;
+      margin-bottom: 24px;
     }
-    .settings-section.active { display: block; }
     
-    .settings-section h2 {
-      font-size: 18px;
+    .settings-card h2 {
+      font-size: 16px;
       font-weight: 600;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     
+    .settings-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--gray-600);
+    }
+    
+    .settings-card p {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: 16px;
+    }
+    
+    /* Forms */
     .form-group {
       margin-bottom: 20px;
     }
@@ -123,46 +193,121 @@
       font-size: 14px;
       font-weight: 500;
       margin-bottom: 6px;
-      color: var(--gray-600);
+      color: var(--gray-700);
     }
     
-    .form-group input {
+    .form-group input, .form-group select {
       width: 100%;
-      padding: 12px 14px;
+      padding: 10px 14px;
       border: 1px solid var(--gray-200);
       border-radius: 8px;
       font-size: 14px;
       font-family: inherit;
+      background: var(--white);
     }
-    .form-group input:focus {
+    
+    .form-group input:focus, .form-group select:focus {
       outline: none;
       border-color: var(--accent);
     }
+    
     .form-group input:disabled {
       background: var(--gray-50);
       color: var(--gray-500);
     }
     
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    /* Buttons */
     .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       padding: 10px 20px;
       border-radius: 8px;
       font-weight: 500;
       font-size: 14px;
       cursor: pointer;
       border: none;
+      text-decoration: none;
     }
+    
     .btn-primary { background: var(--black); color: white; }
     .btn-primary:hover { background: var(--gray-900); }
     .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+    .btn-secondary:hover { background: var(--gray-200); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-accent:hover { background: var(--accent-dark); }
     .btn-danger { background: var(--red); color: white; }
+    .btn-danger:hover { background: #DC2626; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     
+    /* Toggle Switch */
+    .toggle-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .toggle-group:last-child { border-bottom: none; }
+    
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .toggle-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--gray-200);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .toggle.active { background: var(--accent); }
+    
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .toggle.active::after { transform: translateX(20px); }
+    
+    /* Plan Card */
     .plan-card {
       border: 2px solid var(--gray-200);
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 16px;
     }
-    .plan-card.current { border-color: var(--accent); background: #F5F3FF; }
+    
+    .plan-card.current {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
     
     .plan-header {
       display: flex;
@@ -171,11 +316,7 @@
       margin-bottom: 8px;
     }
     
-    .plan-name {
-      font-weight: 600;
-      font-size: 16px;
-    }
-    
+    .plan-name { font-weight: 600; font-size: 18px; }
     .plan-badge {
       font-size: 11px;
       font-weight: 600;
@@ -186,59 +327,224 @@
     }
     
     .plan-price {
-      font-size: 24px;
+      font-size: 32px;
       font-weight: 700;
       margin-bottom: 8px;
     }
-    .plan-price span { font-size: 14px; font-weight: 400; color: var(--gray-400); }
+    
+    .plan-price span {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--gray-500);
+    }
     
     .plan-features {
-      color: var(--gray-500);
       font-size: 14px;
+      color: var(--gray-600);
     }
+    
+    /* Usage Bar */
+    .usage-item {
+      margin-bottom: 20px;
+    }
+    
+    .usage-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .usage-label { font-size: 14px; font-weight: 500; }
+    .usage-value { font-size: 14px; color: var(--gray-500); }
     
     .usage-bar {
       background: var(--gray-100);
       border-radius: 100px;
       height: 8px;
       overflow: hidden;
-      margin: 12px 0;
     }
+    
     .usage-bar-fill {
       background: var(--accent);
       height: 100%;
       border-radius: 100px;
+      transition: width 0.3s;
     }
     
-    .usage-text {
+    .usage-bar-fill.warning { background: var(--yellow); }
+    .usage-bar-fill.danger { background: var(--red); }
+    
+    /* API Key List */
+    .api-key-list {
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .api-key-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .api-key-item:last-child { border-bottom: none; }
+    
+    .api-key-info { flex: 1; }
+    .api-key-name { font-weight: 500; font-size: 14px; }
+    .api-key-meta { font-size: 12px; color: var(--gray-500); }
+    .api-key-value {
+      font-family: monospace;
       font-size: 13px;
-      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-right: 12px;
     }
     
+    .api-key-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--gray-400);
+    }
+    
+    /* Integration Cards */
+    .integration-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .integration-card {
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    
+    .integration-card.connected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    
+    .integration-card.locked {
+      opacity: 0.6;
+    }
+    
+    .integration-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--gray-100);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+    
+    .integration-info { flex: 1; }
+    .integration-name { font-weight: 500; font-size: 14px; }
+    .integration-status { font-size: 12px; color: var(--gray-500); }
+    .integration-status.connected { color: var(--accent); }
+    
+    /* Alerts */
     .alert {
-      padding: 12px 16px;
+      padding: 14px 16px;
       border-radius: 8px;
       font-size: 14px;
       margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
+    
     .alert-success { background: #DCFCE7; color: #166534; }
     .alert-error { background: #FEE2E2; color: #DC2626; }
+    .alert-warning { background: #FEF3C7; color: #92400E; }
+    .alert-info { background: var(--accent-light); color: var(--accent-dark); }
     
+    .alert svg { width: 20px; height: 20px; flex-shrink: 0; }
+    
+    /* Upgrade Banner */
+    .upgrade-banner {
+      background: linear-gradient(135deg, var(--gray-900), var(--black));
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .upgrade-banner h3 { font-size: 16px; margin-bottom: 4px; }
+    .upgrade-banner p { font-size: 14px; opacity: 0.8; }
+    .upgrade-banner .btn { background: white; color: var(--black); }
+    
+    /* Danger Zone */
     .danger-zone {
       border: 1px solid var(--red);
       border-radius: 12px;
       padding: 20px;
-      margin-top: 32px;
     }
+    
     .danger-zone h3 {
       color: var(--red);
       font-size: 16px;
       margin-bottom: 8px;
     }
+    
     .danger-zone p {
       font-size: 14px;
       color: var(--gray-500);
       margin-bottom: 16px;
+    }
+    
+    /* Session List */
+    .session-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .session-item:last-child { border-bottom: none; }
+    .session-info { font-size: 14px; }
+    .session-meta { font-size: 12px; color: var(--gray-500); }
+    .session-current { 
+      font-size: 11px;
+      background: var(--accent-light);
+      color: var(--accent-dark);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .settings-layout { flex-direction: column; }
+      .settings-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+        display: flex;
+        overflow-x: auto;
+        padding: 12px;
+        gap: 8px;
+      }
+      .sidebar-section { display: flex; gap: 8px; margin-bottom: 0; }
+      .sidebar-section-title { display: none; }
+      .sidebar-item { padding: 8px 16px; white-space: nowrap; }
+      .settings-content { padding: 24px; }
+      .form-row { grid-template-columns: 1fr; }
+      .integration-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -247,86 +553,367 @@
     <a href="/" class="logo">Vibe<span>QA</span></a>
     <div class="nav-links">
       <a href="/">Home</a>
-      <a href="/history.html">Scan History</a>
+      <a href="/history.html">History</a>
       <a href="#" onclick="logout()">Log out</a>
     </div>
   </nav>
 
-  <div class="container">
-    <h1>Settings</h1>
-    
-    <div class="settings-nav">
-      <button class="active" onclick="showSection('profile')">Profile</button>
-      <button onclick="showSection('plan')">Plan & Usage</button>
-      <button onclick="showSection('security')">Security</button>
-    </div>
-    
-    <div id="alert-container"></div>
-    
-    <!-- Profile Section -->
-    <div class="settings-section active" id="section-profile">
-      <h2>Profile Information</h2>
-      <form onsubmit="updateProfile(event)">
-        <div class="form-group">
-          <label>Name</label>
-          <input type="text" id="profile-name" placeholder="Your name">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="profile-email" disabled>
-        </div>
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-      </form>
-    </div>
-    
-    <!-- Plan Section -->
-    <div class="settings-section" id="section-plan">
-      <h2>Current Plan</h2>
-      <div class="plan-card current" id="current-plan-card">
-        <div class="plan-header">
-          <span class="plan-name" id="plan-name">Free</span>
-          <span class="plan-badge">Current</span>
-        </div>
-        <div class="plan-price" id="plan-price">$0<span>/month</span></div>
-        <div class="plan-features" id="plan-features">1 scan per day</div>
+  <div class="settings-layout">
+    <!-- Sidebar -->
+    <aside class="settings-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Account</div>
+        <button class="sidebar-item active" onclick="showSection('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </button>
+        <button class="sidebar-item" onclick="showSection('security')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Security
+        </button>
+        <button class="sidebar-item" onclick="showSection('sessions')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Sessions
+        </button>
       </div>
       
-      <h2 style="margin-top:32px">Usage This Month</h2>
-      <div class="usage-bar">
-        <div class="usage-bar-fill" id="usage-bar" style="width: 0%"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Billing</div>
+        <button class="sidebar-item" onclick="showSection('plan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Plan & Usage
+        </button>
+        <button class="sidebar-item" onclick="showSection('billing')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </button>
       </div>
-      <p class="usage-text" id="usage-text">0 scans used</p>
       
-      <div style="margin-top:24px">
-        <a href="/#pricing" class="btn btn-primary">Upgrade Plan</a>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Integrations</div>
+        <button class="sidebar-item" onclick="showSection('integrations')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Connected Apps
+        </button>
+        <button class="sidebar-item" onclick="showSection('api')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          API Keys
+          <span class="badge pro">Pro</span>
+        </button>
+        <button class="sidebar-item" onclick="showSection('webhooks')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"/><path d="M6 17a4 4 0 0 1 4-4h5.1c1.1 0 2.24-.75 2.66-1.76a4 4 0 1 1 6.18 4.7"/><path d="M12 17a4 4 0 0 1-6.67-4.43C5.65 11.7 6.38 11 7.16 11H12"/></svg>
+          Webhooks
+          <span class="badge pro">Pro</span>
+        </button>
       </div>
-    </div>
-    
-    <!-- Security Section -->
-    <div class="settings-section" id="section-security">
-      <h2>Change Password</h2>
-      <form onsubmit="changePassword(event)">
-        <div class="form-group">
-          <label>Current Password</label>
-          <input type="password" id="current-password" required>
-        </div>
-        <div class="form-group">
-          <label>New Password</label>
-          <input type="password" id="new-password" required minlength="8">
-        </div>
-        <div class="form-group">
-          <label>Confirm New Password</label>
-          <input type="password" id="confirm-password" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Update Password</button>
-      </form>
       
-      <div class="danger-zone">
-        <h3>Danger Zone</h3>
-        <p>Once you delete your account, there is no going back. Please be certain.</p>
-        <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Notifications</div>
+        <button class="sidebar-item" onclick="showSection('notifications')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Email & Alerts
+        </button>
       </div>
-    </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="settings-content">
+      <div id="alert-container"></div>
+
+      <!-- Profile Section -->
+      <section class="settings-section active" id="section-profile">
+        <div class="settings-header">
+          <h1>Profile</h1>
+          <p>Manage your personal information</p>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Personal Information</h2>
+          <form onsubmit="updateProfile(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="profile-name" placeholder="Your name">
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="profile-email" disabled>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Timezone</label>
+              <select id="profile-timezone">
+                <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                <option value="America/Denver">Mountain Time (MT)</option>
+                <option value="America/Chicago">Central Time (CT)</option>
+                <option value="America/New_York">Eastern Time (ET)</option>
+                <option value="UTC">UTC</option>
+                <option value="Europe/London">London (GMT)</option>
+                <option value="Europe/Paris">Paris (CET)</option>
+                <option value="Asia/Tokyo">Tokyo (JST)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Security Section -->
+      <section class="settings-section" id="section-security">
+        <div class="settings-header">
+          <h1>Security</h1>
+          <p>Manage your password and account security</p>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Change Password</h2>
+          <form onsubmit="changePassword(event)">
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" id="current-password" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="new-password" required minlength="8">
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirm-password" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </form>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Two-Factor Authentication</h2>
+          <p>Add an extra layer of security to your account</p>
+          <button class="btn btn-secondary" disabled>Coming Soon</button>
+        </div>
+        
+        <div class="danger-zone">
+          <h3>Delete Account</h3>
+          <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+          <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
+        </div>
+      </section>
+
+      <!-- Sessions Section -->
+      <section class="settings-section" id="section-sessions">
+        <div class="settings-header">
+          <h1>Active Sessions</h1>
+          <p>Manage your logged-in devices</p>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Current Sessions</h2>
+          <div id="sessions-list">
+            <p style="color: var(--gray-400)">Loading sessions...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Plan & Usage Section -->
+      <section class="settings-section" id="section-plan">
+        <div class="settings-header">
+          <h1>Plan & Usage</h1>
+          <p>View your current plan and usage statistics</p>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Current Plan</h2>
+          <div class="plan-card current" id="current-plan-card">
+            <div class="plan-header">
+              <span class="plan-name" id="plan-name">Free</span>
+              <span class="plan-badge">Current Plan</span>
+            </div>
+            <div class="plan-price" id="plan-price">$0<span>/month</span></div>
+            <div class="plan-features" id="plan-features">1 scan per day, 7-day history</div>
+          </div>
+          <a href="/#pricing" class="btn btn-accent">Upgrade Plan</a>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Usage This Month</h2>
+          <div id="usage-stats">
+            <div class="usage-item">
+              <div class="usage-header">
+                <span class="usage-label">Scans</span>
+                <span class="usage-value" id="scans-usage">0 / 30</span>
+              </div>
+              <div class="usage-bar">
+                <div class="usage-bar-fill" id="scans-bar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="usage-item">
+              <div class="usage-header">
+                <span class="usage-label">API Requests</span>
+                <span class="usage-value" id="api-usage">0 / 0</span>
+              </div>
+              <div class="usage-bar">
+                <div class="usage-bar-fill" id="api-bar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+          <div id="upgrade-nudge"></div>
+        </div>
+      </section>
+
+      <!-- Billing Section -->
+      <section class="settings-section" id="section-billing">
+        <div class="settings-header">
+          <h1>Billing</h1>
+          <p>Manage payment methods and view invoices</p>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Payment Method</h2>
+          <p>No payment method on file</p>
+          <button class="btn btn-secondary" disabled>Add Payment Method (Coming Soon)</button>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Billing History</h2>
+          <p style="color: var(--gray-400)">No invoices yet</p>
+        </div>
+      </section>
+
+      <!-- Integrations Section -->
+      <section class="settings-section" id="section-integrations">
+        <div class="settings-header">
+          <h1>Connected Apps</h1>
+          <p>Connect your favorite tools for automated testing</p>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Code & Deployment</h2>
+          <p>Auto-scan on push or deploy</p>
+          <div class="integration-grid" id="code-integrations">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Vibe Coding Platforms</h2>
+          <p>Direct integration with AI builders</p>
+          <div class="integration-grid" id="vibe-integrations">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Notifications & Project Management</h2>
+          <p>Get alerts and create issues</p>
+          <div class="integration-grid" id="notification-integrations">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- API Keys Section -->
+      <section class="settings-section" id="section-api">
+        <div class="settings-header">
+          <h1>API Keys</h1>
+          <p>Manage API keys for programmatic access</p>
+        </div>
+        
+        <div id="api-upgrade-banner" class="upgrade-banner" style="display:none">
+          <div>
+            <h3>Unlock API Access</h3>
+            <p>Upgrade to Pro to generate API keys and integrate with your CI/CD pipeline</p>
+          </div>
+          <a href="/#pricing" class="btn">Upgrade to Pro</a>
+        </div>
+        
+        <div class="settings-card" id="api-keys-section">
+          <h2>Your API Keys</h2>
+          <p>Use these keys to authenticate API requests. Keep them secret!</p>
+          
+          <form onsubmit="createApiKey(event)" style="display:flex;gap:12px;margin-bottom:20px">
+            <input type="text" id="new-key-name" placeholder="Key name (e.g., CI/CD Pipeline)" style="flex:1" required>
+            <button type="submit" class="btn btn-primary">Generate Key</button>
+          </form>
+          
+          <div class="api-key-list" id="api-keys-list">
+            <div class="api-key-empty">No API keys yet. Create one above.</div>
+          </div>
+        </div>
+        
+        <div class="settings-card">
+          <h2>API Documentation</h2>
+          <p>Learn how to use the VibeQA API to automate your testing workflow.</p>
+          <a href="/docs/api" class="btn btn-secondary">View Documentation</a>
+        </div>
+      </section>
+
+      <!-- Webhooks Section -->
+      <section class="settings-section" id="section-webhooks">
+        <div class="settings-header">
+          <h1>Webhooks</h1>
+          <p>Receive real-time notifications when scans complete</p>
+        </div>
+        
+        <div id="webhooks-upgrade-banner" class="upgrade-banner" style="display:none">
+          <div>
+            <h3>Unlock Webhooks</h3>
+            <p>Upgrade to Pro to receive webhook notifications for scan events</p>
+          </div>
+          <a href="/#pricing" class="btn">Upgrade to Pro</a>
+        </div>
+        
+        <div class="settings-card" id="webhooks-section">
+          <h2>Webhook Endpoints</h2>
+          <p>We'll send a POST request to these URLs when scans complete.</p>
+          <button class="btn btn-secondary" disabled>Add Webhook (Coming Soon)</button>
+        </div>
+      </section>
+
+      <!-- Notifications Section -->
+      <section class="settings-section" id="section-notifications">
+        <div class="settings-header">
+          <h1>Notifications</h1>
+          <p>Control how and when you receive alerts</p>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Email Notifications</h2>
+          <div class="toggle-group">
+            <div>
+              <div class="toggle-label">Scan Complete</div>
+              <div class="toggle-desc">Get notified when a scan finishes</div>
+            </div>
+            <div class="toggle active" id="toggle-scan-complete" onclick="toggleNotification('emailOnScanComplete')"></div>
+          </div>
+          <div class="toggle-group">
+            <div>
+              <div class="toggle-label">Issues Found</div>
+              <div class="toggle-desc">Get alerted when new issues are detected</div>
+            </div>
+            <div class="toggle active" id="toggle-issues-found" onclick="toggleNotification('emailOnIssuesFound')"></div>
+          </div>
+          <div class="toggle-group">
+            <div>
+              <div class="toggle-label">Weekly Digest</div>
+              <div class="toggle-desc">Summary of all scans and issues from the past week</div>
+            </div>
+            <div class="toggle active" id="toggle-weekly-digest" onclick="toggleNotification('emailWeeklyDigest')"></div>
+          </div>
+        </div>
+        
+        <div class="settings-card">
+          <h2>Slack Notifications</h2>
+          <p>Connect Slack in the Integrations tab to enable Slack notifications.</p>
+          <div class="toggle-group" style="opacity:0.5">
+            <div>
+              <div class="toggle-label">Scan Complete</div>
+              <div class="toggle-desc">Post to Slack when scans finish</div>
+            </div>
+            <div class="toggle" id="toggle-slack"></div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script>
@@ -336,6 +923,7 @@
     
     const token = localStorage.getItem('vibeqa_token');
     let currentUser = null;
+    let notificationSettings = {};
     
     if (!token) {
       window.location.href = '/?login=1';
@@ -343,11 +931,51 @@
     
     const planDetails = {
       free: { name: 'Free', price: '$0', features: '1 scan/day, 7-day history, basic checks' },
-      pro: { name: 'Pro', price: '$29', features: '100 scans/month, AI analysis, 90-day history, API access, integrations' },
+      pro: { name: 'Pro', price: '$29', features: '100 scans/month, AI analysis, 90-day history, API access' },
       team: { name: 'Team', price: '$79', features: 'Unlimited scans, 1-year history, all integrations, team collaboration' },
-      enterprise: { name: 'Enterprise', price: 'Custom', features: 'SSO, SCIM, audit logs, dedicated support, SLA' }
+      enterprise: { name: 'Enterprise', price: 'Custom', features: 'SSO, SCIM, audit logs, dedicated support' }
     };
     
+    const integrations = {
+      code: [
+        { id: 'github', name: 'GitHub', desc: 'Auto-scan on PR', minPlan: 'pro' },
+        { id: 'gitlab', name: 'GitLab', desc: 'Auto-scan on merge request', minPlan: 'pro' },
+        { id: 'vercel', name: 'Vercel', desc: 'Scan preview deployments', minPlan: 'team' },
+        { id: 'netlify', name: 'Netlify', desc: 'Scan deploy previews', minPlan: 'team' },
+      ],
+      vibe: [
+        { id: 'cursor', name: 'Cursor', desc: 'AI code editor', minPlan: 'team' },
+        { id: 'bolt', name: 'Bolt', desc: 'AI app builder', minPlan: 'team' },
+        { id: 'v0', name: 'v0', desc: 'Vercel AI UI', minPlan: 'team' },
+        { id: 'replit', name: 'Replit', desc: 'Online IDE', minPlan: 'team' },
+        { id: 'lovable', name: 'Lovable', desc: 'AI app builder', minPlan: 'team' },
+      ],
+      notifications: [
+        { id: 'slack', name: 'Slack', desc: 'Team notifications', minPlan: 'pro' },
+        { id: 'discord', name: 'Discord', desc: 'Server notifications', minPlan: 'pro' },
+        { id: 'linear', name: 'Linear', desc: 'Create issues', minPlan: 'team' },
+        { id: 'jira', name: 'Jira', desc: 'Create tickets', minPlan: 'team' },
+      ]
+    };
+    
+    // Navigation
+    function showSection(section) {
+      document.querySelectorAll('.settings-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('section-' + section)?.classList.add('active');
+      event.target.closest('.sidebar-item')?.classList.add('active');
+    }
+    
+    function showAlert(message, type = 'success') {
+      const container = document.getElementById('alert-container');
+      const icon = type === 'success' 
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      container.innerHTML = `<div class="alert alert-${type}">${icon} ${message}</div>`;
+      setTimeout(() => container.innerHTML = '', 5000);
+    }
+    
+    // Load user data
     async function loadUser() {
       try {
         const res = await fetch(`${API_URL}/api/auth/me`, {
@@ -362,76 +990,288 @@
         
         currentUser = await res.json();
         
+        // Profile
         document.getElementById('profile-name').value = currentUser.name || '';
         document.getElementById('profile-email').value = currentUser.email;
+        document.getElementById('profile-timezone').value = currentUser.settings?.timezone || 'America/Los_Angeles';
         
+        // Plan
         const plan = planDetails[currentUser.plan] || planDetails.free;
         document.getElementById('plan-name').textContent = plan.name;
         document.getElementById('plan-price').innerHTML = `${plan.price}<span>/month</span>`;
         document.getElementById('plan-features').textContent = plan.features;
         
-        // Usage - fetch detailed stats
-        try {
-          const usageRes = await fetch(`${API_URL}/api/auth/usage`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (usageRes.ok) {
-            const stats = await usageRes.json();
-            const pct = Math.min(100, stats.percentages?.monthlyScans || 0);
-            document.getElementById('usage-bar').style.width = pct + '%';
-            
-            const current = stats.current?.scansThisMonth || 0;
-            const limit = stats.limits?.scansPerMonth;
-            document.getElementById('usage-text').textContent = limit === Infinity 
-              ? `${current} scans used this month (unlimited)`
-              : `${current} of ${limit} scans used this month`;
-            
-            // Show upgrade nudges if any
-            if (stats.upgradeNudges && stats.upgradeNudges.length > 0) {
-              const nudge = stats.upgradeNudges[0];
-              const nudgeHtml = `
-                <div class="alert alert-info" style="background:#CCFBF1;color:#0F766E;margin-top:16px;">
-                  <strong>${nudge.message}</strong>
-                  <a href="/#pricing" class="btn btn-primary" style="margin-left:12px;padding:6px 12px;font-size:13px;">${nudge.cta}</a>
-                </div>
-              `;
-              document.getElementById('usage-text').insertAdjacentHTML('afterend', nudgeHtml);
-            }
-          }
-        } catch (e) {
-          console.error('Failed to load usage stats:', e);
-          // Fallback to basic display
-          const limits = { free: 30, pro: 100, team: Infinity };
-          const limit = limits[currentUser.plan] || 30;
-          const used = currentUser.usage?.scansThisMonth || 0;
-          const pct = Math.min(100, (used / limit) * 100);
-          document.getElementById('usage-bar').style.width = pct + '%';
-          document.getElementById('usage-text').textContent = limit === Infinity 
-            ? `${used} scans used (unlimited)`
-            : `${used} of ${limit} scans used`;
+        // Notifications
+        notificationSettings = currentUser.settings?.notifications || {};
+        updateNotificationToggles();
+        
+        // Load usage stats
+        loadUsageStats();
+        
+        // Load integrations
+        renderIntegrations();
+        
+        // Load API keys
+        loadApiKeys();
+        
+        // Load sessions
+        loadSessions();
+        
+        // Check plan for gated features
+        if (currentUser.plan === 'free') {
+          document.getElementById('api-upgrade-banner').style.display = 'flex';
+          document.getElementById('api-keys-section').style.display = 'none';
+          document.getElementById('webhooks-upgrade-banner').style.display = 'flex';
+          document.getElementById('webhooks-section').style.display = 'none';
         }
-          
+        
       } catch (e) {
-        console.error(e);
+        console.error('Failed to load user:', e);
       }
     }
     
-    function showSection(section) {
-      document.querySelectorAll('.settings-section').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.settings-nav button').forEach(el => el.classList.remove('active'));
-      document.getElementById('section-' + section).classList.add('active');
-      event.target.classList.add('active');
+    async function loadUsageStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/usage`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const stats = await res.json();
+          
+          // Scans
+          const scansCurrent = stats.current?.scansThisMonth || 0;
+          const scansLimit = stats.limits?.scansPerMonth;
+          const scansText = scansLimit === Infinity ? `${scansCurrent} (unlimited)` : `${scansCurrent} / ${scansLimit}`;
+          document.getElementById('scans-usage').textContent = scansText;
+          const scansPct = scansLimit === Infinity ? 0 : Math.min(100, (scansCurrent / scansLimit) * 100);
+          const scansBar = document.getElementById('scans-bar');
+          scansBar.style.width = scansPct + '%';
+          if (scansPct >= 90) scansBar.classList.add('danger');
+          else if (scansPct >= 70) scansBar.classList.add('warning');
+          
+          // API
+          const apiCurrent = stats.current?.apiRequestsThisMonth || 0;
+          const apiLimit = stats.limits?.apiRequests || 0;
+          const apiText = apiLimit === 0 ? 'Not available' : apiLimit === Infinity ? `${apiCurrent} (unlimited)` : `${apiCurrent} / ${apiLimit}`;
+          document.getElementById('api-usage').textContent = apiText;
+          const apiPct = apiLimit === 0 || apiLimit === Infinity ? 0 : Math.min(100, (apiCurrent / apiLimit) * 100);
+          document.getElementById('api-bar').style.width = apiPct + '%';
+          
+          // Upgrade nudges
+          if (stats.upgradeNudges && stats.upgradeNudges.length > 0) {
+            const nudge = stats.upgradeNudges[0];
+            document.getElementById('upgrade-nudge').innerHTML = `
+              <div class="alert alert-info" style="margin-top:16px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <div style="flex:1">
+                  <strong>${nudge.message}</strong>
+                </div>
+                <a href="/#pricing" class="btn btn-sm btn-accent">${nudge.cta}</a>
+              </div>
+            `;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load usage:', e);
+      }
     }
     
-    function showAlert(message, type = 'success') {
-      const container = document.getElementById('alert-container');
-      container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-      setTimeout(() => container.innerHTML = '', 5000);
+    function renderIntegrations() {
+      const planOrder = ['free', 'pro', 'team', 'enterprise'];
+      const userPlanIndex = planOrder.indexOf(currentUser.plan);
+      
+      ['code', 'vibe', 'notifications'].forEach(category => {
+        const container = document.getElementById(category + '-integrations');
+        container.innerHTML = integrations[category].map(int => {
+          const minPlanIndex = planOrder.indexOf(int.minPlan);
+          const hasAccess = userPlanIndex >= minPlanIndex;
+          const isConnected = currentUser.integrations?.[int.id];
+          
+          return `
+            <div class="integration-card ${isConnected ? 'connected' : ''} ${!hasAccess ? 'locked' : ''}">
+              <div class="integration-icon">${int.name.slice(0,2).toUpperCase()}</div>
+              <div class="integration-info">
+                <div class="integration-name">${int.name}</div>
+                <div class="integration-status ${isConnected ? 'connected' : ''}">
+                  ${!hasAccess ? `Requires ${int.minPlan}` : isConnected ? 'Connected' : int.desc}
+                </div>
+              </div>
+              ${hasAccess ? `
+                <button class="btn btn-sm ${isConnected ? 'btn-secondary' : 'btn-primary'}" 
+                        onclick="${isConnected ? `disconnectIntegration('${int.id}')` : `connectIntegration('${int.id}')`}">
+                  ${isConnected ? 'Disconnect' : 'Connect'}
+                </button>
+              ` : `
+                <a href="/#pricing" class="btn btn-sm btn-secondary">Upgrade</a>
+              `}
+            </div>
+          `;
+        }).join('');
+      });
+    }
+    
+    async function connectIntegration(id) {
+      // In production, this would redirect to OAuth
+      showAlert(`${id} integration coming soon! We'll notify you when it's ready.`, 'info');
+    }
+    
+    async function disconnectIntegration(id) {
+      if (!confirm(`Disconnect ${id}?`)) return;
+      try {
+        const res = await fetch(`${API_URL}/api/auth/integrations/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          currentUser.integrations[id] = null;
+          renderIntegrations();
+          showAlert(`${id} disconnected`);
+        }
+      } catch (e) {
+        showAlert('Failed to disconnect', 'error');
+      }
+    }
+    
+    async function loadApiKeys() {
+      if (currentUser.plan === 'free') return;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/auth/api-keys`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const keys = await res.json();
+          const container = document.getElementById('api-keys-list');
+          
+          if (keys.length === 0) {
+            container.innerHTML = '<div class="api-key-empty">No API keys yet. Create one above.</div>';
+          } else {
+            container.innerHTML = keys.map(key => `
+              <div class="api-key-item">
+                <div class="api-key-info">
+                  <div class="api-key-name">${key.name}</div>
+                  <div class="api-key-meta">Created ${new Date(key.createdAt).toLocaleDateString()} · ${key.usageCount} requests</div>
+                </div>
+                <span class="api-key-value">${key.key}</span>
+                <button class="btn btn-sm btn-danger" onclick="revokeApiKey('${key.key}')">Revoke</button>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load API keys:', e);
+      }
+    }
+    
+    async function createApiKey(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-key-name').value;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/auth/api-keys`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          // Show the full key once (it won't be shown again)
+          alert(`API Key created! Copy it now - you won't see it again:\n\n${data.key}`);
+          document.getElementById('new-key-name').value = '';
+          loadApiKeys();
+        } else {
+          showAlert(data.error || 'Failed to create key', 'error');
+        }
+      } catch (e) {
+        showAlert('Failed to create API key', 'error');
+      }
+    }
+    
+    async function revokeApiKey(keyPrefix) {
+      if (!confirm('Revoke this API key? Any applications using it will stop working.')) return;
+      
+      try {
+        const res = await fetch(`${API_URL}/api/auth/api-keys/${keyPrefix}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          showAlert('API key revoked');
+          loadApiKeys();
+        }
+      } catch (e) {
+        showAlert('Failed to revoke key', 'error');
+      }
+    }
+    
+    async function loadSessions() {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/sessions`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const sessions = await res.json();
+          const container = document.getElementById('sessions-list');
+          
+          container.innerHTML = sessions.map((session, i) => `
+            <div class="session-item">
+              <div>
+                <div class="session-info">Session ${session.tokenPrefix}</div>
+                <div class="session-meta">Created ${new Date(session.createdAt).toLocaleDateString()}</div>
+              </div>
+              ${i === 0 ? '<span class="session-current">Current</span>' : ''}
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Failed to load sessions:', e);
+      }
+    }
+    
+    function updateNotificationToggles() {
+      const toggles = {
+        'toggle-scan-complete': notificationSettings.emailOnScanComplete !== false,
+        'toggle-issues-found': notificationSettings.emailOnIssuesFound !== false,
+        'toggle-weekly-digest': notificationSettings.emailWeeklyDigest !== false,
+      };
+      
+      Object.entries(toggles).forEach(([id, active]) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('active', active);
+      });
+    }
+    
+    async function toggleNotification(key) {
+      notificationSettings[key] = !notificationSettings[key];
+      updateNotificationToggles();
+      
+      try {
+        await fetch(`${API_URL}/api/auth/notifications`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(notificationSettings)
+        });
+      } catch (e) {
+        console.error('Failed to save notification settings:', e);
+      }
     }
     
     async function updateProfile(e) {
       e.preventDefault();
       const name = document.getElementById('profile-name').value;
+      const timezone = document.getElementById('profile-timezone').value;
       
       try {
         const res = await fetch(`${API_URL}/api/auth/profile`, {
@@ -440,17 +1280,16 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ name })
+          body: JSON.stringify({ name, timezone })
         });
         
         if (res.ok) {
-          showAlert('Profile updated successfully!');
+          showAlert('Profile updated');
         } else {
-          const data = await res.json();
-          showAlert(data.error || 'Update failed', 'error');
+          showAlert('Failed to update profile', 'error');
         }
       } catch (e) {
-        showAlert('Update failed', 'error');
+        showAlert('Failed to update profile', 'error');
       }
     }
     
@@ -476,16 +1315,16 @@
         });
         
         if (res.ok) {
-          showAlert('Password updated successfully!');
+          showAlert('Password updated');
           document.getElementById('current-password').value = '';
           document.getElementById('new-password').value = '';
           document.getElementById('confirm-password').value = '';
         } else {
           const data = await res.json();
-          showAlert(data.error || 'Update failed', 'error');
+          showAlert(data.error || 'Failed to update password', 'error');
         }
       } catch (e) {
-        showAlert('Update failed', 'error');
+        showAlert('Failed to update password', 'error');
       }
     }
     
@@ -515,6 +1354,7 @@
       window.location.href = '/';
     }
     
+    // Initialize
     loadUser();
   </script>
 </body>
