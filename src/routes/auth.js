@@ -1,6 +1,7 @@
 const express = require('express');
 const { User, Session, ApiKey } = require('../models/user');
-const fetch = require('node-fetch') || globalThis.fetch;
+// Node 18+ has built-in fetch
+const fetch = globalThis.fetch;
 
 const router = express.Router();
 
