@@ -20,7 +20,13 @@ app.use(authMiddleware);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    database: db.isConfigured ? 'supabase' : 'in-memory',
+    supabaseUrl: process.env.SUPABASE_URL ? 'set' : 'missing',
+    supabaseKey: process.env.SUPABASE_SERVICE_KEY ? 'set' : 'missing'
+  });
 });
 
 // Routes
