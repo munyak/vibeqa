@@ -21,6 +21,15 @@ const PRICES = {
   },
 };
 
+// Check if Stripe is configured
+router.get('/status', (req, res) => {
+  res.json({
+    stripeConfigured: !!stripe,
+    demoMode: !stripe,
+    message: stripe ? 'Stripe is configured' : 'Demo mode - upgrades are instant and free'
+  });
+});
+
 // Create checkout session
 router.post('/checkout', requireAuth, async (req, res) => {
   try {
@@ -36,7 +45,8 @@ router.post('/checkout', requireAuth, async (req, res) => {
       return res.json({ 
         success: true, 
         demo: true,
-        message: 'Upgraded to ' + plan + ' (demo mode - Stripe not configured)'
+        plan,
+        message: `🎉 Upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}! (Demo mode - enjoy all features)`
       });
     }
     
