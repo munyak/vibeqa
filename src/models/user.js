@@ -14,18 +14,27 @@ function hashPassword(password) {
   return crypto.createHash('sha256').update(password + 'vibeqa-salt').digest('hex');
 }
 
+// Special accounts that get upgraded plans automatically
+const SPECIAL_ACCOUNTS = {
+  'mkanaventi@gmail.com': 'team',
+  // Add more test accounts here
+};
+
 const User = {
   create: async ({ email, password, name }) => {
     if (users.has(email)) {
       throw new Error('Email already registered');
     }
     
+    // Check if this email should get a special plan
+    const specialPlan = SPECIAL_ACCOUNTS[email.toLowerCase()] || 'free';
+    
     const user = {
       id: generateId(),
       email,
       passwordHash: hashPassword(password),
       name: name || email.split('@')[0],
-      plan: 'free',
+      plan: specialPlan,
       scansToday: 0,
       scansThisMonth: 0,
       lastScanDate: null,
