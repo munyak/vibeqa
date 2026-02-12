@@ -1,12 +1,21 @@
 [build]
   publish = "."
-  command = "echo 'Static site - no build needed'"
+  command = "npm install"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@sparticuz/chromium-min"]
 
 [[redirects]]
-  from = "/api/*"
-  to = "https://vibeqa-api.railway.app/api/:splat"
+  from = "/api/scan"
+  to = "/.netlify/functions/scan"
   status = 200
-  force = true
+
+[[redirects]]
+  from = "/api/scan/*"
+  to = "/.netlify/functions/scan/:splat"
+  status = 200
 
 [[headers]]
   for = "/*"

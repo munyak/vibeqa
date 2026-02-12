@@ -882,61 +882,49 @@
       loading.classList.add('visible');
       results.classList.remove('visible');
       upgradeCta.classList.remove('visible');
-      loadingText.textContent = 'Starting scan...';
+      
+      // Animate loading text
+      const messages = [
+        'Starting scan...',
+        'Loading page...',
+        'Checking mobile responsiveness...',
+        'Analyzing performance...',
+        'Running accessibility checks...',
+        'Almost done...'
+      ];
+      let msgIndex = 0;
+      const loadingInterval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        loadingText.textContent = messages[msgIndex];
+      }, 3000);
 
       try {
-        // Start scan
-        const startRes = await fetch(`${API_URL}/api/scan`, {
+        // Run scan (direct response - no polling needed)
+        const scanRes = await fetch(`${API_URL}/api/scan`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url })
         });
         
-        if (!startRes.ok) {
-          const err = await startRes.json();
-          throw new Error(err.error || 'Failed to start scan');
+        const scan = await scanRes.json();
+        
+        if (!scanRes.ok) {
+          throw new Error(scan.error || scan.message || 'Scan failed');
         }
         
-        const { scanId } = await startRes.json();
-        
-        // Poll for results
-        let attempts = 0;
-        const maxAttempts = 60; // 2 minutes max
-        
-        while (attempts < maxAttempts) {
-          await new Promise(r => setTimeout(r, 2000));
-          
-          const statusRes = await fetch(`${API_URL}/api/scan/${scanId}`);
-          const scan = await statusRes.json();
-          
-          if (scan.status === 'complete') {
-            displayResults(scan);
-            break;
-          } else if (scan.status === 'error') {
-            throw new Error(scan.error || 'Scan failed');
-          }
-          
-          // Update loading text
-          const messages = [
-            'Checking page load...',
-            'Testing mobile responsiveness...',
-            'Looking for broken links...',
-            'Analyzing performance...',
-            'Running accessibility checks...',
-            'Almost done...'
-          ];
-          loadingText.textContent = messages[Math.min(attempts, messages.length - 1)];
-          attempts++;
-        }
-        
-        if (attempts >= maxAttempts) {
-          throw new Error('Scan timed out');
+        if (scan.status === 'complete') {
+          displayResults(scan);
+        } else if (scan.status === 'error') {
+          throw new Error(scan.error || 'Scan failed');
+        } else {
+          throw new Error('Unexpected response from server');
         }
         
       } catch (err) {
-        alert('Error: ' + err.message);
         console.error(err);
+        alert('Error: ' + err.message);
       } finally {
+        clearInterval(loadingInterval);
         scanBtn.disabled = false;
         scanBtn.textContent = 'Scan Now';
         loading.classList.remove('visible');
