@@ -6,17 +6,18 @@ const sessions = new Map();
 const apiKeys = new Map();
 const usageEvents = new Map(); // Track all usage for analytics
 
+const crypto = require('crypto');
+
 function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  // Use proper UUIDs for Supabase compatibility
+  return crypto.randomUUID();
 }
 
 function generateApiKey() {
-  const crypto = require('crypto');
   return 'vqa_' + crypto.randomBytes(24).toString('hex');
 }
 
 function hashPassword(password) {
-  const crypto = require('crypto');
   return crypto.createHash('sha256').update(password + 'vibeqa-salt').digest('hex');
 }
 
