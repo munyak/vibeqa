@@ -92,7 +92,7 @@ async function verifyPassword(email, password) {
   
   const { data, error } = await supabase
     .from('users')
-    .select('id, password_hash')
+    .select('id, password_hash, login_count')
     .eq('email', email.toLowerCase())
     .single();
   
@@ -101,12 +101,12 @@ async function verifyPassword(email, password) {
   const passwordHash = hashPassword(password);
   if (data.password_hash !== passwordHash) return null;
   
-  // Update login stats
+  // Update login stats (increment login_count manually)
   await supabase
     .from('users')
     .update({ 
       last_login_at: new Date().toISOString(),
-      login_count: supabase.raw('login_count + 1')
+      login_count: (data.login_count || 0) + 1
     })
     .eq('id', data.id);
   
