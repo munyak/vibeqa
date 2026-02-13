@@ -19,6 +19,12 @@ app.use(express.json());
 app.use(express.static('.'));
 app.use(authMiddleware);
 
+// HTML page routes (clean URLs without .html extension)
+app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
+app.get('/history', (req, res) => res.sendFile(path.join(__dirname, 'history.html')));
+app.get('/settings', (req, res) => res.sendFile(path.join(__dirname, 'settings.html')));
+app.get('/reset-password', (req, res) => res.sendFile(path.join(__dirname, 'reset-password.html')));
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
