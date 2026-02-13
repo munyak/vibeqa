@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const puppeteer = require('puppeteer');
 const path = require('path');
+const crypto = require('crypto');
 
 // Routes
 const authRoutes = require('./src/routes/auth');
@@ -107,12 +108,12 @@ app.post('/api/scan', async (req, res) => {
       const scan = await db.createScan({ userId, projectId, url });
       scanId = scan.id;
     } else {
-      // Fallback to in-memory ID
-      scanId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+      // Fallback to UUID for anonymous scans
+      scanId = crypto.randomUUID();
     }
   } catch (err) {
     console.error('Failed to create scan record:', err);
-    scanId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    scanId = crypto.randomUUID();
   }
   
   // Start scan in background
