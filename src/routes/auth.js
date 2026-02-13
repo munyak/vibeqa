@@ -629,3 +629,216 @@ router.get('/verify-reset-token', async (req, res) => {
 });
 
 module.exports = router;
+
+// ============================================
+// SSO - Google OAuth
+// ============================================
+
+const GOOGLE_SSO_CONFIG = {
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  redirectUri: `${process.env.APP_URL || 'https://intuitive-insight-production-bb40.up.railway.app'}/api/auth/google/callback`
+};
+
+// Start Google SSO flow
+router.get('/google', (req, res) => {
+  if (!GOOGLE_SSO_CONFIG.clientId) {
+    return res.status(500).json({ error: 'Google SSO not configured' });
+  }
+  
+  const params = new URLSearchParams({
+    client_id: GOOGLE_SSO_CONFIG.clientId,
+    redirect_uri: GOOGLE_SSO_CONFIG.redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    access_type: 'offline',
+    prompt: 'select_account'
+  });
+  
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+});
+
+// Google SSO callback
+router.get('/google/callback', async (req, res) => {
+  const { code, error } = req.query;
+  
+  if (error || !code) {
+    return res.redirect('/?error=google_auth_failed');
+  }
+  
+  try {
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: GOOGLE_SSO_CONFIG.clientId,
+        client_secret: GOOGLE_SSO_CONFIG.clientSecret,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: GOOGLE_SSO_CONFIG.redirectUri
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    
+    if (tokenData.error) {
+      console.error('Google OAuth error:', tokenData);
+      return res.redirect('/?error=google_token_failed');
+    }
+    
+    // Get user info
+    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    
+    const googleUser = await userResponse.json();
+    
+    if (!googleUser.email) {
+      return res.redirect('/?error=google_no_email');
+    }
+    
+    // Find or create user
+    let user = await db.getUserByEmail(googleUser.email);
+    
+    if (!user) {
+      // Create new user
+      user = await db.createUser({
+        email: googleUser.email,
+        name: googleUser.name || googleUser.email.split('@')[0],
+        password: crypto.randomBytes(32).toString('hex'), // Random password for SSO users
+        ssoProvider: 'google',
+        ssoId: googleUser.id
+      });
+    }
+    
+    // Create session
+    const session = await db.createSession(user.id);
+    
+    // Redirect with token
+    res.redirect(`/?sso_token=${session.token}`);
+    
+  } catch (err) {
+    console.error('Google SSO error:', err);
+    res.redirect('/?error=google_auth_error');
+  }
+});
+
+// ============================================
+// SSO - GitHub OAuth
+// ============================================
+
+const GITHUB_SSO_CONFIG = {
+  clientId: process.env.GITHUB_SSO_CLIENT_ID || process.env.GITHUB_CLIENT_ID,
+  clientSecret: process.env.GITHUB_SSO_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET,
+  redirectUri: `${process.env.APP_URL || 'https://intuitive-insight-production-bb40.up.railway.app'}/api/auth/github/callback`
+};
+
+// Start GitHub SSO flow
+router.get('/github', (req, res) => {
+  if (!GITHUB_SSO_CONFIG.clientId) {
+    return res.status(500).json({ error: 'GitHub SSO not configured' });
+  }
+  
+  const params = new URLSearchParams({
+    client_id: GITHUB_SSO_CONFIG.clientId,
+    redirect_uri: GITHUB_SSO_CONFIG.redirectUri,
+    scope: 'user:email read:user',
+    allow_signup: 'true'
+  });
+  
+  res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+});
+
+// GitHub SSO callback
+router.get('/github/callback', async (req, res) => {
+  const { code, error } = req.query;
+  
+  if (error || !code) {
+    return res.redirect('/?error=github_auth_failed');
+  }
+  
+  try {
+    // Exchange code for token
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_SSO_CONFIG.clientId,
+        client_secret: GITHUB_SSO_CONFIG.clientSecret,
+        code,
+        redirect_uri: GITHUB_SSO_CONFIG.redirectUri
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    
+    if (tokenData.error) {
+      console.error('GitHub OAuth error:', tokenData);
+      return res.redirect('/?error=github_token_failed');
+    }
+    
+    // Get user info
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        'User-Agent': 'VibeQA'
+      }
+    });
+    
+    const githubUser = await userResponse.json();
+    
+    // Get primary email (might be private)
+    let email = githubUser.email;
+    if (!email) {
+      const emailsResponse = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+          'User-Agent': 'VibeQA'
+        }
+      });
+      const emails = await emailsResponse.json();
+      const primaryEmail = emails.find(e => e.primary) || emails[0];
+      email = primaryEmail?.email;
+    }
+    
+    if (!email) {
+      return res.redirect('/?error=github_no_email');
+    }
+    
+    // Find or create user
+    let user = await db.getUserByEmail(email);
+    
+    if (!user) {
+      // Create new user
+      user = await db.createUser({
+        email,
+        name: githubUser.name || githubUser.login,
+        password: crypto.randomBytes(32).toString('hex'), // Random password for SSO users
+        ssoProvider: 'github',
+        ssoId: String(githubUser.id)
+      });
+    }
+    
+    // Create session
+    const session = await db.createSession(user.id);
+    
+    // Redirect with token
+    res.redirect(`/?sso_token=${session.token}`);
+    
+  } catch (err) {
+    console.error('GitHub SSO error:', err);
+    res.redirect('/?error=github_auth_error');
+  }
+});
+
+// Check SSO availability
+router.get('/sso/providers', (req, res) => {
+  res.json({
+    google: !!GOOGLE_SSO_CONFIG.clientId,
+    github: !!GITHUB_SSO_CONFIG.clientId
+  });
+});
