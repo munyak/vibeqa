@@ -403,7 +403,8 @@
           return;
         }
         
-        scans = await res.json();
+        const data = await res.json();
+        scans = data.scans || [];
         renderScans(scans);
       } catch (e) {
         console.error(e);
