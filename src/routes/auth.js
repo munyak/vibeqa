@@ -53,11 +53,14 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
+    console.log('[AUTH] Login attempt:', { email, passwordLength: password?.length, bodyKeys: Object.keys(req.body) });
+    
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
     }
     
     const userId = await db.verifyPassword(email, password);
+    console.log('[AUTH] verifyPassword result:', userId ? 'success' : 'failed');
     
     if (!userId) {
       return res.status(401).json({ error: 'Invalid email or password' });

@@ -96,9 +96,17 @@ async function verifyPassword(email, password) {
     .eq('email', email.toLowerCase())
     .single();
   
-  if (error || !data) return null;
+  if (error || !data) {
+    console.log('[DB] verifyPassword: user not found for', email);
+    return null;
+  }
   
   const passwordHash = hashPassword(password);
+  console.log('[DB] verifyPassword hash comparison:', { 
+    stored: data.password_hash?.substring(0, 16) + '...', 
+    computed: passwordHash?.substring(0, 16) + '...',
+    match: data.password_hash === passwordHash 
+  });
   if (data.password_hash !== passwordHash) return null;
   
   // Update login stats (increment login_count manually)
