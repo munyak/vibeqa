@@ -310,6 +310,52 @@ async function incrementScanUsage(userId) {
     .eq('user_id', userId);
 }
 
+// Plan limits
+const PLAN_LIMITS = {
+  free: { scansPerDay: 1, scansPerMonth: 30 },
+  pro: { scansPerDay: 10, scansPerMonth: 100 },
+  team: { scansPerDay: Infinity, scansPerMonth: Infinity },
+  enterprise: { scansPerDay: Infinity, scansPerMonth: Infinity },
+};
+
+async function canScan(userId) {
+  if (!supabase) return fallbackCanScan(userId);
+  
+  // Get user's plan
+  const user = await getUserById(userId);
+  if (!user) return false;
+  
+  const limits = PLAN_LIMITS[user.plan] || PLAN_LIMITS.free;
+  
+  // Unlimited plans
+  if (limits.scansPerDay === Infinity) return true;
+  
+  // Get usage
+  const usage = await getUserUsage(userId);
+  if (!usage) return true; // No usage record = first scan
+  
+  const today = new Date().toISOString().split('T')[0];
+  const currentMonth = new Date().toISOString().slice(0, 7) + '-01';
+  
+  // Reset counters if new day/month
+  let scansToday = usage.scans_today || 0;
+  let scansThisMonth = usage.scans_this_month || 0;
+  
+  if (usage.last_scan_date !== today) {
+    scansToday = 0;
+  }
+  if (usage.month_start_date !== currentMonth) {
+    scansThisMonth = 0;
+  }
+  
+  return scansToday < limits.scansPerDay && scansThisMonth < limits.scansPerMonth;
+}
+
+function fallbackCanScan(userId) {
+  // In-memory fallback - allow scans
+  return true;
+}
+
 // ============================================
 // API KEY OPERATIONS
 // ============================================
@@ -968,6 +1014,7 @@ module.exports = {
   // Usage
   getUserUsage,
   incrementScanUsage,
+  canScan,
   
   // API Keys
   createApiKey,

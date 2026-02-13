@@ -88,15 +88,15 @@ app.post('/api/scan', async (req, res) => {
 
   // Check scan limits for authenticated users
   if (req.user) {
-    const canScan = await User.canScan(req.user.id);
-    if (!canScan) {
+    const canScanNow = await db.canScan(req.user.id);
+    if (!canScanNow) {
       return res.status(429).json({ 
         error: 'Scan limit reached',
         message: 'Upgrade your plan for more scans',
         upgrade: true
       });
     }
-    await User.incrementScanCount(req.user.id);
+    // Usage is incremented in db.createScan, no need to call separately
   }
 
   // Create scan record in database
