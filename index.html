@@ -855,6 +855,9 @@
           <span id="auth-switch-text">Already have an account?</span>
           <a onclick="toggleAuthMode()" id="auth-switch-link">Log in</a>
         </div>
+        <div class="forgot-password" id="forgot-password-link" style="display: none; text-align: center; margin-top: 12px;">
+          <a href="#" onclick="showForgotPassword()" style="color: var(--text-muted); font-size: 13px;">Forgot password?</a>
+        </div>
       </div>
     </div>
   </div>
@@ -1278,6 +1281,46 @@
       document.getElementById('auth-switch-text').textContent = isSignup ? 'Already have an account?' : "Don't have an account?";
       document.getElementById('auth-switch-link').textContent = isSignup ? 'Log in' : 'Sign up';
       document.getElementById('auth-error').textContent = '';
+      // Show forgot password link only on login
+      document.getElementById('forgot-password-link').style.display = isSignup ? 'none' : 'block';
+    }
+    
+    async function showForgotPassword() {
+      const email = document.getElementById('auth-email').value;
+      if (!email) {
+        document.getElementById('auth-error').textContent = 'Please enter your email first';
+        return;
+      }
+      
+      const errorEl = document.getElementById('auth-error');
+      const submitBtn = document.getElementById('auth-submit');
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      errorEl.textContent = '';
+      
+      try {
+        const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        const data = await res.json();
+        
+        if (data.demo) {
+          // Demo mode - show the reset link
+          errorEl.innerHTML = `<span style="color: var(--accent);">Reset link (demo mode):</span><br>
+            <a href="${data.demo.resetUrl}" target="_blank" style="color: var(--accent); word-break: break-all;">Click here to reset password</a>`;
+        } else {
+          errorEl.innerHTML = '<span style="color: var(--accent);">✓ If an account exists, a reset email has been sent.</span>';
+        }
+      } catch (err) {
+        errorEl.textContent = 'Failed to send reset email. Please try again.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Log in';
+      }
     }
 
     async function handleAuth(e) {

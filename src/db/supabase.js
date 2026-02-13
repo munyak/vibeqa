@@ -1052,5 +1052,104 @@ module.exports = {
   
   // Helpers
   hashPassword,
-  sanitizeUser
+  sanitizeUser,
+  
+  // Password Reset
+  createPasswordReset,
+  verifyPasswordResetToken,
+  completePasswordReset
 };
+
+// ============================================
+// Password Reset
+// ============================================
+
+async function createPasswordReset(email) {
+  if (!supabase) return null;
+  
+  // Find user by email
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('id, email, name')
+    .eq('email', email.toLowerCase())
+    .single();
+  
+  if (userError || !user) return null;
+  
+  // Generate token (64 char hex)
+  const token = crypto.randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  
+  // Invalidate any existing tokens for this user
+  await supabase
+    .from('password_resets')
+    .delete()
+    .eq('user_id', user.id);
+  
+  // Create new token
+  const { error } = await supabase
+    .from('password_resets')
+    .insert({
+      user_id: user.id,
+      token,
+      expires_at: expiresAt.toISOString()
+    });
+  
+  if (error) {
+    console.error('Error creating password reset:', error);
+    return null;
+  }
+  
+  return { token, user };
+}
+
+async function verifyPasswordResetToken(token) {
+  if (!supabase) return null;
+  
+  const { data, error } = await supabase
+    .from('password_resets')
+    .select('*, users(id, email, name)')
+    .eq('token', token)
+    .is('used_at', null)
+    .gte('expires_at', new Date().toISOString())
+    .single();
+  
+  if (error || !data) return null;
+  
+  return {
+    resetId: data.id,
+    userId: data.user_id,
+    user: data.users
+  };
+}
+
+async function completePasswordReset(token, newPassword) {
+  if (!supabase) return false;
+  
+  const reset = await verifyPasswordResetToken(token);
+  if (!reset) return false;
+  
+  const passwordHash = hashPassword(newPassword);
+  
+  // Update password
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({ password_hash: passwordHash })
+    .eq('id', reset.userId);
+  
+  if (updateError) return false;
+  
+  // Mark token as used
+  await supabase
+    .from('password_resets')
+    .update({ used_at: new Date().toISOString() })
+    .eq('id', reset.resetId);
+  
+  // Delete all sessions for this user (force re-login)
+  await supabase
+    .from('sessions')
+    .delete()
+    .eq('user_id', reset.userId);
+  
+  return true;
+}

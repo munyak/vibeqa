@@ -545,4 +545,87 @@ router.post('/webhooks/github', express.raw({ type: 'application/json' }), async
   }
 });
 
+// Forgot password - request reset
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    
+    const result = await db.createPasswordReset(email);
+    
+    // Always return success to prevent email enumeration
+    // In production, this would send an email
+    const response = { 
+      success: true, 
+      message: 'If an account with that email exists, a password reset link has been sent.' 
+    };
+    
+    // In demo mode, include the reset link for testing
+    if (result && !process.env.SENDGRID_API_KEY) {
+      const resetUrl = `${process.env.APP_URL || 'https://intuitive-insight-production-bb40.up.railway.app'}/reset-password.html?token=${result.token}`;
+      response.demo = {
+        note: 'Email not configured. Use this link to reset password:',
+        resetUrl,
+        token: result.token
+      };
+    }
+    
+    res.json(response);
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+});
+
+// Reset password - verify token and set new password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password are required' });
+    }
+    
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+    
+    const success = await db.completePasswordReset(token, password);
+    
+    if (!success) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+    
+    res.json({ success: true, message: 'Password has been reset. Please log in with your new password.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+// Verify reset token (check if valid before showing form)
+router.get('/verify-reset-token', async (req, res) => {
+  try {
+    const { token } = req.query;
+    
+    if (!token) {
+      return res.status(400).json({ valid: false, error: 'Token is required' });
+    }
+    
+    const result = await db.verifyPasswordResetToken(token);
+    
+    if (!result) {
+      return res.json({ valid: false, error: 'Invalid or expired token' });
+    }
+    
+    res.json({ valid: true, email: result.user.email });
+  } catch (err) {
+    console.error('Verify reset token error:', err);
+    res.status(500).json({ valid: false, error: 'Failed to verify token' });
+  }
+});
+
 module.exports = router;
