@@ -1066,10 +1066,16 @@
       }, 3000);
 
       try {
-        // Start scan
+        // Start scan - include auth token if logged in
+        const scanHeaders = { 'Content-Type': 'application/json' };
+        const authToken = localStorage.getItem('vibeqa_token');
+        if (authToken) {
+          scanHeaders['Authorization'] = `Bearer ${authToken}`;
+        }
+        
         const scanRes = await fetch(`${API_URL}/api/scan`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: scanHeaders,
           body: JSON.stringify({ url })
         });
         
@@ -1087,7 +1093,8 @@
         
         while (scan.status === 'scanning' && attempts < maxAttempts) {
           await new Promise(r => setTimeout(r, 2000)); // Wait 2 seconds
-          const pollRes = await fetch(`${API_URL}/api/scan/${scanId}`);
+          const pollHeaders = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+          const pollRes = await fetch(`${API_URL}/api/scan/${scanId}`, { headers: pollHeaders });
           scan = await pollRes.json();
           attempts++;
         }
