@@ -1,124 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — VibeQA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="VibeQA Privacy Policy — how we collect, use, and protect your data." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #FFFFFF;
-      color: #09090B;
-      line-height: 1.7;
-      font-size: 16px;
-      -webkit-font-smoothing: antialiased;
+    :root {
+      --bg: #0B0D14; --bg-card: #0F1420; --bg-card2: #141928;
+      --border: rgba(255,255,255,0.07); --border-glow: rgba(29,233,182,0.25);
+      --teal: #1DE9B6; --sky: #29B6F6;
+      --grad: linear-gradient(135deg, #1DE9B6 0%, #29B6F6 100%);
+      --grad-text: linear-gradient(90deg, #1DE9B6 0%, #29B6F6 100%);
+      --white: #FFFFFF; --gray-100: rgba(255,255,255,0.90);
+      --gray-300: rgba(255,255,255,0.55); --gray-500: rgba(255,255,255,0.30);
+      --gray-700: rgba(255,255,255,0.10);
+      --font-main: 'Space Grotesk', -apple-system, sans-serif;
+      --font-mono: 'Space Mono', 'Courier New', monospace;
+      --radius: 12px; --radius-lg: 20px;
     }
-    .container { max-width: 720px; margin: 0 auto; padding: 60px 24px; }
-    h1 { font-size: 32px; margin-bottom: 8px; letter-spacing: -0.025em; }
-    .updated { color: #71717A; font-size: 14px; margin-bottom: 40px; }
-    h2 { font-size: 20px; margin: 32px 0 16px; letter-spacing: -0.025em; }
-    p { margin-bottom: 16px; color: #3F3F46; }
-    ul { margin: 16px 0 16px 24px; color: #3F3F46; }
-    li { margin-bottom: 8px; }
-    a { color: #6366F1; }
-    .back { display: inline-block; margin-bottom: 24px; color: #71717A; text-decoration: none; font-size: 14px; }
-    .back:hover { color: #09090B; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-main); background: var(--bg); color: var(--gray-100); min-height: 100vh; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; top: -20%; left: -10%;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(29,233,182,0.04) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 2; }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11,13,20,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
+    .logo-wordmark { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+    .logo-wordmark span { background: var(--grad-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .back-link { color: var(--gray-300); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .back-link:hover { color: var(--teal); }
+    .page-header { padding: 64px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    .page-label { font-size: 11px; font-family: var(--font-mono); letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; }
+    .page-title { font-size: clamp(28px, 5vw, 42px); font-weight: 700; letter-spacing: -1px; color: var(--white); margin-bottom: 12px; }
+    .page-meta { font-size: 13px; color: var(--gray-500); font-family: var(--font-mono); }
+    .content { padding-bottom: 80px; }
+    .content h2 { font-size: 20px; font-weight: 600; color: var(--white); margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .content h3 { font-size: 15px; font-weight: 600; color: var(--gray-100); margin: 20px 0 8px; }
+    .content p { font-size: 14px; color: var(--gray-300); line-height: 1.7; margin-bottom: 12px; }
+    .content ul { margin: 8px 0 12px 20px; }
+    .content ul li { font-size: 14px; color: var(--gray-300); line-height: 1.7; margin-bottom: 6px; }
+    .content a { color: var(--teal); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+    .highlight-box {
+      background: rgba(29,233,182,0.05); border: 1px solid rgba(29,233,182,0.15);
+      border-radius: var(--radius); padding: 16px 20px; margin: 20px 0;
+    }
+    .highlight-box p { margin-bottom: 0; }
+    .data-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    .data-table th { text-align: left; color: var(--teal); font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--gray-300); vertical-align: top; line-height: 1.5; }
+    .data-table tr:last-child td { border-bottom: none; }
+    footer { border-top: 1px solid var(--border); padding: 32px 0; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 13px; color: var(--gray-500); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--gray-300); }
+    .footer-copy { font-size: 12px; color: var(--gray-500); font-family: var(--font-mono); }
   </style>
 </head>
 <body>
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="ng" x1="4" y1="4" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#1DE9B6"/><stop offset="100%" stop-color="#29B6F6"/></linearGradient></defs>
+          <circle cx="13.5" cy="13" r="8" stroke="url(#ng)" stroke-width="2.2"/>
+          <line x1="19.5" y1="19" x2="25" y2="25" stroke="url(#ng)" stroke-width="2.2" stroke-linecap="round"/>
+          <polyline points="9.5,13 12,16 17.5,10.5" stroke="url(#ng)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="logo-wordmark">Vibe<span>QA</span></div>
+      </a>
+      <a href="/" class="back-link">← Back to home</a>
+    </div>
+  </nav>
+
   <div class="container">
-    <a href="/" class="back">← Back to VibeQA</a>
-    <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: February 11, 2026</p>
+    <div class="page-header">
+      <div class="page-label">Legal</div>
+      <h1 class="page-title">Privacy Policy</h1>
+      <p class="page-meta">// Effective date: March 1, 2026 &nbsp;·&nbsp; Last updated: February 24, 2026</p>
+    </div>
 
-    <p>VibeQA ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website testing service.</p>
+    <div class="content">
 
-    <h2>Information We Collect</h2>
-    <p>We collect information you provide directly to us:</p>
-    <ul>
-      <li><strong>Account Information:</strong> Email address, name, and password when you create an account</li>
-      <li><strong>Payment Information:</strong> Billing details processed securely through Stripe (we do not store full credit card numbers)</li>
-      <li><strong>Usage Data:</strong> URLs you submit for scanning, scan results, and service usage patterns</li>
-      <li><strong>Communications:</strong> Information you provide when contacting support</li>
-    </ul>
+      <div class="highlight-box">
+        <p>VibeQA is built by a security professional. We collect only what we need to run the service, we don't sell your data, and we give you control over what we store. This policy tells you exactly what we collect, why, and how long we keep it.</p>
+      </div>
 
-    <p>We automatically collect certain information:</p>
-    <ul>
-      <li><strong>Log Data:</strong> IP address, browser type, operating system, referring URLs, and timestamps</li>
-      <li><strong>Device Information:</strong> Device type, unique device identifiers, and mobile network information</li>
-      <li><strong>Cookies:</strong> Session cookies to maintain your login state</li>
-    </ul>
+      <h2>1. Who We Are</h2>
+      <p>VibeQA ("we," "us," "our") is an automated quality assurance service for web applications, operated at <a href="https://vibeqa.io">vibeqa.io</a>. To contact us about privacy matters: <a href="mailto:privacy@vibeqa.io">privacy@vibeqa.io</a>.</p>
 
-    <h2>How We Use Your Information</h2>
-    <p>We use collected information to:</p>
-    <ul>
-      <li>Provide, maintain, and improve our services</li>
-      <li>Process transactions and send related information</li>
-      <li>Send technical notices, updates, security alerts, and support messages</li>
-      <li>Respond to your comments, questions, and customer service requests</li>
-      <li>Monitor and analyze trends, usage, and activities</li>
-      <li>Detect, investigate, and prevent fraudulent transactions and abuse</li>
-    </ul>
+      <h2>2. What We Collect and Why</h2>
 
-    <h2>Information Sharing</h2>
-    <p>We do not sell your personal information. We may share information:</p>
-    <ul>
-      <li><strong>With Service Providers:</strong> Third parties that perform services on our behalf (payment processing, hosting, analytics)</li>
-      <li><strong>For Legal Reasons:</strong> When required by law or to protect rights, privacy, safety, or property</li>
-      <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>
-    </ul>
+      <h3>2.1 Account Data</h3>
+      <p>When you create an account, we collect:</p>
+      <ul>
+        <li><strong>Email address</strong> — required to create and identify your account, send transactional emails (scan results, trial expiry, billing receipts)</li>
+        <li><strong>Name</strong> — optional, used for personalization</li>
+        <li><strong>Password</strong> — stored as a bcrypt hash; we never store or transmit plaintext passwords</li>
+      </ul>
+      <p>If you sign in via Google or GitHub SSO, we receive only your email address and public profile name from those providers. We do not receive your passwords or access your accounts beyond authentication.</p>
 
-    <h2>Data Retention</h2>
-    <p>We retain your information for as long as your account is active or as needed to provide services. Scan results are retained according to your plan:</p>
-    <ul>
-      <li>Free: 7 days</li>
-      <li>Pro: 30 days</li>
-      <li>Team: 90 days</li>
-    </ul>
-    <p>You may request deletion of your account and associated data at any time by contacting us.</p>
+      <h3>2.2 Scan Data</h3>
+      <p>When you submit a URL for scanning, we:</p>
+      <ul>
+        <li>Crawl and render the URL you provide using an automated browser</li>
+        <li>Capture screenshots of the page at desktop and mobile viewports</li>
+        <li>Collect and store the issues found (broken links, console errors, performance metrics, etc.)</li>
+        <li>Store the URL and scan results in your scan history per your plan's retention period</li>
+      </ul>
+      <p><strong>Important:</strong> By submitting a URL for scanning, you confirm you own the site or have authorization from the owner to scan it. We access third-party websites only at your direction. We are not responsible for content found on scanned sites.</p>
 
-    <h2>Data Security</h2>
-    <p>We implement appropriate technical and organizational measures to protect your information, including:</p>
-    <ul>
-      <li>Encryption of data in transit (TLS/SSL)</li>
-      <li>Secure password hashing</li>
-      <li>Regular security assessments</li>
-      <li>Access controls and authentication</li>
-    </ul>
+      <h3>2.3 Technical and Usage Data</h3>
+      <ul>
+        <li><strong>IP addresses</strong> — logged for rate limiting, abuse prevention, and security. Free-tier rate limiting uses IP to enforce scan limits. Logs are retained for 30 days.</li>
+        <li><strong>Authentication tokens</strong> — JWT tokens are issued on login and stored in your browser's localStorage. Tokens use a sliding-window expiry with automatic refresh.</li>
+        <li><strong>Browser and device information</strong> — basic user-agent data collected to detect and prevent automated abuse of free-tier scans.</li>
+        <li><strong>Usage analytics</strong> — we use PostHog to understand how the product is used (feature usage, scan frequency, conversion events). PostHog is configured in privacy-preserving mode; data is not shared with third parties or used for ad targeting.</li>
+      </ul>
 
-    <h2>Your Rights</h2>
-    <p>Depending on your location, you may have rights to:</p>
-    <ul>
-      <li>Access your personal information</li>
-      <li>Correct inaccurate data</li>
-      <li>Request deletion of your data</li>
-      <li>Object to or restrict processing</li>
-      <li>Data portability</li>
-      <li>Withdraw consent</li>
-    </ul>
+      <h3>2.4 Payment Data</h3>
+      <p>Payments are processed by <a href="https://stripe.com" target="_blank">Stripe</a>. We do not store, transmit, or have access to your credit card numbers, CVV, or banking information. Stripe provides us with a non-sensitive billing token, your subscription status, and last-4 card digits for display purposes. Stripe's privacy policy governs how they handle your payment data.</p>
 
-    <h2>California Privacy Rights (CCPA)</h2>
-    <p>California residents have additional rights under the CCPA, including the right to know what personal information is collected, request deletion, and opt-out of sales (we do not sell personal information).</p>
+      <h2>3. Data Retention</h2>
 
-    <h2>International Data Transfers</h2>
-    <p>Your information may be transferred to and processed in countries other than your own. We ensure appropriate safeguards are in place for such transfers.</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Data Type</th><th>Free Plan</th><th>Pro Plan</th><th>Team Plan</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Scan results & screenshots</td><td>7 days</td><td>90 days</td><td>1 year</td></tr>
+          <tr><td>Account data</td><td colspan="3">Until account deletion or 2 years of inactivity</td></tr>
+          <tr><td>IP address logs</td><td colspan="3">30 days (rolling)</td></tr>
+          <tr><td>Email verification records</td><td colspan="3">90 days</td></tr>
+          <tr><td>Payment/billing records</td><td colspan="3">7 years (tax compliance)</td></tr>
+        </tbody>
+      </table>
 
-    <h2>Children's Privacy</h2>
-    <p>Our service is not directed to children under 13. We do not knowingly collect personal information from children under 13.</p>
+      <h2>4. How We Use Your Data</h2>
+      <ul>
+        <li><strong>To provide the service</strong> — scanning URLs, generating reports, storing your history</li>
+        <li><strong>To run your account</strong> — authentication, billing, plan enforcement</li>
+        <li><strong>To communicate with you</strong> — transactional emails only (scan results, billing, trial expiry). We do not send marketing emails without your explicit opt-in.</li>
+        <li><strong>To prevent abuse</strong> — IP rate limiting, disposable email blocking, and behavioral signals are used to protect service integrity</li>
+        <li><strong>To improve the product</strong> — aggregated, anonymized usage analytics</li>
+      </ul>
+      <p>We do not sell your data. We do not use your scan results to train AI models. We do not profile you for advertising.</p>
 
-    <h2>Changes to This Policy</h2>
-    <p>We may update this Privacy Policy from time to time. We will notify you of material changes by posting the new policy on this page and updating the "Last updated" date.</p>
+      <h2>5. Third-Party Services</h2>
 
-    <h2>Contact Us</h2>
-    <p>If you have questions about this Privacy Policy, please contact us at:</p>
-    <ul>
-      <li>Email: <a href="mailto:privacy@vibeqa.io">privacy@vibeqa.io</a></li>
-      <li>Address: Los Angeles, CA, USA</li>
-    </ul>
+      <table class="data-table">
+        <thead>
+          <tr><th>Service</th><th>Purpose</th><th>Data Shared</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Stripe</td><td>Payment processing</td><td>Email, billing amount, plan selection</td></tr>
+          <tr><td>Railway</td><td>Cloud infrastructure (hosting)</td><td>All service data (encrypted at rest)</td></tr>
+          <tr><td>Google (OAuth)</td><td>Optional SSO login</td><td>Email, name (only if you use Google login)</td></tr>
+          <tr><td>GitHub (OAuth)</td><td>Optional SSO login</td><td>Email, name (only if you use GitHub login)</td></tr>
+          <tr><td>PostHog</td><td>Product analytics</td><td>Anonymized usage events, no PII in events</td></tr>
+        </tbody>
+      </table>
+
+      <p>We do not share your data with any other third parties except as required by law.</p>
+
+      <h2>6. Cookies and Local Storage</h2>
+      <p>VibeQA uses browser <strong>localStorage</strong> (not cookies) to store your authentication token. We use minimal session-level cookies only where technically required. We do not use tracking cookies, advertising cookies, or third-party cookies for analytics.</p>
+      <p>PostHog may set a first-party analytics cookie to track session continuity. This can be blocked via browser settings without affecting core service functionality.</p>
+
+      <h2>7. Your Rights</h2>
+      <p>Depending on your location, you may have the following rights:</p>
+      <ul>
+        <li><strong>Access</strong> — request a copy of your personal data</li>
+        <li><strong>Correction</strong> — update inaccurate data via your account settings</li>
+        <li><strong>Deletion</strong> — delete your account and all associated data. Scan history is purged within 72 hours. Billing records are retained for legal compliance per Section 3.</li>
+        <li><strong>Portability</strong> — export your scan history in JSON format from your dashboard</li>
+        <li><strong>Opt-out of analytics</strong> — disable PostHog tracking via your account settings</li>
+        <li><strong>Withdraw consent</strong> — where processing is based on consent, you may withdraw it at any time</li>
+      </ul>
+      <p>To exercise any of these rights: <a href="mailto:privacy@vibeqa.io">privacy@vibeqa.io</a>. We respond to all requests within 30 days.</p>
+
+      <h2>8. California Residents (CCPA)</h2>
+      <p>California residents have the right to know what personal information we collect, to delete it, and to opt out of its sale. We do not sell personal information. To submit a CCPA request: <a href="mailto:privacy@vibeqa.io">privacy@vibeqa.io</a>.</p>
+
+      <h2>9. European Users (GDPR)</h2>
+      <p>If you are located in the European Economic Area, our legal basis for processing your data is:</p>
+      <ul>
+        <li><strong>Contract performance</strong> — to provide the service you signed up for</li>
+        <li><strong>Legitimate interests</strong> — fraud prevention, abuse control, service improvement</li>
+        <li><strong>Legal obligation</strong> — billing record retention</li>
+        <li><strong>Consent</strong> — marketing communications (where applicable)</li>
+      </ul>
+      <p>Data is hosted on Railway infrastructure in the United States. By using VibeQA, you consent to this transfer. We apply appropriate safeguards consistent with GDPR Chapter V.</p>
+
+      <h2>10. Security</h2>
+      <p>VibeQA is built by a 20-year information security professional. Security measures include: HTTPS-only data transmission, bcrypt password hashing, JWT token rotation with sliding-window expiry, IP-based rate limiting, disposable email blocking on registration, and encrypted data at rest via Railway's infrastructure.</p>
+      <p>No system is perfectly secure. If you discover a security vulnerability, please report it responsibly to <a href="mailto:security@vibeqa.io">security@vibeqa.io</a>.</p>
+
+      <h2>11. Children</h2>
+      <p>VibeQA is not directed to children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, contact us at <a href="mailto:privacy@vibeqa.io">privacy@vibeqa.io</a> and we will delete it promptly.</p>
+
+      <h2>12. Changes to This Policy</h2>
+      <p>We may update this policy. When we do, we will update the "Last updated" date at the top and, for material changes, notify you by email. Continued use of VibeQA after changes constitutes acceptance of the updated policy.</p>
+
+      <h2>13. Contact</h2>
+      <p>Questions about this policy: <a href="mailto:privacy@vibeqa.io">privacy@vibeqa.io</a><br/>
+      General support: <a href="mailto:hello@vibeqa.io">hello@vibeqa.io</a></p>
+
+    </div>
   </div>
+
+  <footer>
+    <div class="footer-inner">
+      <a href="/" class="logo">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="fg" x1="4" y1="4" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#1DE9B6"/><stop offset="100%" stop-color="#29B6F6"/></linearGradient></defs>
+          <circle cx="13.5" cy="13" r="8" stroke="url(#fg)" stroke-width="2.2"/>
+          <line x1="19.5" y1="19" x2="25" y2="25" stroke="url(#fg)" stroke-width="2.2" stroke-linecap="round"/>
+          <polyline points="9.5,13 12,16 17.5,10.5" stroke="url(#fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="logo-wordmark" style="font-size:16px">Vibe<span>QA</span></div>
+      </a>
+      <div class="footer-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="mailto:hello@vibeqa.io">Contact</a>
+      </div>
+      <div class="footer-copy">© 2026 VibeQA</div>
+    </div>
+  </footer>
 </body>
 </html>

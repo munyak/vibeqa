@@ -1,135 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Terms of Service — VibeQA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="VibeQA Terms of Service — the rules of the road for using our QA platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #FFFFFF;
-      color: #09090B;
-      line-height: 1.7;
-      font-size: 16px;
-      -webkit-font-smoothing: antialiased;
+    :root {
+      --bg: #0B0D14; --bg-card: #0F1420; --bg-card2: #141928;
+      --border: rgba(255,255,255,0.07); --border-glow: rgba(29,233,182,0.25);
+      --teal: #1DE9B6; --sky: #29B6F6;
+      --grad: linear-gradient(135deg, #1DE9B6 0%, #29B6F6 100%);
+      --grad-text: linear-gradient(90deg, #1DE9B6 0%, #29B6F6 100%);
+      --white: #FFFFFF; --gray-100: rgba(255,255,255,0.90);
+      --gray-300: rgba(255,255,255,0.55); --gray-500: rgba(255,255,255,0.30);
+      --gray-700: rgba(255,255,255,0.10);
+      --font-main: 'Space Grotesk', -apple-system, sans-serif;
+      --font-mono: 'Space Mono', 'Courier New', monospace;
+      --radius: 12px; --radius-lg: 20px;
     }
-    .container { max-width: 720px; margin: 0 auto; padding: 60px 24px; }
-    h1 { font-size: 32px; margin-bottom: 8px; letter-spacing: -0.025em; }
-    .updated { color: #71717A; font-size: 14px; margin-bottom: 40px; }
-    h2 { font-size: 20px; margin: 32px 0 16px; letter-spacing: -0.025em; }
-    p { margin-bottom: 16px; color: #3F3F46; }
-    ul { margin: 16px 0 16px 24px; color: #3F3F46; }
-    li { margin-bottom: 8px; }
-    a { color: #6366F1; }
-    .back { display: inline-block; margin-bottom: 24px; color: #71717A; text-decoration: none; font-size: 14px; }
-    .back:hover { color: #09090B; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-main); background: var(--bg); color: var(--gray-100); min-height: 100vh; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; top: -20%; right: -10%;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(41,182,246,0.04) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 2; }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11,13,20,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
+    .logo-wordmark { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+    .logo-wordmark span { background: var(--grad-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .back-link { color: var(--gray-300); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .back-link:hover { color: var(--teal); }
+    .page-header { padding: 64px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    .page-label { font-size: 11px; font-family: var(--font-mono); letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; }
+    .page-title { font-size: clamp(28px, 5vw, 42px); font-weight: 700; letter-spacing: -1px; color: var(--white); margin-bottom: 12px; }
+    .page-meta { font-size: 13px; color: var(--gray-500); font-family: var(--font-mono); }
+    .content { padding-bottom: 80px; }
+    .content h2 { font-size: 20px; font-weight: 600; color: var(--white); margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .content h3 { font-size: 15px; font-weight: 600; color: var(--gray-100); margin: 20px 0 8px; }
+    .content p { font-size: 14px; color: var(--gray-300); line-height: 1.7; margin-bottom: 12px; }
+    .content ul { margin: 8px 0 12px 20px; }
+    .content ul li { font-size: 14px; color: var(--gray-300); line-height: 1.7; margin-bottom: 6px; }
+    .content a { color: var(--teal); text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+    .highlight-box { background: rgba(29,233,182,0.05); border: 1px solid rgba(29,233,182,0.15); border-radius: var(--radius); padding: 16px 20px; margin: 20px 0; }
+    .highlight-box p { margin-bottom: 0; }
+    .warning-box { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius); padding: 16px 20px; margin: 20px 0; }
+    .warning-box p { margin-bottom: 0; color: rgba(248,113,113,0.9); }
+    footer { border-top: 1px solid var(--border); padding: 32px 0; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 13px; color: var(--gray-500); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--gray-300); }
+    .footer-copy { font-size: 12px; color: var(--gray-500); font-family: var(--font-mono); }
   </style>
 </head>
 <body>
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="ng" x1="4" y1="4" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#1DE9B6"/><stop offset="100%" stop-color="#29B6F6"/></linearGradient></defs>
+          <circle cx="13.5" cy="13" r="8" stroke="url(#ng)" stroke-width="2.2"/>
+          <line x1="19.5" y1="19" x2="25" y2="25" stroke="url(#ng)" stroke-width="2.2" stroke-linecap="round"/>
+          <polyline points="9.5,13 12,16 17.5,10.5" stroke="url(#ng)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="logo-wordmark">Vibe<span>QA</span></div>
+      </a>
+      <a href="/" class="back-link">← Back to home</a>
+    </div>
+  </nav>
+
   <div class="container">
-    <a href="/" class="back">← Back to VibeQA</a>
-    <h1>Terms of Service</h1>
-    <p class="updated">Last updated: February 11, 2026</p>
+    <div class="page-header">
+      <div class="page-label">Legal</div>
+      <h1 class="page-title">Terms of Service</h1>
+      <p class="page-meta">// Effective date: March 1, 2026 &nbsp;·&nbsp; Last updated: February 24, 2026</p>
+    </div>
 
-    <p>These Terms of Service ("Terms") govern your use of VibeQA's website testing services. By using our services, you agree to these Terms.</p>
+    <div class="content">
 
-    <h2>1. Acceptance of Terms</h2>
-    <p>By accessing or using VibeQA, you agree to be bound by these Terms and our Privacy Policy. If you do not agree, do not use our services.</p>
+      <div class="highlight-box">
+        <p>These Terms govern your use of VibeQA. By creating an account or using the service, you agree to these Terms. If you're using VibeQA for an organization, you agree on that organization's behalf.</p>
+      </div>
 
-    <h2>2. Description of Service</h2>
-    <p>VibeQA provides automated website testing services, including:</p>
-    <ul>
-      <li>Automated scanning for broken links, mobile responsiveness, performance issues, and accessibility</li>
-      <li>Screenshot capture of websites on desktop and mobile viewports</li>
-      <li>AI-powered UX analysis (on eligible plans)</li>
-      <li>Scheduled monitoring and notifications</li>
-    </ul>
+      <h2>1. The Service</h2>
+      <p>VibeQA provides automated quality assurance scanning for web applications ("the Service"). You submit URLs; we crawl them, analyze them, and return a report. We also offer account management, scan history, integrations, and an API.</p>
+      <p>The Service is provided as-is and as-available. While we work hard to keep it reliable, we don't guarantee 100% uptime or that every scan will catch every issue. QA tools — including VibeQA — are one layer of a quality process, not a substitute for it.</p>
 
-    <h2>3. Account Registration</h2>
-    <p>To access certain features, you must create an account. You agree to:</p>
-    <ul>
-      <li>Provide accurate and complete information</li>
-      <li>Maintain the security of your account credentials</li>
-      <li>Promptly notify us of any unauthorized access</li>
-      <li>Accept responsibility for all activities under your account</li>
-    </ul>
+      <h2>2. Your Account</h2>
+      <h3>2.1 Eligibility</h3>
+      <p>You must be at least 13 years old to use VibeQA. If you are using the Service on behalf of an organization, you represent that you have authority to bind that organization to these Terms.</p>
 
-    <h2>4. Acceptable Use</h2>
-    <p>You agree not to:</p>
-    <ul>
-      <li>Use the service for any unlawful purpose</li>
-      <li>Scan websites you do not own or have permission to test</li>
-      <li>Attempt to overwhelm, disrupt, or attack any website through our service</li>
-      <li>Circumvent usage limits or security measures</li>
-      <li>Reverse engineer or attempt to extract source code</li>
-      <li>Resell or redistribute the service without authorization</li>
-      <li>Use the service to develop competing products</li>
-    </ul>
+      <h3>2.2 Account Security</h3>
+      <p>You are responsible for maintaining the security of your account credentials. Do not share your password or API keys. Notify us immediately at <a href="mailto:security@vibeqa.io">security@vibeqa.io</a> if you suspect unauthorized access. We are not liable for losses resulting from unauthorized use of your account.</p>
 
-    <h2>5. Subscription and Payment</h2>
-    <p>Paid subscriptions are billed in advance on a monthly basis. You agree to:</p>
-    <ul>
-      <li>Pay all fees associated with your subscription plan</li>
-      <li>Provide valid payment information</li>
-      <li>Accept automatic renewal unless cancelled before the renewal date</li>
-    </ul>
-    <p>Refunds are provided at our discretion. You may cancel your subscription at any time; cancellation takes effect at the end of the current billing period.</p>
+      <h3>2.3 Accurate Information</h3>
+      <p>You agree to provide accurate registration information and keep it current. Accounts created with false information, disposable email addresses, or for the purpose of abusing free-tier limits may be terminated without notice.</p>
 
-    <h2>6. Usage Limits</h2>
-    <p>Each plan includes specific usage limits:</p>
-    <ul>
-      <li><strong>Free:</strong> 1 scan per day</li>
-      <li><strong>Pro ($29/mo):</strong> 30 scans per month, AI analysis, daily monitoring</li>
-      <li><strong>Team ($79/mo):</strong> Unlimited scans, 5 team members, hourly monitoring</li>
-    </ul>
-    <p>Exceeding limits may result in throttling or suspension of service.</p>
+      <h2>3. Acceptable Use</h2>
 
-    <h2>7. Intellectual Property</h2>
-    <p>VibeQA and its content, features, and functionality are owned by us and protected by copyright, trademark, and other laws. You retain ownership of any content you submit for scanning.</p>
+      <div class="warning-box">
+        <p><strong>Scan authorization requirement:</strong> You may only scan websites you own or have explicit written permission to scan. Unauthorized scanning may violate computer fraud laws in your jurisdiction. VibeQA is not responsible for scans initiated without authorization.</p>
+      </div>
 
-    <h2>8. Data and Privacy</h2>
-    <p>We collect and process data as described in our <a href="/privacy.html">Privacy Policy</a>. By using our service, you consent to such processing and warrant that all data provided is accurate.</p>
+      <h3>You agree NOT to use VibeQA to:</h3>
+      <ul>
+        <li>Scan websites you do not own or lack explicit authorization to scan</li>
+        <li>Conduct denial-of-service attacks or intentionally overload target servers via scan abuse</li>
+        <li>Circumvent rate limits, scan quotas, or free-tier restrictions through technical means (VPNs, rotating IPs, disposable email automation, etc.)</li>
+        <li>Reverse engineer, decompile, or attempt to extract the source code of VibeQA</li>
+        <li>Resell or sublicense VibeQA's scanning infrastructure without a written agreement</li>
+        <li>Use the Service to store, transmit, or process data that violates applicable law</li>
+        <li>Attempt to gain unauthorized access to VibeQA's systems, databases, or other users' data</li>
+        <li>Automate account creation to gain additional free-tier scans</li>
+      </ul>
+      <p>Violation of acceptable use may result in immediate account suspension and potential legal action.</p>
 
-    <h2>9. Disclaimer of Warranties</h2>
-    <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE DO NOT WARRANT THAT:</p>
-    <ul>
-      <li>The service will be uninterrupted or error-free</li>
-      <li>Results will be accurate or reliable</li>
-      <li>The service will meet your specific requirements</li>
-    </ul>
-    <p>Scan results are for informational purposes only and should not be the sole basis for decisions.</p>
+      <h2>4. Subscription Plans and Payment</h2>
 
-    <h2>10. Limitation of Liability</h2>
-    <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, VIBEQA SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR GOODWILL.</p>
-    <p>Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim.</p>
+      <h3>4.1 Free Plan</h3>
+      <p>The Free plan provides limited scans per day with no charge. We reserve the right to modify free plan limits at any time with reasonable notice.</p>
 
-    <h2>11. Indemnification</h2>
-    <p>You agree to indemnify and hold harmless VibeQA from any claims, damages, or expenses arising from your use of the service or violation of these Terms.</p>
+      <h3>4.2 Paid Plans</h3>
+      <p>Pro and Team plans are billed monthly or annually in advance. By subscribing, you authorize us to charge your payment method on a recurring basis until you cancel. All prices are in USD.</p>
 
-    <h2>12. Termination</h2>
-    <p>We may suspend or terminate your account at any time for violation of these Terms or for any other reason. Upon termination:</p>
-    <ul>
-      <li>Your right to use the service ceases immediately</li>
-      <li>We may delete your data after a reasonable period</li>
-      <li>Provisions that should survive termination will remain in effect</li>
-    </ul>
+      <h3>4.3 14-Day Free Trial</h3>
+      <p>Paid plans include a 14-day free trial. No credit card is required to start a trial. If you add a payment method and do not cancel before the trial ends, you will be charged the plan rate. You can cancel at any time during the trial with no charge.</p>
 
-    <h2>13. Changes to Terms</h2>
-    <p>We may modify these Terms at any time. Material changes will be communicated via email or through the service. Continued use after changes constitutes acceptance.</p>
+      <h3>4.4 Refunds</h3>
+      <p>We offer a 14-day money-back guarantee from the date of your first paid charge. To request a refund, email <a href="mailto:billing@vibeqa.io">billing@vibeqa.io</a> within 14 days. Refunds are issued to the original payment method and processed within 5–10 business days. We do not offer prorated refunds for partial months beyond the 14-day window.</p>
 
-    <h2>14. Governing Law</h2>
-    <p>These Terms are governed by the laws of the State of California, USA, without regard to conflict of law principles. Disputes shall be resolved in the courts of Los Angeles County, California.</p>
+      <h3>4.5 Cancellation</h3>
+      <p>You may cancel your subscription at any time from your account settings. Cancellation takes effect at the end of your current billing period. You retain access to paid features until that date. We do not delete your scan history immediately on cancellation — it remains accessible until the retention period for your prior plan expires.</p>
 
-    <h2>15. Contact</h2>
-    <p>Questions about these Terms? Contact us at:</p>
-    <ul>
-      <li>Email: <a href="mailto:legal@vibeqa.io">legal@vibeqa.io</a></li>
-      <li>Address: Los Angeles, CA, USA</li>
-    </ul>
+      <h3>4.6 Price Changes</h3>
+      <p>We may change subscription prices with 30 days' notice by email. Price changes take effect on your next renewal date after the notice period.</p>
+
+      <h2>5. API Access</h2>
+      <p>Pro and Team plans include API access subject to the request limits in your plan. API keys are personal and non-transferable. Sharing API keys with third parties to circumvent per-seat or per-scan limits is prohibited. We may rate-limit or suspend API access for accounts that exceed reasonable usage patterns, regardless of plan tier, and will notify you before taking action where possible.</p>
+
+      <h2>6. Intellectual Property</h2>
+
+      <h3>6.1 VibeQA IP</h3>
+      <p>VibeQA, including its scanning engine, brand, design, documentation, and all related materials, is our intellectual property. These Terms do not transfer any ownership rights to you. You receive a limited, non-exclusive, non-transferable license to use the Service for its intended purpose.</p>
+
+      <h3>6.2 Your Content</h3>
+      <p>You own the websites you scan and any data you submit. You grant us a limited license to access, crawl, and process the URLs you submit solely to provide scan results to you. We do not claim ownership of your websites or scan results. We do not use your scan results to train AI models or share them with third parties without your consent.</p>
+
+      <h3>6.3 Feedback</h3>
+      <p>If you submit feedback, suggestions, or feature requests, you grant us the right to use that feedback without restriction or compensation. We appreciate the input.</p>
+
+      <h2>7. Third-Party Websites</h2>
+      <p>When VibeQA scans a URL, it accesses third-party websites on your behalf. We are not responsible for the content, availability, or practices of those websites. Some websites may block automated scanners — we cannot guarantee scan completion for all URLs. Scan failures due to third-party blocking or rate limiting are not grounds for refund.</p>
+
+      <h2>8. Disclaimers and Limitation of Liability</h2>
+      <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
+      <p>We do not warrant that the Service will be uninterrupted, error-free, or that every issue in a scanned application will be detected. VibeQA's scan results are informational — use them as one input in your quality process, not as a definitive security audit or compliance certification.</p>
+      <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, VIBEQA'S TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM THESE TERMS OR YOUR USE OF THE SERVICE SHALL NOT EXCEED THE AMOUNT YOU PAID TO US IN THE 12 MONTHS PRECEDING THE CLAIM. WE ARE NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES.</p>
+
+      <h2>9. Indemnification</h2>
+      <p>You agree to indemnify and hold harmless VibeQA and its officers, employees, and agents from any claims, damages, or expenses (including reasonable legal fees) arising from: (a) your use of the Service in violation of these Terms, (b) your scanning of websites without authorization, (c) your violation of any applicable law, or (d) any content you submit through the Service.</p>
+
+      <h2>10. Termination</h2>
+      <p>You may delete your account at any time from account settings. We may suspend or terminate your account immediately if you violate these Terms, attempt to abuse the Service, or if required by law. We will provide notice where practicable.</p>
+      <p>On termination: your access to the Service ends immediately; paid plan scan history is retained for 30 days to allow data export before deletion; free plan data is deleted immediately.</p>
+
+      <h2>11. Modifications to the Service</h2>
+      <p>We may modify, add, or remove features at any time. For material changes that reduce functionality of a paid plan, we will provide 30 days' notice and the option to cancel with a prorated refund. Minor changes, bug fixes, and additions don't require advance notice.</p>
+
+      <h2>12. Governing Law and Disputes</h2>
+      <p>These Terms are governed by the laws of the State of Delaware, United States, without regard to conflict of law principles. Any dispute arising from these Terms shall be resolved by binding arbitration under AAA rules, except that either party may seek injunctive relief in a court of competent jurisdiction for IP infringement or unauthorized access to systems. Class action waiver: you agree to resolve disputes individually, not as part of a class action.</p>
+
+      <h2>13. Miscellaneous</h2>
+      <p><strong>Entire agreement:</strong> These Terms, together with our Privacy Policy, constitute the entire agreement between you and VibeQA regarding the Service.</p>
+      <p><strong>Severability:</strong> If any provision is found unenforceable, the remaining provisions remain in effect.</p>
+      <p><strong>No waiver:</strong> Failure to enforce any provision does not constitute a waiver of our right to do so later.</p>
+      <p><strong>Assignment:</strong> You may not assign your account or rights under these Terms. We may assign our rights in connection with a merger, acquisition, or sale of substantially all assets, with notice to you.</p>
+
+      <h2>14. Contact</h2>
+      <p>Questions about these Terms: <a href="mailto:legal@vibeqa.io">legal@vibeqa.io</a><br/>
+      General support: <a href="mailto:hello@vibeqa.io">hello@vibeqa.io</a><br/>
+      Security issues: <a href="mailto:security@vibeqa.io">security@vibeqa.io</a></p>
+
+    </div>
   </div>
+
+  <footer>
+    <div class="footer-inner">
+      <a href="/" class="logo">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="fg" x1="4" y1="4" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#1DE9B6"/><stop offset="100%" stop-color="#29B6F6"/></linearGradient></defs>
+          <circle cx="13.5" cy="13" r="8" stroke="url(#fg)" stroke-width="2.2"/>
+          <line x1="19.5" y1="19" x2="25" y2="25" stroke="url(#fg)" stroke-width="2.2" stroke-linecap="round"/>
+          <polyline points="9.5,13 12,16 17.5,10.5" stroke="url(#fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="logo-wordmark" style="font-size:16px">Vibe<span>QA</span></div>
+      </a>
+      <div class="footer-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="mailto:hello@vibeqa.io">Contact</a>
+      </div>
+      <div class="footer-copy">© 2026 VibeQA</div>
+    </div>
+  </footer>
 </body>
 </html>
