@@ -645,8 +645,12 @@ router.get('/verify-reset-token', async (req, res) => {
 const GOOGLE_SSO_CONFIG = {
   clientId: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  // Callback must point to Railway (backend handles it), not Netlify (frontend)
   redirectUri: `${process.env.APP_URL || 'https://intuitive-insight-production-bb40.up.railway.app'}/api/auth/google/callback`
 };
+
+// Where to send users after auth completes — the Netlify frontend, not Railway
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://vibeqa.io';
 
 // Start Google SSO flow
 router.get('/google', (req, res) => {
@@ -671,9 +675,9 @@ router.get('/google/callback', async (req, res) => {
   const { code, error } = req.query;
   
   if (error || !code) {
-    return res.redirect('/?error=google_auth_failed');
+    return res.redirect(`${FRONTEND_URL}/?error=google_auth_failed`);
   }
-  
+
   try {
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -687,28 +691,28 @@ router.get('/google/callback', async (req, res) => {
         redirect_uri: GOOGLE_SSO_CONFIG.redirectUri
       })
     });
-    
+
     const tokenData = await tokenResponse.json();
-    
+
     if (tokenData.error) {
       console.error('Google OAuth error:', tokenData);
-      return res.redirect('/?error=google_token_failed');
+      return res.redirect(`${FRONTEND_URL}/?error=google_token_failed`);
     }
-    
+
     // Get user info
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` }
     });
-    
+
     const googleUser = await userResponse.json();
-    
+
     if (!googleUser.email) {
-      return res.redirect('/?error=google_no_email');
+      return res.redirect(`${FRONTEND_URL}/?error=google_no_email`);
     }
-    
+
     // Find or create user
     let user = await db.getUserByEmail(googleUser.email);
-    
+
     if (!user) {
       // Create new user
       user = await db.createUser({
@@ -719,16 +723,16 @@ router.get('/google/callback', async (req, res) => {
         ssoId: googleUser.id
       });
     }
-    
+
     // Create session
     const session = await db.createSession(user.id);
-    
-    // Redirect with token
-    res.redirect(`/?sso_token=${session.token}`);
-    
+
+    // Redirect back to the Netlify frontend with the session token
+    res.redirect(`${FRONTEND_URL}/?sso_token=${session.token}`);
+
   } catch (err) {
     console.error('Google SSO error:', err);
-    res.redirect('/?error=google_auth_error');
+    res.redirect(`${FRONTEND_URL}/?error=google_auth_error`);
   }
 });
 
