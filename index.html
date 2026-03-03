@@ -3,8 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VibeQA — QA for AI-Coded Apps | Catch What Cursor & Claude Missed</title>
-  <meta name="description" content="Your AI writes the code. VibeQA catches what it misses. Automated QA built for Cursor, Copilot, and Claude Code workflows. No test-writing required. Free scan, results in 60 seconds." />
+  <title>VibeQA — QA Testing for AI-Coded Apps</title>
+  <meta name="description" content="Automated QA testing for AI-coded apps. Catch bugs, performance issues, and UX problems with Lighthouse + AI analysis." />
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="VibeQA — QA Testing for AI-Coded Apps" />
+  <meta property="og:description" content="Automated QA testing for AI-coded apps. Catch bugs with Lighthouse + AI analysis." />
+  <meta property="og:image" content="https://vibeqa.io/og-image.svg" />
+  <meta property="og:url" content="https://vibeqa.io" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="VibeQA" />
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="VibeQA — QA Testing for AI-Coded Apps" />
+  <meta name="twitter:description" content="Automated QA testing for AI-coded apps." />
+  <meta name="twitter:image" content="https://vibeqa.io/og-image.svg" />
+  
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -80,6 +95,16 @@
       );
       pointer-events: none;
       z-index: 1;
+    }
+
+    /* ─── TOUCH TARGETS (Mobile Accessibility) ─── */
+    button,
+    a,
+    input[type="button"],
+    input[type="submit"],
+    [role="button"] {
+      min-width: 44px;
+      min-height: 44px;
     }
 
     /* ─── UTILITY ─── */
@@ -158,13 +183,15 @@
     .btn-primary {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       background: var(--grad);
       color: #0B0D14;
       font-family: var(--font-main);
       font-size: 14px;
       font-weight: 700;
-      padding: 9px 20px;
+      min-height: 44px;
+      padding: 12px 20px;
       border-radius: 8px;
       border: none;
       cursor: pointer;
@@ -398,18 +425,38 @@
     .screenshot-title { font-size: 12px; color: var(--gray-500); margin-bottom: 8px; font-family: var(--font-mono); }
     .screenshot img { width: 100%; border-radius: var(--radius); border: 1px solid var(--border); }
     .copy-prompt-btn {
-      display: inline-flex; align-items: center; gap: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       margin-top: 20px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--gray-300);
-      font-family: var(--font-main); font-size: 13px;
-      padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      background: linear-gradient(135deg, #FF6B35 0%, #E55A25 100%);
+      color: white;
+      font-family: var(--font-main);
+      font-size: 14px;
+      font-weight: 600;
+      min-height: 44px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
       transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
     }
-    .copy-prompt-btn:hover { border-color: var(--teal); color: var(--teal); }
-    .copy-prompt-btn.copied { border-color: var(--teal); color: var(--teal); }
-    .copy-prompt-btn svg { width: 14px; height: 14px; }
+    .copy-prompt-btn:hover {
+      background: linear-gradient(135deg, #E55A25 0%, #D44A15 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.6);
+    }
+    .copy-prompt-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
+    }
+    .copy-prompt-btn.copied {
+      background: linear-gradient(135deg, #1DE9B6 0%, #29B6F6 100%);
+      color: #0B0D14;
+    }
+    .copy-prompt-btn svg { width: 16px; height: 16px; }
 
     /* ─── UPGRADE CTA ─── */
     .upgrade-cta {
@@ -558,8 +605,11 @@
       margin-top: 1px;
     }
     .plan-cta {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
+      min-height: 44px;
       padding: 12px;
       border-radius: 10px;
       font-family: var(--font-main);
