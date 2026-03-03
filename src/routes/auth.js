@@ -9,6 +9,7 @@ const router = express.Router();
 // Special accounts that get upgraded plans automatically
 const SPECIAL_ACCOUNTS = {
   'mkanaventi@gmail.com': 'team',
+  'gbutler1738@gmail.com': 'team',
 };
 
 // Register
@@ -66,7 +67,16 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     
-    const user = await db.getUserById(userId);
+    let user = await db.getUserById(userId);
+    
+    // Auto-upgrade special accounts on login
+    const specialPlan = SPECIAL_ACCOUNTS[email.toLowerCase()];
+    if (specialPlan && user.plan !== specialPlan) {
+      await db.updateUser(user.id, { plan: specialPlan });
+      user.plan = specialPlan;
+      console.log('[AUTH] Auto-upgraded', email, 'to', specialPlan);
+    }
+    
     const session = await db.createSession(userId);
     
     res.json({ user, token: session.token });
