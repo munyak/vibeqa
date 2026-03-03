@@ -628,8 +628,6 @@ router.get('/verify-reset-token', async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // ============================================
 // SSO - Google OAuth
 // ============================================
@@ -842,3 +840,5 @@ router.get('/sso/providers', (req, res) => {
     github: !!GITHUB_SSO_CONFIG.clientId
   });
 });
+
+module.exports = router;
