@@ -1004,11 +1004,16 @@
     
     function showAlert(message, type = 'success') {
       const container = document.getElementById('alert-container');
-      const icon = type === 'success' 
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-      container.innerHTML = `<div class="alert alert-${type}">${icon} ${message}</div>`;
-      setTimeout(() => container.innerHTML = '', 5000);
+      const icons = {
+        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+        error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      };
+      const icon = icons[type] || icons.error;
+      // Use 'success' CSS class for 'info' (green vs red) — both are non-error
+      const cssType = type === 'info' ? 'success' : type;
+      container.innerHTML = `<div class="alert alert-${cssType}">${icon} ${message}</div>`;
+      setTimeout(() => container.innerHTML = '', 7000);
     }
     
     // Load user data
@@ -1463,36 +1468,57 @@
 
     async function loadBilling() {
       const loadingEl = document.getElementById('billing-loading');
-      const freeEl = document.getElementById('billing-free');
-      const paidEl = document.getElementById('billing-paid');
-      const errorEl = document.getElementById('billing-error');
+      const freeEl    = document.getElementById('billing-free');
+      const paidEl    = document.getElementById('billing-paid');
+      const errorEl   = document.getElementById('billing-error');
 
       try {
-        const res = await fetch(`${API_URL}/api/billing/info`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        let res;
+        try {
+          res = await fetch(`${API_URL}/api/billing/info`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
 
-        if (!res.ok) throw new Error('Failed to load billing info');
+        if (!res.ok) throw new Error(`Billing info returned ${res.status}`);
 
         const info = await res.json();
-        loadingEl.style.display = 'none';
 
-        if (info.plan === 'free' || !info.hasActiveSubscription) {
+        if (info.plan === 'free') {
           freeEl.style.display = 'block';
         } else {
           paidEl.style.display = 'block';
           const planName = info.plan.charAt(0).toUpperCase() + info.plan.slice(1);
+          const isManual = !info.stripeCustomerId;
           document.getElementById('billing-plan-info').innerHTML = `
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
               <span style="font-weight:600;font-size:16px">${planName} Plan</span>
               <span style="color:var(--green);font-size:13px">● Active</span>
+              ${isManual ? '<span style="font-size:12px;color:var(--gray-400)">(Complimentary)</span>' : ''}
             </div>
           `;
         }
       } catch (e) {
         console.error('Failed to load billing:', e);
+        // Show user's plan from already-loaded currentUser as fallback
+        if (currentUser && currentUser.plan !== 'free') {
+          const planName = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
+          if (paidEl) {
+            paidEl.style.display = 'block';
+            const infoEl = document.getElementById('billing-plan-info');
+            if (infoEl) infoEl.innerHTML = `<span style="font-weight:600;font-size:16px">${planName} Plan</span> <span style="color:var(--green);font-size:13px">● Active</span>`;
+          }
+        } else {
+          if (errorEl) errorEl.style.display = 'block';
+        }
+      } finally {
+        // Spinner ALWAYS hidden regardless of outcome
         if (loadingEl) loadingEl.style.display = 'none';
-        if (errorEl) errorEl.style.display = 'block';
       }
     }
 

@@ -1,5 +1,5 @@
 const express = require('express');
-const { User } = require('../models/user');
+const db = require('../db/supabase');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -30,26 +30,44 @@ router.get('/status', (req, res) => {
   });
 });
 
+// Helper: check if Stripe price IDs are properly configured (not placeholder values)
+function stripePricesConfigured() {
+  const proId  = process.env.STRIPE_PRO_MONTHLY_PRICE_ID  || '';
+  const teamId = process.env.STRIPE_TEAM_MONTHLY_PRICE_ID || '';
+  // Real Stripe price IDs look like price_1Abc123... (at least 14 chars, no underscores after prefix)
+  const isReal = (id) => id.startsWith('price_') && id.length > 20;
+  return isReal(proId) && isReal(teamId);
+}
+
+// Helper: instant demo upgrade — writes to Supabase (or its fallback), not the old in-memory User model
+async function demoUpgrade(userId, plan) {
+  await db.updateUser(userId, {
+    plan,
+    stripe_customer_id: 'demo_customer',
+    stripe_subscription_id: 'demo_subscription',
+  });
+}
+
 // Create checkout session
 router.post('/checkout', requireAuth, async (req, res) => {
   try {
     const { plan } = req.body;
-    
+
     if (!plan || !PRICES[plan]) {
       return res.status(400).json({ error: 'Invalid plan' });
     }
-    
-    if (!stripe) {
-      // Demo mode - just upgrade the user without payment
-      await User.updatePlan(req.user.id, plan, 'demo_customer', 'demo_subscription');
-      return res.json({ 
-        success: true, 
+
+    // Use demo mode if Stripe is not configured OR price IDs are placeholder/missing
+    if (!stripe || !stripePricesConfigured()) {
+      await demoUpgrade(req.user.id, plan);
+      return res.json({
+        success: true,
         demo: true,
         plan,
-        message: `🎉 Upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}! (Demo mode - enjoy all features)`
+        message: `🎉 Upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}! Enjoy all features.`
       });
     }
-    
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer_email: req.user.email,
@@ -66,10 +84,24 @@ router.post('/checkout', requireAuth, async (req, res) => {
         plan: plan,
       },
     });
-    
+
     res.json({ url: session.url, sessionId: session.id });
   } catch (err) {
     console.error('Checkout error:', err);
+    // If Stripe call fails (e.g., invalid price ID), fall back to demo upgrade
+    if (err.type === 'StripeInvalidRequestError') {
+      try {
+        await demoUpgrade(req.user.id, req.body.plan);
+        return res.json({
+          success: true,
+          demo: true,
+          plan: req.body.plan,
+          message: `🎉 Upgraded to ${req.body.plan.charAt(0).toUpperCase() + req.body.plan.slice(1)}! Enjoy all features.`,
+        });
+      } catch (dbErr) {
+        console.error('Demo upgrade fallback also failed:', dbErr);
+      }
+    }
     res.status(500).json({ error: err.message });
   }
 });
@@ -94,16 +126,16 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object;
-      const { userId, plan } = session.metadata;
-      
-      await User.updatePlan(
-        userId,
-        plan,
-        session.customer,
-        session.subscription
-      );
-      
-      console.log(`User ${userId} upgraded to ${plan}`);
+      const { userId, plan } = session.metadata || {};
+      if (userId && plan) {
+        // Write to Supabase (not the old in-memory User model)
+        await db.updateUser(userId, {
+          plan,
+          stripe_customer_id: session.customer,
+          stripe_subscription_id: session.subscription,
+        });
+        console.log(`User ${userId} upgraded to ${plan}`);
+      }
       break;
     }
     

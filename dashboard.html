@@ -613,6 +613,7 @@
     }
 
     async function upgrade() {
+      // Non-free users → try to open Stripe billing portal
       if (user.plan !== 'free') {
         try {
           const res  = await fetch(`${API_URL}/api/billing/portal`, {
@@ -622,49 +623,62 @@
           const data = await res.json();
           if (data.url) {
             window.location.href = data.url;
+            return;
           } else if (data.manualPlan) {
-            // Paid plan managed outside Stripe (special/complimentary accounts)
-            alert(data.error || 'Your plan is managed manually. Contact support@vibeqa.io for changes.');
-          } else if (data.needsCheckout) {
-            // No Stripe subscription on record — guide user through checkout
-            const pick = prompt('To manage your subscription, please set up billing first.\n\nChoose a plan:\n1. Pro ($29/mo) — 10 scans/day, 100/month\n2. Team ($79/mo) — Unlimited scans\n\nEnter 1 or 2:');
-            if (pick === '1' || pick === '2') {
-              const planName = pick === '1' ? 'pro' : 'team';
-              const checkoutRes = await fetch(`${API_URL}/api/billing/checkout`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ plan: planName })
-              });
-              const checkoutData = await checkoutRes.json();
-              if (checkoutData.url) { window.location.href = checkoutData.url; }
-              else if (checkoutData.demo) { alert(checkoutData.message); await loadSubscription(); }
-            }
-          } else {
-            alert(data.error || 'Could not open billing portal');
+            alert('Your plan is managed directly — no billing portal needed.\nNeed to make changes? Email support@vibeqa.io.');
+            return;
           }
-        } catch (err) { alert('Error: ' + err.message); }
-        return;
+          // Portal unavailable (no Stripe customer) → fall through to checkout picker below
+        } catch (err) {
+          console.warn('Portal request failed, showing checkout picker:', err.message);
+        }
       }
-      const pick = prompt('Choose a plan:\n1. Pro ($29/mo) — 10 scans/day, 100/month\n2. Team ($79/mo) — Unlimited scans\n\nEnter 1 or 2:');
-      if (pick === '1' || pick === '2') {
-        const planName = pick === '1' ? 'pro' : 'team';
-        try {
-          const res  = await fetch(`${API_URL}/api/billing/checkout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ plan: planName })
+
+      // Plan picker for new upgrades or when portal unavailable
+      const pick = prompt(
+        `${user.plan !== 'free' ? 'Set up billing for your account:\n\n' : 'Choose a plan:\n\n'}` +
+        '1. Pro ($29/mo) — 10 scans/day, 100/month\n' +
+        '2. Team ($79/mo) — Unlimited scans\n\n' +
+        'Enter 1 or 2 (or Cancel to dismiss):'
+      );
+      if (pick !== '1' && pick !== '2') return;
+
+      const planName = pick === '1' ? 'pro' : 'team';
+      const btn = document.getElementById('plan-action-btn');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Processing…';
+
+      try {
+        const res  = await fetch(`${API_URL}/api/billing/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ plan: planName })
+        });
+        const data = await res.json();
+
+        if (data.url) {
+          // Real Stripe checkout — redirect
+          window.location.href = data.url;
+        } else if (data.demo) {
+          // Instant upgrade (demo/no-payment mode) — refresh everything
+          alert(data.message || `Upgraded to ${capitalize(planName)}!`);
+          const userRes = await fetch(`${API_URL}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
           });
-          const data = await res.json();
-          if (data.url) {
-            window.location.href = data.url;
-          } else if (data.demo) {
-            alert(data.message);
-            const userRes = await fetch(`${API_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (userRes.ok) {
             user = await userRes.json();
             updateNavUI();
-            await loadSubscription();
           }
-        } catch (err) { alert('Error: ' + err.message); }
+          await loadSubscription();
+        } else {
+          alert('Could not complete upgrade: ' + (data.error || 'Unknown error. Please try again.'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
       }
     }
 
