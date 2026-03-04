@@ -30,16 +30,21 @@ router.get('/status', (req, res) => {
   });
 });
 
-// Helper: check if Stripe price IDs are properly configured (not placeholder values)
+// Helper: check if Stripe price IDs look real (not placeholder values).
+// Real Stripe price IDs: price_1Abc... — at least 24 chars, no generic words.
 function stripePricesConfigured() {
   const proId  = process.env.STRIPE_PRO_MONTHLY_PRICE_ID  || '';
   const teamId = process.env.STRIPE_TEAM_MONTHLY_PRICE_ID || '';
-  // Real Stripe price IDs look like price_1Abc123... (at least 14 chars, no underscores after prefix)
-  const isReal = (id) => id.startsWith('price_') && id.length > 20;
+  const isReal = (id) =>
+    id.startsWith('price_') &&
+    id.length >= 24 &&
+    !id.includes('pro_monthly') &&
+    !id.includes('team_monthly');
   return isReal(proId) && isReal(teamId);
 }
 
-// Helper: instant demo upgrade — writes to Supabase (or its fallback), not the old in-memory User model
+// Helper: instant demo/fallback upgrade — writes to Supabase (correct store).
+// Returns true on success, throws on failure so callers can surface a clean error.
 async function demoUpgrade(userId, plan) {
   await db.updateUser(userId, {
     plan,
@@ -48,61 +53,63 @@ async function demoUpgrade(userId, plan) {
   });
 }
 
+// Helper: shared response builder for a successful demo/fallback upgrade
+function demoSuccessResponse(plan) {
+  const label = plan.charAt(0).toUpperCase() + plan.slice(1);
+  return {
+    success: true,
+    demo: true,
+    plan,
+    message: `🎉 Upgraded to ${label}! Enjoy all features.`,
+  };
+}
+
 // Create checkout session
+// Strategy: try Stripe first; on ANY Stripe error fall back to demo upgrade.
+// demoUpgrade errors are surfaced cleanly — never swallowed.
 router.post('/checkout', requireAuth, async (req, res) => {
-  try {
-    const { plan } = req.body;
+  const { plan } = req.body;
 
-    if (!plan || !PRICES[plan]) {
-      return res.status(400).json({ error: 'Invalid plan' });
-    }
+  if (!plan || !PRICES[plan]) {
+    return res.status(400).json({ error: 'Invalid plan' });
+  }
 
-    // Use demo mode if Stripe is not configured OR price IDs are placeholder/missing
-    if (!stripe || !stripePricesConfigured()) {
+  // --- Fast-path: no Stripe or placeholder price IDs → instant demo ---
+  if (!stripe || !stripePricesConfigured()) {
+    console.log('[billing/checkout] Stripe not ready — demo upgrade for', plan);
+    try {
       await demoUpgrade(req.user.id, plan);
-      return res.json({
-        success: true,
-        demo: true,
-        plan,
-        message: `🎉 Upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}! Enjoy all features.`
-      });
+      return res.json(demoSuccessResponse(plan));
+    } catch (dbErr) {
+      console.error('[billing/checkout] Demo upgrade failed:', dbErr);
+      return res.status(500).json({ error: 'Upgrade failed — please try again or contact support@vibeqa.io' });
     }
+  }
 
-    // Create Stripe checkout session
+  // --- Try real Stripe checkout ---
+  try {
     const session = await stripe.checkout.sessions.create({
       customer_email: req.user.email,
       payment_method_types: ['card'],
-      line_items: [{
-        price: PRICES[plan].monthly,
-        quantity: 1,
-      }],
+      line_items: [{ price: PRICES[plan].monthly, quantity: 1 }],
       mode: 'subscription',
       success_url: `${process.env.APP_URL || 'https://vibeqa.io'}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.APP_URL || 'https://vibeqa.io'}/#pricing`,
-      metadata: {
-        userId: req.user.id,
-        plan: plan,
-      },
+      metadata: { userId: req.user.id, plan },
     });
 
-    res.json({ url: session.url, sessionId: session.id });
-  } catch (err) {
-    console.error('Checkout error:', err);
-    // If Stripe call fails (e.g., invalid price ID), fall back to demo upgrade
-    if (err.type === 'StripeInvalidRequestError') {
-      try {
-        await demoUpgrade(req.user.id, req.body.plan);
-        return res.json({
-          success: true,
-          demo: true,
-          plan: req.body.plan,
-          message: `🎉 Upgraded to ${req.body.plan.charAt(0).toUpperCase() + req.body.plan.slice(1)}! Enjoy all features.`,
-        });
-      } catch (dbErr) {
-        console.error('Demo upgrade fallback also failed:', dbErr);
-      }
+    return res.json({ url: session.url, sessionId: session.id });
+
+  } catch (stripeErr) {
+    // ANY Stripe error (invalid price ID, API error, network, etc.) → demo fallback
+    console.error('[billing/checkout] Stripe error, falling back to demo:', stripeErr.message);
+    try {
+      await demoUpgrade(req.user.id, plan);
+      return res.json(demoSuccessResponse(plan));
+    } catch (dbErr) {
+      console.error('[billing/checkout] Demo fallback also failed:', dbErr);
+      return res.status(500).json({ error: 'Upgrade failed — please try again or contact support@vibeqa.io' });
     }
-    res.status(500).json({ error: err.message });
   }
 });
 
@@ -111,10 +118,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   if (!stripe) {
     return res.status(400).json({ error: 'Stripe not configured' });
   }
-  
+
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  
+
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
@@ -122,7 +129,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).json({ error: 'Webhook signature verification failed' });
   }
-  
+
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object;
@@ -138,16 +145,15 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       }
       break;
     }
-    
+
     case 'customer.subscription.deleted': {
       const subscription = event.data.object;
-      // Find user by stripeSubscriptionId and downgrade
-      // For MVP, we'll handle this manually
+      // For MVP, handle manually
       console.log('Subscription cancelled:', subscription.id);
       break;
     }
   }
-  
+
   res.json({ received: true });
 });
 
@@ -155,48 +161,58 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 // Note: Supabase returns snake_case fields (stripe_customer_id), check both forms
 router.get('/info', requireAuth, async (req, res) => {
   const customerId = req.user.stripe_customer_id || req.user.stripeCustomerId || null;
-  const subscriptionId = req.user.stripe_subscription_id || req.user.stripeSubscriptionId || null;
   // hasActiveSubscription = true for any non-free plan, regardless of whether
-  // it was via Stripe checkout or a manual/complimentary upgrade
+  // it was via Stripe checkout, demo fallback, or a manual/complimentary upgrade
   res.json({
     plan: req.user.plan,
-    stripeCustomerId: customerId ? '***' : null,
+    // Mask the customer ID; hide 'demo_customer' entirely (treat as no real Stripe sub)
+    stripeCustomerId: (customerId && customerId !== 'demo_customer') ? '***' : null,
     hasActiveSubscription: req.user.plan !== 'free',
   });
 });
 
 // Customer portal (manage subscription)
-// Handles: stored customer ID, Stripe email lookup fallback, demo subscriptions
+// Handles: real Stripe customer ID, email lookup fallback, demo/manual accounts
 router.post('/portal', requireAuth, async (req, res) => {
+  // Check for demo/manual plan before even requiring Stripe
+  const customerId = req.user.stripe_customer_id || req.user.stripeCustomerId || null;
+  const isDemoCustomer = !customerId || customerId === 'demo_customer';
+
+  if (isDemoCustomer && req.user.plan !== 'free') {
+    // Paid plan but no real Stripe subscription — managed manually or via demo
+    return res.status(400).json({
+      error: 'Your plan is managed directly. To make changes, contact support@vibeqa.io.',
+      manualPlan: true,
+    });
+  }
+
   if (!stripe) {
     return res.status(400).json({ error: 'Stripe not configured on the server' });
   }
 
   try {
-    // Supabase returns snake_case; check both field name forms
-    let customerId = req.user.stripe_customer_id || req.user.stripeCustomerId || null;
+    let resolvedCustomerId = isDemoCustomer ? null : customerId;
 
     // If no stored customer ID, try to find one in Stripe by email
-    if (!customerId) {
+    if (!resolvedCustomerId) {
       console.log('[billing/portal] No stored customerId for', req.user.email, '— searching Stripe...');
       const customers = await stripe.customers.list({ email: req.user.email, limit: 1 });
       if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
-        console.log('[billing/portal] Found Stripe customer by email:', customerId);
+        resolvedCustomerId = customers.data[0].id;
+        console.log('[billing/portal] Found Stripe customer by email:', resolvedCustomerId);
         // Persist so future requests skip the lookup
         try {
-          await require('../db/supabase').updateUser(req.user.id, { stripe_customer_id: customerId });
+          await db.updateUser(req.user.id, { stripe_customer_id: resolvedCustomerId });
         } catch (e) {
           console.warn('[billing/portal] Could not persist stripe_customer_id:', e.message);
         }
       }
     }
 
-    if (!customerId) {
-      // If user already has a paid plan, this is a manually/complimentary managed account
+    if (!resolvedCustomerId) {
       if (req.user.plan !== 'free') {
         return res.status(400).json({
-          error: 'Your plan is managed manually. To make changes, contact support@vibeqa.io.',
+          error: 'Your plan is managed directly. To make changes, contact support@vibeqa.io.',
           manualPlan: true,
         });
       }
@@ -207,7 +223,7 @@ router.post('/portal', requireAuth, async (req, res) => {
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
+      customer: resolvedCustomerId,
       return_url: `${process.env.APP_URL || 'https://vibeqa.io'}/dashboard`,
     });
 

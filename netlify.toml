@@ -56,6 +56,19 @@
   status = 200
   force = true
 
+# Proxy scheduled scans API to Railway backend
+[[redirects]]
+  from = "/api/schedules"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/schedules"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/schedules/*"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/schedules/:splat"
+  status = 200
+  force = true
+
 # All other /api/* calls go to Netlify Functions (scan runs here via puppeteer)
 [[redirects]]
   from = "/api/*"
