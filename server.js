@@ -7,6 +7,7 @@ const crypto = require('crypto');
 // Routes
 const authRoutes = require('./src/routes/auth');
 const billingRoutes = require('./src/routes/billing');
+const userRoutes = require('./src/routes/user');
 const { authMiddleware } = require('./src/middleware/auth');
 const { User } = require('./src/models/user');
 const db = require('./src/db/supabase');
@@ -39,6 +40,7 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/user', userRoutes);
 
 // Admin endpoint to set user plan (protected by secret)
 app.post('/api/admin/set-plan', async (req, res) => {
