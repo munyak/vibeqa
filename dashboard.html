@@ -517,8 +517,25 @@
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const data = await res.json();
-          if (data.url) { window.location.href = data.url; }
-          else { alert('No active subscription to manage'); }
+          if (data.url) {
+            window.location.href = data.url;
+          } else if (data.needsCheckout) {
+            // No Stripe subscription on record — guide user through checkout
+            const pick = prompt('To manage your subscription, please set up billing first.\n\nChoose a plan:\n1. Pro ($29/mo) — 10 scans/day, 100/month\n2. Team ($79/mo) — Unlimited scans\n\nEnter 1 or 2:');
+            if (pick === '1' || pick === '2') {
+              const planName = pick === '1' ? 'pro' : 'team';
+              const checkoutRes = await fetch(`${API_URL}/api/billing/checkout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ plan: planName })
+              });
+              const checkoutData = await checkoutRes.json();
+              if (checkoutData.url) { window.location.href = checkoutData.url; }
+              else if (checkoutData.demo) { alert(checkoutData.message); await loadSubscription(); }
+            }
+          } else {
+            alert(data.error || 'Could not open billing portal');
+          }
         } catch (err) { alert('Error: ' + err.message); }
         return;
       }

@@ -36,6 +36,26 @@
   status = 200
   force = true
 
+# Proxy scan history reads to Railway (Supabase) — note: POST /api/scan stays on Netlify Functions
+[[redirects]]
+  from = "/api/scans"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/scans"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/scans/*"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/scans/:splat"
+  status = 200
+  force = true
+
+# Proxy individual scan reads to Railway
+[[redirects]]
+  from = "/api/scan/*"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/scan/:splat"
+  status = 200
+  force = true
+
 # All other /api/* calls go to Netlify Functions (scan runs here via puppeteer)
 [[redirects]]
   from = "/api/*"

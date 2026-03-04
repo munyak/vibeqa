@@ -59,8 +59,8 @@ router.post('/checkout', requireAuth, async (req, res) => {
         quantity: 1,
       }],
       mode: 'subscription',
-      success_url: `${process.env.APP_URL || 'http://localhost:3848'}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.APP_URL || 'http://localhost:3848'}/#pricing`,
+      success_url: `${process.env.APP_URL || 'https://vibeqa.io'}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.APP_URL || 'https://vibeqa.io'}/#pricing`,
       metadata: {
         userId: req.user.id,
         plan: plan,
@@ -120,28 +120,59 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 });
 
 // Get billing info
+// Note: Supabase returns snake_case fields (stripe_customer_id), check both forms
 router.get('/info', requireAuth, async (req, res) => {
+  const customerId = req.user.stripe_customer_id || req.user.stripeCustomerId || null;
+  const subscriptionId = req.user.stripe_subscription_id || req.user.stripeSubscriptionId || null;
   res.json({
     plan: req.user.plan,
-    stripeCustomerId: req.user.stripeCustomerId ? '***' : null,
-    hasActiveSubscription: !!req.user.stripeSubscriptionId,
+    stripeCustomerId: customerId ? '***' : null,
+    hasActiveSubscription: !!(subscriptionId && subscriptionId !== 'demo_subscription'),
   });
 });
 
 // Customer portal (manage subscription)
+// Handles: stored customer ID, Stripe email lookup fallback, demo subscriptions
 router.post('/portal', requireAuth, async (req, res) => {
-  if (!stripe || !req.user.stripeCustomerId) {
-    return res.status(400).json({ error: 'No active subscription' });
+  if (!stripe) {
+    return res.status(400).json({ error: 'Stripe not configured on the server' });
   }
-  
+
   try {
+    // Supabase returns snake_case; check both field name forms
+    let customerId = req.user.stripe_customer_id || req.user.stripeCustomerId || null;
+
+    // If no stored customer ID, try to find one in Stripe by email
+    if (!customerId) {
+      console.log('[billing/portal] No stored customerId for', req.user.email, '— searching Stripe...');
+      const customers = await stripe.customers.list({ email: req.user.email, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        console.log('[billing/portal] Found Stripe customer by email:', customerId);
+        // Persist so future requests skip the lookup
+        try {
+          await require('../db/supabase').updateUser(req.user.id, { stripe_customer_id: customerId });
+        } catch (e) {
+          console.warn('[billing/portal] Could not persist stripe_customer_id:', e.message);
+        }
+      }
+    }
+
+    if (!customerId) {
+      return res.status(400).json({
+        error: 'No Stripe subscription found for this account. Please upgrade via the pricing page.',
+        needsCheckout: true,
+      });
+    }
+
     const session = await stripe.billingPortal.sessions.create({
-      customer: req.user.stripeCustomerId,
-      return_url: `${process.env.APP_URL || 'http://localhost:3848'}/dashboard`,
+      customer: customerId,
+      return_url: `${process.env.APP_URL || 'https://vibeqa.io'}/dashboard`,
     });
-    
+
     res.json({ url: session.url });
   } catch (err) {
+    console.error('[billing/portal] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
