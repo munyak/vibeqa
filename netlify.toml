@@ -7,6 +7,29 @@
   node_bundler = "esbuild"
   external_node_modules = ["@sparticuz/chromium-min"]
 
+# Proxy auth API to Railway backend (Google OAuth, signup, login, sessions)
+# Must come BEFORE the catch-all /api/* rule
+[[redirects]]
+  from = "/api/auth/*"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/auth/:splat"
+  status = 200
+  force = true
+
+# Proxy billing API to Railway backend (Stripe, subscriptions)
+[[redirects]]
+  from = "/api/billing/*"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/billing/:splat"
+  status = 200
+  force = true
+
+# Proxy admin API to Railway backend
+[[redirects]]
+  from = "/api/admin/*"
+  to = "https://intuitive-insight-production-bb40.up.railway.app/api/admin/:splat"
+  status = 200
+  force = true
+
+# All other /api/* calls go to Netlify Functions (scan runs here via puppeteer)
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
