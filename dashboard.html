@@ -182,6 +182,66 @@
 
     .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
 
+    /* ── Clickable scan items ── */
+    .scan-item { cursor: pointer; transition: background 0.1s; }
+    .scan-item:hover { background: var(--gray-50); }
+
+    /* ── Issue count badges ── */
+    .scan-badge {
+      font-size: 12px; font-weight: 500; padding: 3px 9px;
+      border-radius: 100px; white-space: nowrap;
+    }
+    .badge-critical { background: #FEE2E2; color: #DC2626; }
+    .badge-warning  { background: #FEF3C7; color: #D97706; }
+    .badge-info     { background: #CCFBF1; color: #0F766E; }
+    .badge-success  { background: #DCFCE7; color: #16A34A; }
+
+    /* ── Scan detail modal ── */
+    .modal-overlay {
+      display: none; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      align-items: flex-start; justify-content: center;
+      padding: 40px 20px; overflow-y: auto;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+      background: var(--white); border-radius: 16px;
+      width: 100%; max-width: 700px;
+      max-height: calc(100vh - 80px); overflow-y: auto;
+    }
+    .modal-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--gray-100);
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; background: white; z-index: 10;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 580px; }
+    .modal-close { background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 4px; }
+    .modal-close:hover { color: var(--black); }
+    .modal-body { padding: 24px; }
+    .modal-meta { font-size: 13px; color: var(--gray-400); margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; }
+    .modal-actions { display: flex; gap: 8px; margin-bottom: 20px; }
+    .btn-copy {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; background: var(--gray-50);
+      border: 1px solid var(--gray-200); border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: var(--gray-600); cursor: pointer;
+    }
+    .btn-copy:hover { background: var(--gray-100); }
+    .btn-copy.copied { background: #DCFCE7; border-color: #86EFAC; color: #16A34A; }
+    .issue {
+      padding: 16px; border: 1px solid var(--gray-100);
+      border-radius: 10px; margin-bottom: 12px;
+    }
+    .issue.critical { border-left: 3px solid var(--red); }
+    .issue.warning  { border-left: 3px solid var(--yellow); }
+    .issue.info     { border-left: 3px solid var(--accent); }
+    .issue-header   { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .issue-title    { font-weight: 600; font-size: 14px; }
+    .issue-category { font-size: 12px; color: var(--gray-400); }
+    .issue-description { font-size: 13px; color: var(--gray-500); margin-bottom: 8px; white-space: pre-wrap; }
+    .issue-suggestion  { font-size: 12px; background: var(--gray-50); padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+
     @media (max-width: 768px) {
       .stats { grid-template-columns: 1fr; }
       .scanner-input { flex-direction: column; }
@@ -291,6 +351,28 @@
     </div>
   </main>
 
+  <!-- Scan Detail Modal -->
+  <div class="modal-overlay" id="scan-modal" onclick="if(event.target.id==='scan-modal')closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Scan Details</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta" id="modal-meta"></div>
+        <div class="modal-actions">
+          <button class="btn-copy" onclick="copyAsPrompt()" id="modal-copy-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy as Prompt
+          </button>
+        </div>
+        <div id="modal-issues"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // API_URL: vibeqa.io in production (Netlify proxies /api/auth|billing|user/* to Railway)
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -300,6 +382,8 @@
     let token = localStorage.getItem('vibeqa_token');
     let user  = null;
     let subscription = null;
+    let scans = [];        // module-level — needed by showScan()
+    let currentScan = null;
 
     async function init() {
       if (!token) { window.location.href = '/'; return; }
@@ -452,28 +536,47 @@
             '<div class="empty-state">Could not load scan history.</div>';
           return;
         }
-        const data  = await res.json();
+        const data = await res.json();
         // API returns { scans: [...], total } — handle both array and object responses
-        const scans = Array.isArray(data) ? data : (data.scans || []);
-        const container = document.getElementById('scans-container');
-        if (scans.length === 0) {
-          container.innerHTML = '<div class="empty-state">No scans yet. Run your first scan above!</div>';
-          return;
-        }
-        container.innerHTML = scans.map(s => `
-          <div class="scan-item">
-            <div>
-              <div class="scan-url">${escapeHtml(s.url)}</div>
-              <div class="scan-meta">${formatDate(s.startedAt || s.created_at)} · ${s.summary?.loadTime || (s.issues?.length ? s.issues.length + ' issue(s)' : 'No issues found')}</div>
-            </div>
-            <span class="scan-status ${s.status}">${capitalize(s.status)}</span>
-          </div>
-        `).join('');
+        scans = Array.isArray(data) ? data : (data.scans || []);
+        renderScans();
       } catch (err) {
         console.error('Failed to load scans:', err);
         document.getElementById('scans-container').innerHTML =
           '<div class="empty-state">No scans yet. Run your first scan above!</div>';
       }
+    }
+
+    function renderScans() {
+      const container = document.getElementById('scans-container');
+      if (scans.length === 0) {
+        container.innerHTML = '<div class="empty-state">No scans yet. Run your first scan above!</div>';
+        return;
+      }
+      container.innerHTML = scans.map(s => {
+        const critical = s.summary?.critical || 0;
+        const warnings = s.summary?.warnings || 0;
+        const info     = s.summary?.info     || 0;
+        let badge = '';
+        if (critical > 0)           badge = `<span class="scan-badge badge-critical">${critical} Critical</span>`;
+        else if (warnings > 0)      badge = `<span class="scan-badge badge-warning">${warnings} Warning${warnings > 1 ? 's' : ''}</span>`;
+        else if (info > 0)          badge = `<span class="scan-badge badge-info">${info} Info</span>`;
+        else if (s.status === 'complete') badge = `<span class="scan-badge badge-success">✓ Clear</span>`;
+        const scanId = escapeHtml(s.scanId || s.id || '');
+        const loadInfo = s.summary?.loadTime || (s.issues?.length ? s.issues.length + ' issue(s)' : '');
+        return `
+          <div class="scan-item" onclick="showScan('${scanId}')">
+            <div style="min-width:0;flex:1">
+              <div class="scan-url">${escapeHtml(s.url)}</div>
+              <div class="scan-meta">${getTimeAgo(new Date(s.startedAt || s.created_at))}${loadInfo ? ' · ' + escapeHtml(loadInfo) : ''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+              ${badge}
+              <span class="scan-status ${s.status}">${capitalize(s.status)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     async function startScan() {
@@ -519,6 +622,9 @@
           const data = await res.json();
           if (data.url) {
             window.location.href = data.url;
+          } else if (data.manualPlan) {
+            // Paid plan managed outside Stripe (special/complimentary accounts)
+            alert(data.error || 'Your plan is managed manually. Contact support@vibeqa.io for changes.');
           } else if (data.needsCheckout) {
             // No Stripe subscription on record — guide user through checkout
             const pick = prompt('To manage your subscription, please set up billing first.\n\nChoose a plan:\n1. Pro ($29/mo) — 10 scans/day, 100/month\n2. Team ($79/mo) — Unlimited scans\n\nEnter 1 or 2:');
@@ -561,6 +667,101 @@
         } catch (err) { alert('Error: ' + err.message); }
       }
     }
+
+    // ── Scan detail modal ─────────────────────────────────────────
+    function showScan(scanId) {
+      currentScan = scans.find(s => (s.scanId || s.id) === scanId);
+      if (!currentScan) return;
+
+      document.getElementById('modal-title').textContent = currentScan.url;
+
+      // Meta line: date · load time · issue counts
+      const critical = currentScan.summary?.critical || 0;
+      const warnings = currentScan.summary?.warnings || 0;
+      const info     = currentScan.summary?.info     || 0;
+      const total    = currentScan.issues?.length    || (critical + warnings + info);
+      const metaParts = [
+        getTimeAgo(new Date(currentScan.startedAt || currentScan.created_at)),
+        currentScan.summary?.loadTime ? `Load: ${currentScan.summary.loadTime}` : null,
+        total > 0 ? `${total} issue${total !== 1 ? 's' : ''}` : 'No issues found',
+      ].filter(Boolean);
+      document.getElementById('modal-meta').textContent = metaParts.join(' · ');
+
+      const issuesContainer = document.getElementById('modal-issues');
+      const issues = currentScan.issues || [];
+      if (issues.length > 0) {
+        issuesContainer.innerHTML = issues.map(issue => `
+          <div class="issue ${issue.type || 'info'}">
+            <div class="issue-header">
+              <span class="issue-title">${escapeHtml(issue.title || '')}</span>
+              <span class="issue-category">${escapeHtml(issue.category || '')}</span>
+            </div>
+            <p class="issue-description">${escapeHtml(issue.description || '')}</p>
+            ${issue.suggestion ? `<div class="issue-suggestion"><strong>How to fix:</strong> ${escapeHtml(issue.suggestion)}</div>` : ''}
+          </div>
+        `).join('');
+      } else {
+        issuesContainer.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:32px">No issues found — site looks great! 🎉</p>';
+      }
+
+      document.getElementById('scan-modal').classList.add('visible');
+    }
+
+    function closeModal() {
+      document.getElementById('scan-modal').classList.remove('visible');
+      currentScan = null;
+    }
+
+    function copyAsPrompt() {
+      if (!currentScan || !currentScan.issues || currentScan.issues.length === 0) {
+        alert('No issues to copy.');
+        return;
+      }
+      let promptText = `I ran a VibeQA scan on ${currentScan.url} and found the following issues. Please fix them:\n\n`;
+      currentScan.issues.forEach((issue, i) => {
+        promptText += `## ${i + 1}. ${issue.title} (${issue.category})\n`;
+        promptText += `**Problem:** ${issue.description}\n`;
+        if (issue.suggestion) promptText += `**How to fix:** ${issue.suggestion}\n`;
+        promptText += '\n';
+      });
+      promptText += `---\nPlease implement these fixes and show me the code changes needed.`;
+
+      navigator.clipboard.writeText(promptText).then(() => {
+        const btn = document.getElementById('modal-copy-btn');
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy as Prompt`;
+        }, 2000);
+      }).catch(() => {
+        // Fallback for non-HTTPS or clipboard denial
+        const ta = document.createElement('textarea');
+        ta.value = promptText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Copied to clipboard!');
+      });
+    }
+
+    function getTimeAgo(date) {
+      if (!date || isNaN(date)) return '—';
+      const diff    = Date.now() - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours   = Math.floor(diff / 3600000);
+      const days    = Math.floor(diff / 86400000);
+      if (minutes < 1)  return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours   < 24) return `${hours}h ago`;
+      if (days    < 7)  return `${days}d ago`;
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+    // ─────────────────────────────────────────────────────────────
 
     function logout() {
       fetch(`${API_URL}/api/auth/logout`, {

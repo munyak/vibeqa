@@ -124,10 +124,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 router.get('/info', requireAuth, async (req, res) => {
   const customerId = req.user.stripe_customer_id || req.user.stripeCustomerId || null;
   const subscriptionId = req.user.stripe_subscription_id || req.user.stripeSubscriptionId || null;
+  // hasActiveSubscription = true for any non-free plan, regardless of whether
+  // it was via Stripe checkout or a manual/complimentary upgrade
   res.json({
     plan: req.user.plan,
     stripeCustomerId: customerId ? '***' : null,
-    hasActiveSubscription: !!(subscriptionId && subscriptionId !== 'demo_subscription'),
+    hasActiveSubscription: req.user.plan !== 'free',
   });
 });
 
@@ -159,6 +161,13 @@ router.post('/portal', requireAuth, async (req, res) => {
     }
 
     if (!customerId) {
+      // If user already has a paid plan, this is a manually/complimentary managed account
+      if (req.user.plan !== 'free') {
+        return res.status(400).json({
+          error: 'Your plan is managed manually. To make changes, contact support@vibeqa.io.',
+          manualPlan: true,
+        });
+      }
       return res.status(400).json({
         error: 'No Stripe subscription found for this account. Please upgrade via the pricing page.',
         needsCheckout: true,
