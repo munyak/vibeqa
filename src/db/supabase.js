@@ -496,9 +496,11 @@ function fallbackCreateUser({ email, password, name }) {
     created_at: new Date().toISOString()
   };
   
-  // Auto-upgrade for special emails
-  if (email.toLowerCase() === 'mkanaventi@gmail.com') {
-    user.plan = 'team';
+  // Auto-upgrade for special/test accounts (keep in sync with src/config/specialAccounts.js)
+  const { getSpecialPlan } = require('../config/specialAccounts');
+  const specialPlan = getSpecialPlan(email);
+  if (specialPlan) {
+    user.plan = specialPlan;
   }
   
   inMemoryStore.users.set(id, user);

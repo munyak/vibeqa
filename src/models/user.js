@@ -21,10 +21,8 @@ function hashPassword(password) {
   return crypto.createHash('sha256').update(password + 'vibeqa-salt').digest('hex');
 }
 
-// Special accounts that get upgraded plans automatically
-const SPECIAL_ACCOUNTS = {
-  'mkanaventi@gmail.com': 'team',
-};
+// Special accounts — source of truth is src/config/specialAccounts.js
+const { SPECIAL_ACCOUNTS, getSpecialPlan } = require('../config/specialAccounts');
 
 // Plan limits (import from pricing.js in production)
 const PLAN_LIMITS = {
@@ -40,7 +38,7 @@ const User = {
       throw new Error('Email already registered');
     }
     
-    const specialPlan = SPECIAL_ACCOUNTS[email.toLowerCase()] || 'free';
+    const specialPlan = getSpecialPlan(email) || 'free';
     
     const user = {
       id: generateId(),

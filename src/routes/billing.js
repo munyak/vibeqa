@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db/supabase');
 const { requireAuth } = require('../middleware/auth');
+const { isSpecialAccount } = require('../config/specialAccounts');
 
 const router = express.Router();
 
@@ -72,6 +73,18 @@ router.post('/checkout', requireAuth, async (req, res) => {
 
   if (!plan || !PRICES[plan]) {
     return res.status(400).json({ error: 'Invalid plan' });
+  }
+
+  // --- Special/test accounts always bypass Stripe — instant upgrade, never charged ---
+  if (isSpecialAccount(req.user.email)) {
+    console.log('[billing/checkout] Special account — bypassing Stripe for', req.user.email);
+    try {
+      await demoUpgrade(req.user.id, plan);
+      return res.json(demoSuccessResponse(plan));
+    } catch (dbErr) {
+      console.error('[billing/checkout] Special account upgrade failed:', dbErr);
+      return res.status(500).json({ error: 'Upgrade failed — please try again or contact support@vibeqa.io' });
+    }
   }
 
   // --- Fast-path: no Stripe or placeholder price IDs → instant demo ---
@@ -174,6 +187,14 @@ router.get('/info', requireAuth, async (req, res) => {
 // Customer portal (manage subscription)
 // Handles: real Stripe customer ID, email lookup fallback, demo/manual accounts
 router.post('/portal', requireAuth, async (req, res) => {
+  // Special/test accounts — never redirect to Stripe portal
+  if (isSpecialAccount(req.user.email)) {
+    return res.status(400).json({
+      error: 'Your account is managed directly as a test account. Contact support@vibeqa.io for plan changes.',
+      manualPlan: true,
+    });
+  }
+
   // Check for demo/manual plan before even requiring Stripe
   const customerId = req.user.stripe_customer_id || req.user.stripeCustomerId || null;
   const isDemoCustomer = !customerId || customerId === 'demo_customer';

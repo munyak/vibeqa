@@ -1,16 +1,11 @@
 const express = require('express');
 const db = require('../db/supabase');
 const { PLAN_LIMITS } = require('../models/user');
+const { SPECIAL_ACCOUNTS } = require('../config/specialAccounts');
 const fetch = globalThis.fetch;
 const crypto = require('crypto');
 
 const router = express.Router();
-
-// Special accounts that get upgraded plans automatically
-const SPECIAL_ACCOUNTS = {
-  'mkanaventi@gmail.com': 'team',
-  'gbutler1738@gmail.com': 'team',
-};
 
 // Register
 router.post('/register', async (req, res) => {
