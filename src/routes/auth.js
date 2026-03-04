@@ -96,6 +96,42 @@ router.post('/logout', async (req, res) => {
   res.json({ success: true });
 });
 
+// List active sessions for current user
+router.get('/sessions', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  try {
+    const currentToken = req.headers.authorization?.split(' ')[1];
+    let sessions = [];
+
+    try {
+      sessions = await db.getUserSessions(req.user.id);
+    } catch (e) {
+      // If DB method unavailable, fall back to synthetic current session
+    }
+
+    if (!sessions || sessions.length === 0) {
+      sessions = [{
+        id: 'current',
+        token: currentToken || '',
+        created_at: req.user.created_at || new Date().toISOString(),
+      }];
+    }
+
+    res.json(sessions.map(s => ({
+      id: s.id,
+      tokenPrefix: s.token ? s.token.substring(0, 8) + '...' : 'Unknown',
+      createdAt: s.created_at,
+      isCurrent: s.token === currentToken,
+    })));
+  } catch (err) {
+    console.error('[sessions] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get current user with full details
 router.get('/me', async (req, res) => {
   if (!req.user) {

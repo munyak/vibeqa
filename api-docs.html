@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Reference — VibeQA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --white: #FFFFFF;
+      --black: #0F172A;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-900: #1E293B;
+      --accent: #0D9488;
+      --accent-dark: #0F766E;
+      --accent-light: #CCFBF1;
+      --green: #10B981;
+      --red: #EF4444;
+      --yellow: #F59E0B;
+      --blue: #3B82F6;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--black);
+      line-height: 1.6;
+    }
+
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo { font-size: 20px; font-weight: 700; color: var(--black); text-decoration: none; }
+    .logo span { color: var(--accent); }
+
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a { color: var(--gray-500); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .nav-links a:hover { color: var(--black); }
+
+    .docs-layout {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: calc(100vh - 64px);
+    }
+
+    .docs-sidebar {
+      width: 240px;
+      background: var(--white);
+      border-right: 1px solid var(--gray-200);
+      padding: 32px 0;
+      position: sticky;
+      top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section { margin-bottom: 24px; }
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-400);
+      padding: 0 24px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 8px 24px;
+      color: var(--gray-600);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .sidebar-link:hover { color: var(--black); background: var(--gray-50); }
+    .sidebar-link.active { color: var(--accent); background: var(--accent-light); }
+
+    .docs-content {
+      flex: 1;
+      padding: 40px 48px;
+      max-width: 860px;
+    }
+
+    h1 { font-size: 32px; font-weight: 700; color: var(--black); margin-bottom: 12px; }
+    h2 { font-size: 22px; font-weight: 700; color: var(--black); margin: 40px 0 12px; padding-top: 40px; border-top: 1px solid var(--gray-200); }
+    h2:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+    h3 { font-size: 16px; font-weight: 600; color: var(--black); margin: 24px 0 8px; }
+
+    p { color: var(--gray-600); margin-bottom: 16px; }
+    a { color: var(--accent); }
+
+    .subtitle { font-size: 18px; color: var(--gray-500); margin-bottom: 32px; }
+
+    .endpoint {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-100);
+      background: var(--gray-50);
+    }
+
+    .method {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+    }
+    .method.get { background: #DBEAFE; color: #1D4ED8; }
+    .method.post { background: #D1FAE5; color: #065F46; }
+    .method.put { background: #FEF3C7; color: #92400E; }
+    .method.delete { background: #FEE2E2; color: #991B1B; }
+
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+
+    .auth-badge {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .endpoint-body { padding: 20px; }
+    .endpoint-body p { margin-bottom: 12px; }
+
+    pre, code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    pre {
+      background: var(--gray-900);
+      color: #E2E8F0;
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 12px 0;
+      line-height: 1.5;
+    }
+
+    code {
+      background: var(--gray-100);
+      color: var(--accent-dark);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    th {
+      background: var(--gray-100);
+      color: var(--gray-600);
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--gray-100);
+      color: var(--gray-700);
+    }
+    td code { font-size: 12px; }
+
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin: 16px 0;
+    }
+    .alert-info { background: #EFF6FF; color: #1D4ED8; }
+    .alert-warn { background: #FFFBEB; color: #92400E; }
+
+    .plan-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .plan-badge.pro { background: #EEF2FF; color: #4338CA; }
+    .plan-badge.team { background: #F0FDF4; color: #166534; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="logo">Vibe<span>QA</span></a>
+    <div class="nav-links">
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/settings.html">Settings</a>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Getting Started</div>
+        <a href="#overview" class="sidebar-link active">Overview</a>
+        <a href="#authentication" class="sidebar-link">Authentication</a>
+        <a href="#base-url" class="sidebar-link">Base URL</a>
+        <a href="#errors" class="sidebar-link">Error Handling</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Endpoints</div>
+        <a href="#scans" class="sidebar-link">Scans</a>
+        <a href="#results" class="sidebar-link">Scan Results</a>
+        <a href="#user" class="sidebar-link">User & Usage</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Resources</div>
+        <a href="/settings.html" class="sidebar-link">Get API Key →</a>
+      </div>
+    </aside>
+
+    <main class="docs-content">
+      <h1>API Reference</h1>
+      <p class="subtitle">Run automated scans, retrieve results, and integrate VibeQA into your CI/CD pipeline.</p>
+
+      <div class="alert alert-info">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        API access requires a <strong>Pro plan or higher</strong>. <a href="https://vibeqa.io/#pricing">Upgrade your plan</a> to generate API keys.
+      </div>
+
+      <!-- OVERVIEW -->
+      <h2 id="overview">Overview</h2>
+      <p>The VibeQA API lets you trigger scans, retrieve results, and monitor usage programmatically. All requests use HTTPS and return JSON responses.</p>
+      <p>Common use cases include running a scan on every pull request, checking scan results in post-deploy scripts, and surfacing quality scores in dashboards.</p>
+
+      <!-- BASE URL -->
+      <h2 id="base-url">Base URL</h2>
+      <pre><code>https://vibeqa.io/api</code></pre>
+      <p>All endpoints below are relative to this base URL. For local development, use <code>http://localhost:3847/api</code>.</p>
+
+      <!-- AUTHENTICATION -->
+      <h2 id="authentication">Authentication</h2>
+      <p>All API requests must include your API key in the <code>Authorization</code> header as a Bearer token.</p>
+      <pre><code>Authorization: Bearer vqa_YOUR_API_KEY_HERE</code></pre>
+      <p>You can generate an API key from <a href="/settings.html">Settings → API Keys</a>. Keep your keys secret — treat them like passwords. If a key is compromised, revoke it immediately and generate a new one.</p>
+
+      <h3>Example request</h3>
+      <pre><code>curl -X POST https://vibeqa.io/api/scan \
+  -H "Authorization: Bearer vqa_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://yoursite.com"}'</code></pre>
+
+      <!-- ERRORS -->
+      <h2 id="errors">Error Handling</h2>
+      <p>VibeQA uses standard HTTP status codes. Error responses include a JSON body with an <code>error</code> field describing what went wrong.</p>
+      <table>
+        <thead>
+          <tr><th>Code</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>400</code></td><td>Bad request — missing or invalid parameters</td></tr>
+          <tr><td><code>401</code></td><td>Unauthorized — missing or invalid API key</td></tr>
+          <tr><td><code>403</code></td><td>Forbidden — your plan doesn't include this feature</td></tr>
+          <tr><td><code>429</code></td><td>Rate limited — you've exceeded your plan's scan limit</td></tr>
+          <tr><td><code>500</code></td><td>Server error — retry after a short delay</td></tr>
+        </tbody>
+      </table>
+      <pre><code>// Example error response
+{
+  "error": "Daily scan limit reached. Upgrade to Pro for 10 scans/day.",
+  "upgrade": true,
+  "suggestedPlan": "pro"
+}</code></pre>
+
+      <!-- SCANS -->
+      <h2 id="scans">Scans</h2>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/api/scan</span>
+          <span class="auth-badge">🔑 API Key</span>
+        </div>
+        <div class="endpoint-body">
+          <p>Trigger a new scan for a given URL. The scan runs asynchronously — use the returned <code>scanId</code> to poll for results.</p>
+          <h3>Request body</h3>
+          <table>
+            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>url</code></td><td>string</td><td>Yes</td><td>The page URL to scan (must include https://)</td></tr>
+            </tbody>
+          </table>
+          <h3>Example request</h3>
+          <pre><code>curl -X POST https://vibeqa.io/api/scan \
+  -H "Authorization: Bearer vqa_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://yoursite.com/checkout"}'</code></pre>
+          <h3>Response</h3>
+          <pre><code>{
+  "scanId": "scan_abc123xyz",
+  "status": "pending",
+  "url": "https://yoursite.com/checkout",
+  "createdAt": "2026-03-04T10:00:00.000Z"
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/api/scans</span>
+          <span class="auth-badge">🔑 API Key</span>
+        </div>
+        <div class="endpoint-body">
+          <p>List all scans for your account, ordered by most recent first.</p>
+          <h3>Query parameters</h3>
+          <table>
+            <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>limit</code></td><td>integer</td><td>20</td><td>Number of scans to return (max 100)</td></tr>
+              <tr><td><code>offset</code></td><td>integer</td><td>0</td><td>Pagination offset</td></tr>
+            </tbody>
+          </table>
+          <h3>Response</h3>
+          <pre><code>{
+  "scans": [
+    {
+      "id": "scan_abc123xyz",
+      "url": "https://yoursite.com",
+      "status": "completed",
+      "createdAt": "2026-03-04T10:00:00.000Z",
+      "completedAt": "2026-03-04T10:00:18.000Z",
+      "summary": {
+        "critical": 0,
+        "warnings": 3,
+        "info": 12,
+        "loadTime": "1.4s",
+        "score": 87
+      }
+    }
+  ],
+  "total": 42,
+  "limit": 20,
+  "offset": 0
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <h2 id="results">Scan Results</h2>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/api/scans/:scanId</span>
+          <span class="auth-badge">🔑 API Key</span>
+        </div>
+        <div class="endpoint-body">
+          <p>Retrieve full results for a specific scan, including all detected issues. Poll this endpoint until <code>status</code> is <code>completed</code> or <code>failed</code>.</p>
+          <h3>Path parameters</h3>
+          <table>
+            <thead><tr><th>Parameter</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>scanId</code></td><td>The ID returned by POST /api/scan</td></tr>
+            </tbody>
+          </table>
+          <h3>Response</h3>
+          <pre><code>{
+  "id": "scan_abc123xyz",
+  "url": "https://yoursite.com",
+  "status": "completed",
+  "createdAt": "2026-03-04T10:00:00.000Z",
+  "completedAt": "2026-03-04T10:00:18.000Z",
+  "summary": {
+    "critical": 0,
+    "warnings": 3,
+    "info": 12,
+    "loadTime": "1.4s",
+    "score": 87
+  },
+  "issues": [
+    {
+      "type": "warning",
+      "category": "performance",
+      "message": "Image missing explicit width/height",
+      "element": "<img src=\"hero.jpg\">",
+      "suggestion": "Add width and height attributes to prevent layout shift"
+    }
+  ]
+}</code></pre>
+          <h3>Status values</h3>
+          <table>
+            <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>pending</code></td><td>Scan queued, not yet started</td></tr>
+              <tr><td><code>running</code></td><td>Scan in progress</td></tr>
+              <tr><td><code>completed</code></td><td>Scan finished successfully</td></tr>
+              <tr><td><code>failed</code></td><td>Scan encountered an error</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USER & USAGE -->
+      <h2 id="user">User & Usage</h2>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/api/user/subscriptions</span>
+          <span class="auth-badge">🔑 API Key</span>
+        </div>
+        <div class="endpoint-body">
+          <p>Returns your current plan, usage counts, and plan limits. Useful for checking remaining scan quota before triggering scans in CI.</p>
+          <h3>Response</h3>
+          <pre><code>{
+  "currentPlan": "pro",
+  "planLabel": "Pro",
+  "planPrice": "$29",
+  "status": "active",
+  "renewalDate": "2026-04-01T00:00:00.000Z",
+  "limits": {
+    "scansPerDay": 10,
+    "scansPerMonth": 100,
+    "historyDays": 90,
+    "apiRequests": 1000
+  },
+  "usage": {
+    "scansToday": 3,
+    "scansThisMonth": 47,
+    "scansAllTime": 312
+  }
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- CI/CD EXAMPLE -->
+      <h2>CI/CD Integration Example</h2>
+      <p>This GitHub Actions workflow triggers a VibeQA scan on every push to <code>main</code> and fails the build if critical issues are found.</p>
+      <pre><code># .github/workflows/vibeqa.yml
+name: VibeQA Scan
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run VibeQA Scan
+        run: |
+          RESULT=$(curl -s -X POST https://vibeqa.io/api/scan \
+            -H "Authorization: Bearer ${{ secrets.VIBEQA_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"url\": \"${{ vars.SITE_URL }}\"}")
+
+          SCAN_ID=$(echo $RESULT | jq -r '.scanId')
+          echo "Scan ID: $SCAN_ID"
+
+          # Poll for completion (max 60 seconds)
+          for i in $(seq 1 12); do
+            sleep 5
+            STATUS=$(curl -s https://vibeqa.io/api/scans/$SCAN_ID \
+              -H "Authorization: Bearer ${{ secrets.VIBEQA_API_KEY }}")
+
+            STATE=$(echo $STATUS | jq -r '.status')
+            if [ "$STATE" = "completed" ]; then
+              CRITICAL=$(echo $STATUS | jq '.summary.critical')
+              echo "Scan complete. Critical issues: $CRITICAL"
+              if [ "$CRITICAL" -gt "0" ]; then
+                echo "❌ Build failed: $CRITICAL critical issues found"
+                exit 1
+              fi
+              echo "✅ No critical issues found"
+              exit 0
+            fi
+          done
+
+          echo "⚠️ Scan timed out"
+          exit 1</code></pre>
+
+      <p>Store your API key as a <a href="https://docs.github.com/en/actions/security-guides/encrypted-secrets" target="_blank">GitHub Actions secret</a> named <code>VIBEQA_API_KEY</code>.</p>
+
+      <div class="alert alert-warn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>Never commit API keys to source control. Use environment variables or secrets management in your CI/CD platform.</div>
+      </div>
+    </main>
+  </div>
+
+</body>
+</html>

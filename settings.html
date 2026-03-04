@@ -600,11 +600,6 @@
           API Keys
           <span class="badge pro">Pro</span>
         </button>
-        <button class="sidebar-item" onclick="showSection('webhooks')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"/><path d="M6 17a4 4 0 0 1 4-4h5.1c1.1 0 2.24-.75 2.66-1.76a4 4 0 1 1 6.18 4.7"/><path d="M12 17a4 4 0 0 1-6.67-4.43C5.65 11.7 6.38 11 7.16 11H12"/></svg>
-          Webhooks
-          <span class="badge pro">Pro</span>
-        </button>
         <button class="sidebar-item" onclick="showSection('schedules')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Scheduled Scans
@@ -769,18 +764,35 @@
       <section class="settings-section" id="section-billing">
         <div class="settings-header">
           <h1>Billing</h1>
-          <p>Manage payment methods and view invoices</p>
+          <p>Manage your subscription and payment details</p>
         </div>
-        
-        <div class="settings-card">
-          <h2>Payment Method</h2>
-          <p>No payment method on file</p>
-          <button class="btn btn-secondary" disabled>Add Payment Method (Coming Soon)</button>
+
+        <div id="billing-loading" class="settings-card" style="text-align:center;padding:40px">
+          <p style="color:var(--gray-400)">Loading billing info...</p>
         </div>
-        
-        <div class="settings-card">
-          <h2>Billing History</h2>
-          <p style="color: var(--gray-400)">No invoices yet</p>
+
+        <div id="billing-free" style="display:none">
+          <div class="settings-card">
+            <h2>Free Plan</h2>
+            <p style="margin-bottom:16px;color:var(--gray-600)">You're on the Free plan — 1 scan/day, 7-day history. Upgrade to unlock more scans, API access, scheduled monitoring, and integrations.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <a href="https://vibeqa.io/#pricing" class="btn btn-accent">Upgrade to Pro — $29/mo</a>
+              <a href="https://vibeqa.io/#pricing" class="btn btn-secondary">View All Plans</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="billing-paid" style="display:none">
+          <div class="settings-card">
+            <h2>Active Subscription</h2>
+            <div id="billing-plan-info" style="margin-bottom:16px"></div>
+            <button class="btn btn-primary" onclick="openBillingPortal()">Manage Billing</button>
+            <p style="font-size:12px;color:var(--gray-400);margin-top:8px">Update payment method, download invoices, or cancel your subscription via Stripe.</p>
+          </div>
+        </div>
+
+        <div id="billing-error" class="settings-card" style="display:none">
+          <p style="color:var(--gray-400)">Unable to load billing information. <a href="mailto:support@vibeqa.io" style="color:var(--accent)">Contact support</a> if you need help.</p>
         </div>
       </section>
 
@@ -848,59 +860,10 @@
         <div class="settings-card">
           <h2>API Documentation</h2>
           <p>Learn how to use the VibeQA API to automate your testing workflow.</p>
-          <a href="/docs/api" class="btn btn-secondary">View Documentation</a>
+          <a href="/api-docs.html" class="btn btn-secondary">View Documentation</a>
         </div>
       </section>
 
-      <!-- Webhooks Section -->
-      <section class="settings-section" id="section-webhooks">
-        <div class="settings-header">
-          <h1>Webhooks</h1>
-          <p>Receive real-time notifications when scans complete</p>
-        </div>
-        
-        <div id="webhooks-upgrade-banner" class="upgrade-banner" style="display:none">
-          <div>
-            <h3>Unlock Webhooks</h3>
-            <p>Upgrade to Pro to receive webhook notifications for scan events</p>
-          </div>
-          <a href="/#pricing" class="btn">Upgrade to Pro</a>
-        </div>
-        
-        <div class="settings-card" id="webhooks-section">
-          <h2>Webhook Endpoints</h2>
-          <p>We'll send a POST request to these URLs when scans complete. Pro: 3 webhooks, Team: 10.</p>
-          
-          <form onsubmit="createWebhook(event)" style="display:flex;gap:12px;margin-bottom:20px">
-            <input type="url" id="new-webhook-url" placeholder="https://your-server.com/webhook" style="flex:1" required>
-            <button type="submit" class="btn btn-primary">Add Webhook</button>
-          </form>
-          
-          <div class="api-key-list" id="webhooks-list">
-            <div class="api-key-empty">No webhooks configured yet.</div>
-          </div>
-        </div>
-        
-        <div class="settings-card">
-          <h2>Webhook Payload</h2>
-          <p>Example payload sent to your endpoint:</p>
-          <pre style="background:var(--gray-100);padding:16px;border-radius:8px;font-size:13px;overflow-x:auto">{
-  "event": "scan.complete",
-  "timestamp": "2026-02-12T12:00:00.000Z",
-  "data": {
-    "scanId": "abc123",
-    "url": "https://example.com",
-    "summary": {
-      "critical": 0,
-      "warnings": 2,
-      "info": 5,
-      "loadTime": "1.5s"
-    },
-    "issues": [...]
-  }
-}</pre>
-        </div>
-      </section>
 
       <!-- Scheduled Scans Section -->
       <section class="settings-section" id="section-schedules">
@@ -919,7 +882,7 @@
         
         <div class="settings-card" id="schedules-section">
           <h2>Scheduled Scans</h2>
-          <p>Pro: 3 schedules, Team: 10. Get notified when issues are detected.</p>
+          <p>VibeQA will automatically scan your sites daily or weekly and email you when new issues are found — so you catch regressions before your users do. Pro: up to 3 schedules. Team: up to 10.</p>
           
           <form onsubmit="createSchedule(event)" style="margin-bottom:20px">
             <div class="form-row" style="margin-bottom:12px">
@@ -992,7 +955,7 @@
   <script>
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:3847'
-      : 'https://intuitive-insight-production-bb40.up.railway.app';
+      : 'https://vibeqa.io';
     
     const token = localStorage.getItem('vibeqa_token');
     let currentUser = null;
@@ -1089,18 +1052,18 @@
         
         // Load sessions
         loadSessions();
-        
+
+        // Load billing
+        loadBilling();
+
         // Check plan for gated features
         if (currentUser.plan === 'free') {
           document.getElementById('api-upgrade-banner').style.display = 'flex';
           document.getElementById('api-keys-section').style.display = 'none';
-          document.getElementById('webhooks-upgrade-banner').style.display = 'flex';
-          document.getElementById('webhooks-section').style.display = 'none';
           document.getElementById('schedules-upgrade-banner').style.display = 'flex';
           document.getElementById('schedules-section').style.display = 'none';
         } else {
-          // Load webhooks and schedules for paid users
-          loadWebhooks();
+          // Load schedules for paid users
           loadSchedules();
         }
         
@@ -1345,27 +1308,35 @@
     }
     
     async function loadSessions() {
+      const container = document.getElementById('sessions-list');
       try {
         const res = await fetch(`${API_URL}/api/auth/sessions`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (res.ok) {
           const sessions = await res.json();
-          const container = document.getElementById('sessions-list');
-          
-          container.innerHTML = sessions.map((session, i) => `
+
+          if (!sessions || sessions.length === 0) {
+            container.innerHTML = '<p style="color:var(--gray-400)">No active sessions found.</p>';
+            return;
+          }
+
+          container.innerHTML = sessions.map(session => `
             <div class="session-item">
               <div>
                 <div class="session-info">Session ${session.tokenPrefix}</div>
-                <div class="session-meta">Created ${new Date(session.createdAt).toLocaleDateString()}</div>
+                <div class="session-meta">Started ${new Date(session.createdAt).toLocaleDateString()}</div>
               </div>
-              ${i === 0 ? '<span class="session-current">Current</span>' : ''}
+              ${session.isCurrent ? '<span class="session-current">Current</span>' : ''}
             </div>
           `).join('');
+        } else {
+          container.innerHTML = '<p style="color:var(--gray-400)">Unable to load sessions.</p>';
         }
       } catch (e) {
         console.error('Failed to load sessions:', e);
+        container.innerHTML = '<p style="color:var(--gray-400)">Unable to load sessions.</p>';
       }
     }
     
@@ -1487,130 +1458,75 @@
     }
     
     // ============================================
-    // WEBHOOKS
+    // BILLING
     // ============================================
-    
-    async function loadWebhooks() {
+
+    async function loadBilling() {
+      const loadingEl = document.getElementById('billing-loading');
+      const freeEl = document.getElementById('billing-free');
+      const paidEl = document.getElementById('billing-paid');
+      const errorEl = document.getElementById('billing-error');
+
       try {
-        const res = await fetch(`${API_URL}/api/webhooks`, {
+        const res = await fetch(`${API_URL}/api/billing/info`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
-        if (res.ok) {
-          const webhooks = await res.json();
-          const container = document.getElementById('webhooks-list');
-          
-          if (webhooks.length === 0) {
-            container.innerHTML = '<div class="api-key-empty">No webhooks configured yet.</div>';
-          } else {
-            container.innerHTML = webhooks.map(wh => `
-              <div class="api-key-item">
-                <div class="api-key-info">
-                  <div class="api-key-name">${wh.url}</div>
-                  <div class="api-key-meta">
-                    ${wh.is_active ? '🟢 Active' : '🔴 Paused'} · 
-                    Events: ${wh.events?.join(', ') || 'scan.complete'}
-                    ${wh.last_triggered_at ? ` · Last triggered: ${new Date(wh.last_triggered_at).toLocaleDateString()}` : ''}
-                  </div>
-                </div>
-                <button class="btn btn-sm btn-secondary" onclick="testWebhook('${wh.id}')" style="margin-right:8px">Test</button>
-                <button class="btn btn-sm ${wh.is_active ? 'btn-secondary' : 'btn-accent'}" onclick="toggleWebhook('${wh.id}', ${!wh.is_active})" style="margin-right:8px">
-                  ${wh.is_active ? 'Pause' : 'Enable'}
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteWebhook('${wh.id}')">Delete</button>
-              </div>
-            `).join('');
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load webhooks:', e);
-      }
-    }
-    
-    async function createWebhook(e) {
-      e.preventDefault();
-      const url = document.getElementById('new-webhook-url').value;
-      
-      try {
-        const res = await fetch(`${API_URL}/api/webhooks`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ url, events: ['scan.complete'] })
-        });
-        
-        const data = await res.json();
-        
-        if (res.ok) {
-          showAlert('Webhook created! Secret: ' + (data.secret || 'N/A'));
-          document.getElementById('new-webhook-url').value = '';
-          loadWebhooks();
+
+        if (!res.ok) throw new Error('Failed to load billing info');
+
+        const info = await res.json();
+        loadingEl.style.display = 'none';
+
+        if (info.plan === 'free' || !info.hasActiveSubscription) {
+          freeEl.style.display = 'block';
         } else {
-          showAlert(data.error || 'Failed to create webhook', 'error');
+          paidEl.style.display = 'block';
+          const planName = info.plan.charAt(0).toUpperCase() + info.plan.slice(1);
+          document.getElementById('billing-plan-info').innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span style="font-weight:600;font-size:16px">${planName} Plan</span>
+              <span style="color:var(--green);font-size:13px">● Active</span>
+            </div>
+          `;
         }
       } catch (e) {
-        showAlert('Failed to create webhook', 'error');
+        console.error('Failed to load billing:', e);
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'block';
       }
     }
-    
-    async function testWebhook(id) {
+
+    async function openBillingPortal() {
+      const btn = event.currentTarget;
+      const orig = btn.textContent;
+      btn.textContent = 'Loading...';
+      btn.disabled = true;
+
       try {
-        const res = await fetch(`${API_URL}/api/webhooks/${id}/test`, {
+        const res = await fetch(`${API_URL}/api/billing/portal`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         const data = await res.json();
-        
-        if (data.success) {
-          showAlert('Test webhook sent successfully!');
+
+        if (data.url) {
+          window.location.href = data.url;
         } else {
-          showAlert(`Webhook test failed: ${data.message || 'Unknown error'}`, 'error');
+          showAlert(data.error || 'No active subscription to manage', 'error');
+          btn.textContent = orig;
+          btn.disabled = false;
         }
       } catch (e) {
-        showAlert('Failed to test webhook', 'error');
+        showAlert('Failed to open billing portal', 'error');
+        btn.textContent = orig;
+        btn.disabled = false;
       }
     }
-    
-    async function toggleWebhook(id, active) {
-      try {
-        const res = await fetch(`${API_URL}/api/webhooks/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ is_active: active })
-        });
-        
-        if (res.ok) {
-          showAlert(active ? 'Webhook enabled' : 'Webhook paused');
-          loadWebhooks();
-        }
-      } catch (e) {
-        showAlert('Failed to update webhook', 'error');
-      }
-    }
-    
-    async function deleteWebhook(id) {
-      if (!confirm('Delete this webhook?')) return;
-      
-      try {
-        const res = await fetch(`${API_URL}/api/webhooks/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (res.ok) {
-          showAlert('Webhook deleted');
-          loadWebhooks();
-        }
-      } catch (e) {
-        showAlert('Failed to delete webhook', 'error');
-      }
-    }
+
+    // ============================================
+    // WEBHOOKS (removed — coming in future release)
+    // ============================================
     
     // ============================================
     // SCHEDULED SCANS

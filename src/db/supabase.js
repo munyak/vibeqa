@@ -175,11 +175,25 @@ async function deleteSession(token) {
 
 async function deleteUserSessions(userId) {
   if (!supabase) return;
-  
+
   await supabase
     .from('sessions')
     .delete()
     .eq('user_id', userId);
+}
+
+async function getUserSessions(userId) {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('id, token, created_at, expires_at')
+    .eq('user_id', userId)
+    .gte('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
 }
 
 // ============================================
@@ -1012,6 +1026,7 @@ module.exports = {
   getSessionByToken,
   deleteSession,
   deleteUserSessions,
+  getUserSessions,
   
   // Scans
   createScan,
