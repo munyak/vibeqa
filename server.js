@@ -101,10 +101,55 @@ app.post('/api/scan', async (req, res) => {
       return res.status(429).json({ 
         error: 'Scan limit reached',
         message: 'Upgrade your plan for more scans',
-        upgrade: true
+        upgrade: true,
+        suggestedPlan: req.user.plan === 'free' ? 'pro' : 'team'
       });
     }
     // Usage is incremented in db.createScan, no need to call separately
+    
+    // PAYWALL: Free users get 1 free scan, then must upgrade for rescans
+    if (req.user.plan === 'free') {
+      const usage = await db.getUserUsage(req.user.id);
+      
+      // If they already have 1+ scans (i.e., they did their free scan), block unless they upgrade
+      if (usage && usage.scans_all_time > 0) {
+        return res.status(402).json({
+          error: 'Free trial scan complete',
+          message: 'Upgrade to Pro ($49/mo) to rescan and verify fixes',
+          upgrade: true,
+          suggestedPlan: 'pro',
+          trialsRemaining: 0,
+          callToAction: 'Upgrade now to rescan and compare results',
+          previousScans: usage.scans_all_time
+        });
+      }
+    }
+    
+    // ANTI-ABUSE: Detect cookie clearing / incognito abuse
+    // Store IP + User Agent in session to detect suspicious patterns
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const userAgentHash = require('crypto').createHash('md5').update(userAgent).digest('hex').substring(0, 8);
+    
+    // Check if same IP + different user agent within 1 hour (sign of incognito abuse)
+    if (req.user.plan === 'free') {
+      const lastSession = await db.getLastSession(req.user.id);
+      const oneHourAgo = Date.now() - 3600000;
+      
+      if (lastSession && lastSession.timestamp > oneHourAgo) {
+        if (lastSession.ip === clientIp && lastSession.user_agent_hash !== userAgentHash) {
+          console.warn(`[ABUSE] Detected suspicious pattern for user ${req.user.id}: same IP, different UA in 1hr`);
+          return res.status(429).json({
+            error: 'Too many scans from this IP',
+            message: 'Please wait before scanning again',
+            retryAfter: Math.ceil((lastSession.timestamp + 3600000 - Date.now()) / 1000)
+          });
+        }
+      }
+      
+      // Store this session for abuse detection
+      await db.storeSession(req.user.id, { ip: clientIp, user_agent_hash: userAgentHash, timestamp: Date.now() });
+    }
   }
 
   // Create scan record in database

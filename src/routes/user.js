@@ -11,10 +11,11 @@ if (process.env.STRIPE_SECRET_KEY) {
 }
 
 const PLAN_LIMITS = {
-  free:       { scansPerDay: 1,        scansPerMonth: 30,       historyDays: 7,   apiRequests: 0,     price: '$0',   label: 'Free' },
-  pro:        { scansPerDay: 10,       scansPerMonth: 100,      historyDays: 90,  apiRequests: 1000,  price: '$29',  label: 'Pro' },
-  team:       { scansPerDay: Infinity, scansPerMonth: Infinity, historyDays: 365, apiRequests: 10000, price: '$79',  label: 'Team' },
-  enterprise: { scansPerDay: Infinity, scansPerMonth: Infinity, historyDays: 999, apiRequests: 99999, price: 'Custom', label: 'Enterprise' },
+  free:       { scansPerDay: 1,        scansPerMonth: 30,       historyDays: 7,   apiRequests: 0,     price: '$0',      label: 'Free' },
+  pro:        { scansPerDay: 100,      scansPerMonth: 1000,     historyDays: 90,  apiRequests: 1000,  price: '$49',     label: 'Pro' },
+  team:       { scansPerDay: 500,      scansPerMonth: 5000,     historyDays: 365, apiRequests: 10000, price: '$149',    label: 'Team' },
+  enterprise: { scansPerDay: Infinity, scansPerMonth: Infinity, historyDays: 999, apiRequests: 99999, price: 'Custom',  label: 'Enterprise' },
+  api:        { scansPerDay: Infinity, scansPerMonth: Infinity, historyDays: 365, apiRequests: Infinity, price: '$0.10/scan', label: 'API' },
 };
 
 // GET /api/user/subscriptions
