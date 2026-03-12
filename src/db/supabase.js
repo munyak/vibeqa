@@ -28,13 +28,18 @@ async function createUser({ email, password, name = null }) {
   
   const passwordHash = hashPassword(password);
   
+  // Auto-upgrade special/test accounts (keep in sync with src/config/specialAccounts.js)
+  const { getSpecialPlan } = require('../config/specialAccounts');
+  const specialPlan = getSpecialPlan(email);
+  const plan = specialPlan || 'free';
+  
   const { data, error } = await supabase
     .from('users')
     .insert({
       email: email.toLowerCase(),
       password_hash: passwordHash,
       name,
-      plan: 'free'
+      plan
     })
     .select()
     .single();
@@ -57,7 +62,26 @@ async function getUserByEmail(email) {
     .single();
   
   if (error && error.code !== 'PGRST116') throw error;
-  return data ? sanitizeUser(data) : null;
+  
+  if (!data) return null;
+  
+  // Auto-upgrade special accounts if they haven't been upgraded yet
+  const { getSpecialPlan } = require('../config/specialAccounts');
+  const specialPlan = getSpecialPlan(data.email);
+  if (specialPlan && data.plan !== specialPlan) {
+    // Silently upgrade without forcing wait on caller
+    supabase
+      .from('users')
+      .update({ plan: specialPlan })
+      .eq('id', data.id)
+      .then(() => console.log(`[DB] Auto-upgraded ${data.email} to ${specialPlan} plan`))
+      .catch(err => console.error(`[DB] Failed to auto-upgrade ${data.email}:`, err.message));
+    
+    // Return the upgraded version
+    data.plan = specialPlan;
+  }
+  
+  return sanitizeUser(data);
 }
 
 async function getUserById(id) {
@@ -70,6 +94,23 @@ async function getUserById(id) {
     .single();
   
   if (error) throw error;
+  
+  // Auto-upgrade special accounts if they haven't been upgraded yet
+  const { getSpecialPlan } = require('../config/specialAccounts');
+  const specialPlan = getSpecialPlan(data.email);
+  if (specialPlan && data.plan !== specialPlan) {
+    // Silently upgrade without forcing wait on caller
+    supabase
+      .from('users')
+      .update({ plan: specialPlan })
+      .eq('id', data.id)
+      .then(() => console.log(`[DB] Auto-upgraded ${data.email} to ${specialPlan} plan`))
+      .catch(err => console.error(`[DB] Failed to auto-upgrade ${data.email}:`, err.message));
+    
+    // Return the upgraded version
+    data.plan = specialPlan;
+  }
+  
   return sanitizeUser(data);
 }
 
