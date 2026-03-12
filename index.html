@@ -962,7 +962,7 @@
         <!-- Team -->
         <div class="pricing-card">
           <div class="plan-name">Team</div>
-          <div class="plan-price"><sup>$</sup>99<span>/mo</span></div>
+          <div class="plan-price"><sup>$</sup>79<span>/mo</span></div>
           <div class="plan-desc">For agencies and CTOs shipping at scale</div>
           <div class="plan-divider"></div>
           <ul class="plan-features">
@@ -1206,10 +1206,13 @@
           if (res.ok) {
             currentUser = await res.json();
             document.getElementById('user-avatar').textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
-            document.getElementById('user-email-display').textContent = currentUser.email;
+            const emailEl = document.getElementById('user-email-display');
+            emailEl.childNodes[0].textContent = currentUser.email + ' ';
             const badge = document.getElementById('user-plan-badge');
-            badge.textContent = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
-            badge.className = 'user-plan-badge ' + currentUser.plan;
+            if (badge) {
+              badge.textContent = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
+              badge.className = 'user-plan-badge ' + currentUser.plan;
+            }
           } else { localStorage.removeItem('vibeqa_token'); token = null; location.reload(); }
         } catch (e) { console.error('Auth check failed:', e); }
       }

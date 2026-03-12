@@ -482,7 +482,7 @@
       const renewalEl = document.getElementById('plan-renewal');
       renewalEl.textContent = subscription.renewalDate
         ? new Date(subscription.renewalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        : (plan === 'free' ? 'N/A' : '—');
+        : (plan === 'free' ? 'N/A' : 'Complimentary');
 
       // Usage counters
       const u = subscription.usage || {};
