@@ -29,13 +29,13 @@ const PLANS = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: 29,
-    priceDisplay: '$29',
+    price: 49,
+    priceDisplay: '$49',
     interval: 'month',
     stripePriceId: process.env.STRIPE_PRO_PRICE_ID || 'price_pro_monthly',
     limits: {
-      scansPerDay: 10,
-      scansPerMonth: 100,
+      scansPerDay: 100,
+      scansPerMonth: 1000,
       historyDays: 90,
       projects: 10,
       teamMembers: 1,
@@ -43,7 +43,7 @@ const PLANS = {
       webhooks: 3,
     },
     features: [
-      '100 scans per month',
+      '1,000 scans per month',
       '90-day history',
       'AI-powered UX analysis',
       'API access',
@@ -58,13 +58,13 @@ const PLANS = {
   team: {
     id: 'team',
     name: 'Team',
-    price: 79,
-    priceDisplay: '$79',
+    price: 149,
+    priceDisplay: '$149',
     interval: 'month',
     stripePriceId: process.env.STRIPE_TEAM_PRICE_ID || 'price_team_monthly',
     limits: {
-      scansPerDay: Infinity,
-      scansPerMonth: Infinity,
+      scansPerDay: 500,
+      scansPerMonth: 5000,
       historyDays: 365,
       projects: Infinity,
       teamMembers: 10,
@@ -72,7 +72,7 @@ const PLANS = {
       webhooks: 10,
     },
     features: [
-      'Unlimited scans',
+      '5,000 scans per month',
       '1-year history',
       'AI-powered UX analysis',
       'Full API access',
@@ -151,7 +151,7 @@ const UPGRADE_TRIGGERS = {
   
   // Specific triggers
   triggers: [
-    { event: 'scan_limit_reached', message: 'You\'ve hit your daily scan limit. Upgrade to Pro for 10 scans/day.' },
+    { event: 'scan_limit_reached', message: 'You\'ve hit your daily scan limit. Upgrade to Pro for 100 scans/day.' },
     { event: 'history_limit_reached', message: 'Your scan history is limited to 7 days. Upgrade for 90-day history.' },
     { event: 'api_requested', message: 'API access is available on Pro and above.' },
     { event: 'team_member_limit', message: 'Need more team members? Upgrade to Team for up to 10 collaborators.' },

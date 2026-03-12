@@ -376,8 +376,8 @@ async function incrementScanUsage(userId) {
 // Plan limits
 const PLAN_LIMITS = {
   free: { scansPerDay: 1, scansPerMonth: 30 },
-  pro: { scansPerDay: 10, scansPerMonth: 100 },
-  team: { scansPerDay: Infinity, scansPerMonth: Infinity },
+  pro: { scansPerDay: 100, scansPerMonth: 1000 },
+  team: { scansPerDay: 500, scansPerMonth: 5000 },
   enterprise: { scansPerDay: Infinity, scansPerMonth: Infinity },
 };
 

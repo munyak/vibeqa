@@ -27,8 +27,8 @@ const { SPECIAL_ACCOUNTS, getSpecialPlan } = require('../config/specialAccounts'
 // Plan limits (import from pricing.js in production)
 const PLAN_LIMITS = {
   free: { scansPerDay: 1, scansPerMonth: 30, historyDays: 7, apiRequests: 0, webhooks: 0, projects: 1 },
-  pro: { scansPerDay: 10, scansPerMonth: 100, historyDays: 90, apiRequests: 1000, webhooks: 3, projects: 10 },
-  team: { scansPerDay: Infinity, scansPerMonth: Infinity, historyDays: 365, apiRequests: 10000, webhooks: 10, projects: Infinity },
+  pro: { scansPerDay: 100, scansPerMonth: 1000, historyDays: 90, apiRequests: 1000, webhooks: 3, projects: 10 },
+  team: { scansPerDay: 500, scansPerMonth: 5000, historyDays: 365, apiRequests: 10000, webhooks: 10, projects: Infinity },
   enterprise: { scansPerDay: Infinity, scansPerMonth: Infinity, historyDays: Infinity, apiRequests: Infinity, webhooks: Infinity, projects: Infinity },
 };
 
@@ -219,7 +219,7 @@ const User = {
         if (stats.percentages.dailyScans >= 80 && user.plan === 'free') {
           stats.upgradeNudges.push({
             type: 'daily_limit',
-            message: 'You\'re close to your daily scan limit. Upgrade to Pro for 10 scans/day.',
+            message: 'You\'re close to your daily scan limit. Upgrade to Pro for 100 scans/day.',
             cta: 'Upgrade to Pro',
             plan: 'pro',
           });

@@ -14,11 +14,11 @@ if (process.env.STRIPE_SECRET_KEY) {
 const PRICES = {
   pro: {
     monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID || 'price_pro_monthly',
-    amount: 2900, // $29
+    amount: 4900, // $49
   },
   team: {
     monthly: process.env.STRIPE_TEAM_MONTHLY_PRICE_ID || 'price_team_monthly',
-    amount: 7900, // $79
+    amount: 14900, // $149
   },
 };
 

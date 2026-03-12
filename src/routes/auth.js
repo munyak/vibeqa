@@ -175,7 +175,7 @@ router.get('/usage', async (req, res) => {
     if (stats.percentages.dailyScans >= 80 && req.user.plan === 'free') {
       stats.upgradeNudges.push({
         type: 'daily_limit',
-        message: 'You\'re close to your daily scan limit. Upgrade to Pro for 10 scans/day.',
+        message: 'You\'re close to your daily scan limit. Upgrade to Pro for 100 scans/day.',
         cta: 'Upgrade to Pro',
         plan: 'pro',
       });
