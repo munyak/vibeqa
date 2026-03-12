@@ -571,6 +571,7 @@
               <div class="scan-meta">${getTimeAgo(new Date(s.startedAt || s.created_at))}${loadInfo ? ' · ' + escapeHtml(loadInfo) : ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+              ${s.summary?.vibeScore ? `<span style="background:${s.summary.vibeScore >= 80 ? '#22c55e' : s.summary.vibeScore >= 60 ? '#f59e0b' : '#ef4444'};color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">${s.summary.vibeScore}</span>` : ''}
               ${badge}
               <span class="scan-status ${s.status}">${capitalize(s.status)}</span>
             </div>
@@ -703,11 +704,59 @@
 
       const issuesContainer = document.getElementById('modal-issues');
       const issues = currentScan.issues || [];
+
+      // Render Vibe Score if available (Pro/Team/Enterprise)
+      let vibeScoreHtml = '';
+      if (currentScan.vibeScore) {
+        const vs = currentScan.vibeScore;
+        const overallColor = vs.overall >= 80 ? '#22c55e' : vs.overall >= 60 ? '#f59e0b' : vs.overall >= 40 ? '#f97316' : '#ef4444';
+        const categories = [
+          { label: 'Design', score: vs.design },
+          { label: 'UX', score: vs.ux },
+          { label: 'Conversion', score: vs.conversion },
+          { label: 'Content', score: vs.content },
+          { label: 'Trust', score: vs.trust },
+          { label: 'Technical', score: vs.technical },
+          { label: 'Mobile', score: vs.mobile },
+          { label: 'SEO', score: vs.seo },
+        ].filter(c => c.score != null);
+
+        vibeScoreHtml = `
+          <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:24px;margin-bottom:20px;color:#fff">
+            <div style="display:flex;align-items:center;gap:24px;margin-bottom:16px">
+              <div style="text-align:center">
+                <div style="font-size:48px;font-weight:800;color:${overallColor};line-height:1">${vs.overall}</div>
+                <div style="font-size:11px;opacity:0.7;margin-top:4px">VIBE SCORE</div>
+              </div>
+              <div style="flex:1">
+                ${currentScan.aiInsights?.headline ? `<div style="font-size:14px;font-weight:600;margin-bottom:8px">${escapeHtml(currentScan.aiInsights.headline)}</div>` : ''}
+                ${currentScan.aiInsights?.topPriority ? `<div style="font-size:12px;opacity:0.8">Top priority: ${escapeHtml(currentScan.aiInsights.topPriority)}</div>` : ''}
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+              ${categories.map(c => {
+                const catColor = c.score >= 80 ? '#22c55e' : c.score >= 60 ? '#f59e0b' : '#ef4444';
+                return `<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px">
+                  <div style="font-size:18px;font-weight:700;color:${catColor}">${c.score}</div>
+                  <div style="font-size:10px;opacity:0.6">${c.label}</div>
+                </div>`;
+              }).join('')}
+            </div>
+            ${currentScan.aiInsights?.quickWins ? `
+              <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1)">
+                <div style="font-size:11px;text-transform:uppercase;opacity:0.5;margin-bottom:8px">Quick Wins</div>
+                ${currentScan.aiInsights.quickWins.map(w => `<div style="font-size:12px;padding:4px 0;opacity:0.9">• ${escapeHtml(w)}</div>`).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
       if (issues.length > 0) {
-        issuesContainer.innerHTML = issues.map(issue => `
-          <div class="issue ${issue.type || 'info'}">
+        issuesContainer.innerHTML = vibeScoreHtml + issues.map(issue => `
+          <div class="issue ${issue.type || 'info'}${issue.source === 'ai' ? ' ai-issue' : ''}">
             <div class="issue-header">
-              <span class="issue-title">${escapeHtml(issue.title || '')}</span>
+              <span class="issue-title">${issue.source === 'ai' ? '<span style="background:linear-gradient(90deg,#8b5cf6,#6366f1);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;margin-right:6px">' + (issue.aiModel === 'premium' ? 'AI PREMIUM' : 'AI') + '</span>' : ''}${escapeHtml(issue.title || '')}</span>
               <span class="issue-category">${escapeHtml(issue.category || '')}</span>
             </div>
             <p class="issue-description">${escapeHtml(issue.description || '')}</p>
@@ -715,7 +764,7 @@
           </div>
         `).join('');
       } else {
-        issuesContainer.innerHTML = '<p style="color:var(--gray-400);text-align:center;padding:32px">No issues found — site looks great! 🎉</p>';
+        issuesContainer.innerHTML = vibeScoreHtml + '<p style="color:var(--gray-400);text-align:center;padding:32px">No issues found — site looks great! 🎉</p>';
       }
 
       document.getElementById('scan-modal').classList.add('visible');

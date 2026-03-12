@@ -68,11 +68,11 @@ app.post('/api/admin/set-plan', async (req, res) => {
   res.json({ success: true, email, plan });
 });
 
-// OpenAI for AI analysis (optional)
-let openai = null;
-if (process.env.OPENAI_API_KEY) {
-  const { OpenAI } = require('openai');
-  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Claude AI for intelligent scan analysis (tiered by plan)
+let anthropic = null;
+if (process.env.ANTHROPIC_API_KEY) {
+  const Anthropic = require('@anthropic-ai/sdk');
+  anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
 // In-memory cache for active scans (cleared after completion)
@@ -744,30 +744,116 @@ if (location.protocol !== 'https:') {
       });
     }
 
-    // Use AI to analyze screenshots for UX issues (Pro/Team plans only)
-    if (openai && (plan === 'pro' || plan === 'team')) {
+    // ============================================
+    // CLAUDE AI ANALYSIS (Pro/Team/Enterprise)
+    // The core value engine — this is what makes VibeQA worth paying for
+    // ============================================
+    let vibeScore = null;
+    let aiInsights = null;
+
+    if (anthropic && (plan === 'pro' || plan === 'team' || plan === 'enterprise')) {
       try {
-        const aiAnalysis = await analyzeWithAI(url, desktopScreenshot, issues);
-        if (aiAnalysis && aiAnalysis.length > 0) {
-          issues.push(...aiAnalysis);
+        // Collect rich page context for Claude
+        const pageContext = await page.evaluate(() => {
+          const getText = (sel) => document.querySelector(sel)?.textContent?.trim() || '';
+          const getMeta = (name) => document.querySelector(`meta[name="${name}"], meta[property="${name}"]`)?.content || '';
+
+          // Get visible text content (first 3000 chars for context)
+          const bodyText = document.body?.innerText?.substring(0, 3000) || '';
+
+          // Navigation structure
+          const navLinks = [...document.querySelectorAll('nav a, header a, [role="navigation"] a')]
+            .slice(0, 20)
+            .map(a => ({ text: a.textContent?.trim(), href: a.href }));
+
+          // CTAs and buttons
+          const ctas = [...document.querySelectorAll('button, a.btn, a.button, [class*="cta"], [class*="btn-primary"], input[type="submit"]')]
+            .slice(0, 10)
+            .map(el => ({ text: el.textContent?.trim(), tag: el.tagName, visible: el.offsetParent !== null }));
+
+          // Forms
+          const forms = [...document.querySelectorAll('form')]
+            .map(f => ({ action: f.action, fields: f.querySelectorAll('input, select, textarea').length }));
+
+          // Heading hierarchy
+          const headings = [...document.querySelectorAll('h1, h2, h3')]
+            .slice(0, 15)
+            .map(h => ({ level: h.tagName, text: h.textContent?.trim().substring(0, 80) }));
+
+          // Social proof elements
+          const hasSocialProof = !!(
+            document.querySelector('[class*="testimonial"], [class*="review"], [class*="social-proof"], [class*="trust"]') ||
+            bodyText.match(/customers|trusted by|rated|reviews|testimonial/i)
+          );
+
+          // Pricing elements
+          const hasPricing = !!(
+            document.querySelector('[class*="pricing"], [class*="plan"], [class*="price"]') ||
+            bodyText.match(/\$\d+|pricing|per month|\/mo|free trial/i)
+          );
+
+          return {
+            title: getText('title'),
+            metaDescription: getMeta('description'),
+            ogTitle: getMeta('og:title'),
+            ogDescription: getMeta('og:description'),
+            bodyTextPreview: bodyText.substring(0, 2000),
+            navLinks,
+            ctas,
+            forms,
+            headings,
+            hasSocialProof,
+            hasPricing,
+            colorScheme: getComputedStyle(document.body).backgroundColor,
+            fontFamily: getComputedStyle(document.body).fontFamily,
+            totalImages: document.querySelectorAll('img').length,
+            totalLinks: document.querySelectorAll('a').length,
+            totalScripts: document.querySelectorAll('script').length,
+            hasAnalytics: !!(
+              document.querySelector('script[src*="google-analytics"], script[src*="gtag"], script[src*="gtm"]') ||
+              window.ga || window.gtag || window.dataLayer
+            ),
+          };
+        });
+
+        // Choose model tier based on plan
+        const model = (plan === 'team' || plan === 'enterprise')
+          ? 'claude-sonnet-4-5-20250929'   // Premium: deeper analysis
+          : 'claude-haiku-4-5-20251001';    // Pro: fast, cost-efficient
+
+        const aiResult = await analyzeWithClaude(
+          model, url, desktopScreenshot, mobileScreenshot,
+          pageContext, issues, seoData, loadTime,
+          consoleErrors, failedRequests, brokenLinks, plan
+        );
+
+        if (aiResult) {
+          if (aiResult.issues?.length > 0) {
+            issues.push(...aiResult.issues);
+          }
+          vibeScore = aiResult.vibeScore || null;
+          aiInsights = aiResult.insights || null;
         }
       } catch (err) {
-        console.log('AI analysis skipped:', err.message);
+        console.log(`[${scanId}] AI analysis error (non-blocking):`, err.message);
       }
     }
 
-    console.log(`[${scanId}] Scan complete. Found ${issues.length} issues.`);
-    
-    const scanResult = { 
-      status: 'complete', 
-      url, 
+    console.log(`[${scanId}] Scan complete. Found ${issues.length} issues.${vibeScore ? ` Vibe Score: ${vibeScore.overall}/100` : ''}`);
+
+    const scanResult = {
+      status: 'complete',
+      url,
       issues,
       screenshots,
+      vibeScore,
+      aiInsights,
       summary: {
         critical: issues.filter(i => i.type === 'critical').length,
         warnings: issues.filter(i => i.type === 'warning').length,
         info: issues.filter(i => i.type === 'info').length,
-        loadTime: `${(loadTime / 1000).toFixed(1)}s`
+        loadTime: `${(loadTime / 1000).toFixed(1)}s`,
+        vibeScore: vibeScore?.overall || null
       },
       completedAt: new Date().toISOString()
     };
@@ -919,43 +1005,157 @@ async function sendSlackNotification(userId, scanId, url, summary, issues) {
   }
 }
 
-async function analyzeWithAI(url, screenshot, existingIssues) {
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a UX expert reviewing a website screenshot. Identify 2-3 specific, actionable UX issues that aren't already covered. Focus on:
-- Visual hierarchy problems
-- Confusing navigation
-- Poor call-to-action visibility
-- Text readability issues
-- Trust signals missing
+// ============================================
+// CLAUDE AI ANALYSIS ENGINE
+// This is what makes VibeQA worth paying for.
+// Not just "is the title tag missing" — Claude tells you
+// WHY your page isn't converting and WHAT to do about it.
+// ============================================
 
-Return JSON array: [{"type":"warning","category":"UX","title":"Issue","description":"Details","suggestion":"Fix"}]
-Return empty array [] if no significant issues found.`
-      },
+async function analyzeWithClaude(model, url, desktopScreenshot, mobileScreenshot, pageContext, existingIssues, seoData, loadTime, consoleErrors, failedRequests, brokenLinks, plan) {
+  const isPremium = (plan === 'team' || plan === 'enterprise');
+
+  const systemPrompt = `You are VibeQA, an expert website quality analyst combining the skills of a senior UX designer, conversion rate optimizer, frontend developer, SEO specialist, and accessibility consultant.
+
+You analyze websites holistically — not just technical checks, but whether the site actually WORKS for its business goals. Your analysis should be the kind of insight a $200/hr consultant would give.
+
+IMPORTANT RULES:
+- Only report issues NOT already covered in the existing findings
+- Every issue must have a specific, copy-paste-ready fix (code snippet, copy suggestion, or step-by-step action)
+- Prioritize issues by business impact (conversion, revenue, trust) over minor technical nits
+- Be direct and specific — "Your CTA button is lost in the visual noise" not "Consider improving button visibility"
+- Reference exact elements you see in the screenshots
+
+Return a JSON object with this exact structure:
+{
+  "vibeScore": {
+    "overall": <0-100>,
+    "design": <0-100>,
+    "ux": <0-100>,
+    "conversion": <0-100>,
+    "content": <0-100>,
+    "trust": <0-100>,
+    "technical": <0-100>,
+    "mobile": <0-100>,
+    "seo": <0-100>
+  },
+  "insights": {
+    "headline": "<One-line verdict, e.g. 'Clean design but weak conversion path — visitors don't know what to do next'>",
+    "strengths": ["<What's working well — max 3>"],
+    "quickWins": ["<High-impact, low-effort fixes — max 3>"],
+    "topPriority": "<The single most impactful thing to fix>"
+  },
+  "issues": [
+    {
+      "type": "critical|warning|info",
+      "category": "Conversion|UX|Design|Content|Trust|Mobile|Code Quality",
+      "title": "<Clear, specific issue title>",
+      "description": "<What's wrong AND why it matters for the business>",
+      "suggestion": "<Specific fix with code/copy example>"
+    }
+  ]
+}
+
+${isPremium ? `PREMIUM ANALYSIS — go deeper:
+- Analyze the page copy: Is the value proposition clear in the first 5 seconds?
+- Conversion funnel gaps: What stops a visitor from becoming a customer?
+- Competitive positioning: Does this page stand out or look generic?
+- Emotional design: Does the page build trust and reduce anxiety?
+- Content strategy: Is the messaging hierarchy effective?
+- Provide up to 8 issues max.` : `STANDARD ANALYSIS:
+- Focus on the highest-impact UX, conversion, and design issues
+- Provide up to 5 issues max.`}`;
+
+  const contextSummary = `
+WEBSITE: ${url}
+LOAD TIME: ${loadTime}ms
+PAGE TITLE: ${pageContext.title || 'MISSING'}
+META DESCRIPTION: ${pageContext.metaDescription || 'MISSING'}
+
+NAVIGATION: ${pageContext.navLinks?.map(l => l.text).filter(Boolean).join(' | ') || 'None detected'}
+
+HEADING STRUCTURE:
+${pageContext.headings?.map(h => `${h.level}: ${h.text}`).join('\n') || 'No headings found'}
+
+CTAs/BUTTONS: ${pageContext.ctas?.map(c => c.text).filter(Boolean).join(', ') || 'None detected'}
+FORMS: ${pageContext.forms?.length || 0} form(s) on page
+IMAGES: ${pageContext.totalImages || 0} total
+SCRIPTS: ${pageContext.totalScripts || 0} total
+
+SOCIAL PROOF: ${pageContext.hasSocialProof ? 'Present' : 'NOT FOUND — this hurts conversion'}
+PRICING VISIBLE: ${pageContext.hasPricing ? 'Yes' : 'No'}
+ANALYTICS: ${pageContext.hasAnalytics ? 'Installed' : 'NOT INSTALLED — no way to track conversions'}
+
+BODY TEXT PREVIEW:
+${pageContext.bodyTextPreview?.substring(0, 1500) || 'Could not extract text'}
+
+EXISTING ISSUES ALREADY FOUND (do NOT duplicate these):
+${existingIssues.map(i => `- [${i.type}] ${i.title}`).join('\n')}
+
+CONSOLE ERRORS: ${consoleErrors.length > 0 ? consoleErrors.slice(0, 3).join('; ') : 'None'}
+BROKEN LINKS: ${brokenLinks.length}
+FAILED RESOURCES: ${failedRequests.length}
+`;
+
+  // Build message content with screenshots
+  const content = [
+    { type: 'text', text: contextSummary },
+    {
+      type: 'image',
+      source: { type: 'base64', media_type: 'image/png', data: desktopScreenshot }
+    }
+  ];
+
+  // Include mobile screenshot for premium analysis
+  if (isPremium && mobileScreenshot) {
+    content.push(
+      { type: 'text', text: '\nMOBILE VIEW (375px width):' },
       {
-        role: 'user',
-        content: [
-          { type: 'text', text: `Website: ${url}\nAlready found: ${existingIssues.map(i => i.title).join(', ')}\n\nAnalyze this screenshot for additional UX issues:` },
-          { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshot}` } }
-        ]
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/png', data: mobileScreenshot }
       }
-    ],
-    max_tokens: 500
+    );
+  }
+
+  content.push({
+    type: 'text',
+    text: `\nAnalyze this website. Return ONLY valid JSON matching the schema above. No markdown, no explanation — just the JSON object.`
+  });
+
+  const response = await anthropic.messages.create({
+    model,
+    max_tokens: isPremium ? 2000 : 1200,
+    system: systemPrompt,
+    messages: [{ role: 'user', content }]
   });
 
   try {
-    const content = response.choices[0].message.content;
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    const text = response.content[0].text;
+    // Extract JSON from response (handle potential markdown wrapping)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Validate vibeScore
+      if (parsed.vibeScore && typeof parsed.vibeScore.overall === 'number') {
+        parsed.vibeScore.overall = Math.max(0, Math.min(100, parsed.vibeScore.overall));
+      }
+
+      // Tag AI-generated issues so frontend can style them differently
+      if (parsed.issues) {
+        parsed.issues = parsed.issues.map(issue => ({
+          ...issue,
+          source: 'ai',
+          aiModel: model.includes('sonnet') ? 'premium' : 'standard'
+        }));
+      }
+
+      return parsed;
     }
-  } catch {
-    return [];
+  } catch (err) {
+    console.error('Failed to parse Claude response:', err.message);
   }
-  return [];
+  return null;
 }
 
 // ============================================
@@ -1265,5 +1465,5 @@ app.listen(PORT, () => {
   console.log(`VibeQA server running on http://localhost:${PORT}`);
   console.log(`Supabase: ${db.isConfigured ? 'connected' : 'in-memory mode'}`);
   console.log(`Stripe: ${process.env.STRIPE_SECRET_KEY ? 'configured' : 'demo mode'}`);
-  console.log(`OpenAI: ${process.env.OPENAI_API_KEY ? 'configured' : 'disabled'}`);
+  console.log(`Claude AI: ${process.env.ANTHROPIC_API_KEY ? 'configured' : 'disabled'}`);
 });
