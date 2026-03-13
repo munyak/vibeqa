@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Terms of Service — VibeQA</title>
-  <meta name="description" content="VibeQA Terms of Service — the rules of the road for using our QA platform." />
+  <meta name="description" content="VibeQA Terms of Service — Authorized scanning policy, security analysis terms, and acceptable use." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -87,7 +87,7 @@
     <div class="page-header">
       <div class="page-label">Legal</div>
       <h1 class="page-title">Terms of Service</h1>
-      <p class="page-meta">// Effective date: March 1, 2026 &nbsp;·&nbsp; Last updated: February 24, 2026</p>
+      <p class="page-meta">// Effective date: March 13, 2026 &nbsp;·&nbsp; Last updated: March 13, 2026</p>
     </div>
 
     <div class="content">
@@ -97,8 +97,28 @@
       </div>
 
       <h2>1. The Service</h2>
-      <p>VibeQA provides automated quality assurance scanning for web applications ("the Service"). You submit URLs; we crawl them, analyze them, and return a report. We also offer account management, scan history, integrations, and an API.</p>
-      <p>The Service is provided as-is and as-available. While we work hard to keep it reliable, we don't guarantee 100% uptime or that every scan will catch every issue. QA tools — including VibeQA — are one layer of a quality process, not a substitute for it.</p>
+      <p>VibeQA provides automated security analysis and quality assurance scanning for web applications ("the Service"). You submit URLs; we perform non-invasive security checks, quality analysis, and AI-powered vulnerability detection, then return a detailed report.</p>
+
+      <h3>1.1 What VibeQA Scans</h3>
+      <p>VibeQA performs read-only, non-destructive analysis including:</p>
+      <ul>
+        <li>HTTP security header analysis (HSTS, CSP, X-Frame-Options, Referrer-Policy, Permissions-Policy)</li>
+        <li>Cookie security flag inspection (HttpOnly, Secure, SameSite)</li>
+        <li>Server technology disclosure detection (Server, X-Powered-By headers)</li>
+        <li>Mixed content and transport security checks</li>
+        <li>Client-side source code analysis for exposed credentials, API keys, and sensitive data</li>
+        <li>Form security evaluation (CSRF tokens, autocomplete, insecure form actions)</li>
+        <li>Open redirect and URL parameter vulnerability detection</li>
+        <li>JavaScript library version and known vulnerability detection</li>
+        <li>UX, accessibility, performance, and SEO analysis</li>
+        <li>AI-powered security and quality assessment (paid plans)</li>
+      </ul>
+
+      <div class="highlight-box">
+        <p>VibeQA does <strong>not</strong> perform active exploitation, brute-force attacks, SQL injection, password cracking, or any destructive testing. Our scans are equivalent to what a visitor would observe when browsing your site normally, plus automated analysis of publicly visible headers, cookies, and source code.</p>
+      </div>
+
+      <p>The Service is provided as-is and as-available. While we work hard to keep it reliable, we don't guarantee 100% uptime or that every scan will catch every vulnerability. VibeQA is one layer of a security and quality process, not a substitute for a full penetration test or security audit.</p>
 
       <h2>2. Your Account</h2>
       <h3>2.1 Eligibility</h3>
@@ -110,15 +130,18 @@
       <h3>2.3 Accurate Information</h3>
       <p>You agree to provide accurate registration information and keep it current. Accounts created with false information, disposable email addresses, or for the purpose of abusing free-tier limits may be terminated without notice.</p>
 
-      <h2>3. Acceptable Use</h2>
+      <h2>3. Authorized Scanning and Acceptable Use</h2>
 
       <div class="warning-box">
-        <p><strong>Scan authorization requirement:</strong> You may only scan websites you own or have explicit written permission to scan. Unauthorized scanning may violate computer fraud laws in your jurisdiction. VibeQA is not responsible for scans initiated without authorization.</p>
+        <p><strong>CRITICAL — AUTHORIZATION REQUIRED:</strong> VibeQA performs automated security analysis on websites you submit. You represent and warrant that you own each website you scan or have explicit written authorization from the owner to perform security testing on it. Each scan requires you to confirm this via a consent checkbox. This confirmation is logged and may be used as evidence of your representation in the event of a dispute.</p>
       </div>
+
+      <p>Unauthorized scanning of websites may violate the Computer Fraud and Abuse Act (CFAA) in the United States, the Computer Misuse Act in the United Kingdom, or equivalent laws in your jurisdiction. VibeQA is not responsible for any legal consequences arising from unauthorized use of our scanning service. You assume all liability for scans you initiate.</p>
 
       <h3>You agree NOT to use VibeQA to:</h3>
       <ul>
         <li>Scan websites you do not own or lack explicit authorization to scan</li>
+        <li>Use scan results to harm, extort, blackmail, or threaten website owners</li>
         <li>Conduct denial-of-service attacks or intentionally overload target servers via scan abuse</li>
         <li>Circumvent rate limits, scan quotas, or free-tier restrictions through technical means (VPNs, rotating IPs, disposable email automation, etc.)</li>
         <li>Reverse engineer, decompile, or attempt to extract the source code of VibeQA</li>
@@ -132,10 +155,10 @@
       <h2>4. Subscription Plans and Payment</h2>
 
       <h3>4.1 Free Plan</h3>
-      <p>The Free plan provides limited scans per day with no charge. We reserve the right to modify free plan limits at any time with reasonable notice.</p>
+      <p>The Free plan provides one trial scan to evaluate the service. Additional scans require a paid subscription. We reserve the right to modify free plan limits at any time.</p>
 
       <h3>4.2 Paid Plans</h3>
-      <p>Pro and Team plans are billed monthly or annually in advance. By subscribing, you authorize us to charge your payment method on a recurring basis until you cancel. All prices are in USD.</p>
+      <p>Pro ($49/month, 1,000 scans/month with AI security analysis), Team ($149/month, 5,000 scans/month with premium AI analysis), and Enterprise (custom pricing) plans are billed monthly or annually in advance. By subscribing, you authorize us to charge your payment method on a recurring basis until you cancel. All prices are in USD.</p>
 
       <h3>4.3 14-Day Free Trial</h3>
       <p>Paid plans include a 14-day free trial. No credit card is required to start a trial. If you add a payment method and do not cancel before the trial ends, you will be charged the plan rate. You can cancel at any time during the trial with no charge.</p>
@@ -168,11 +191,11 @@
 
       <h2>8. Disclaimers and Limitation of Liability</h2>
       <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
-      <p>We do not warrant that the Service will be uninterrupted, error-free, or that every issue in a scanned application will be detected. VibeQA's scan results are informational — use them as one input in your quality process, not as a definitive security audit or compliance certification.</p>
+      <p>We do not warrant that the Service will be uninterrupted, error-free, or that every vulnerability or issue in a scanned application will be detected. VibeQA's scan results are informational and should not be considered a comprehensive penetration test, security audit, or compliance certification. For critical applications, we recommend engaging a qualified security professional for a thorough assessment in addition to using VibeQA.</p>
       <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, VIBEQA'S TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM THESE TERMS OR YOUR USE OF THE SERVICE SHALL NOT EXCEED THE AMOUNT YOU PAID TO US IN THE 12 MONTHS PRECEDING THE CLAIM. WE ARE NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES.</p>
 
       <h2>9. Indemnification</h2>
-      <p>You agree to indemnify and hold harmless VibeQA and its officers, employees, and agents from any claims, damages, or expenses (including reasonable legal fees) arising from: (a) your use of the Service in violation of these Terms, (b) your scanning of websites without authorization, (c) your violation of any applicable law, or (d) any content you submit through the Service.</p>
+      <p>You agree to indemnify and hold harmless VibeQA and its officers, employees, and agents from any claims, damages, or expenses (including reasonable legal fees) arising from: (a) your use of the Service in violation of these Terms, (b) your scanning of websites without proper authorization — including any third-party claims from website owners whose sites you scanned, (c) your violation of any applicable law including computer fraud statutes, or (d) any content you submit through the Service.</p>
 
       <h2>10. Termination</h2>
       <p>You may delete your account at any time from account settings. We may suspend or terminate your account immediately if you violate these Terms, attempt to abuse the Service, or if required by law. We will provide notice where practicable.</p>

@@ -344,13 +344,14 @@
             <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
             <tbody>
               <tr><td><code>url</code></td><td>string</td><td>Yes</td><td>The page URL to scan (must include https://)</td></tr>
+              <tr><td><code>ownership_confirmed</code></td><td>boolean</td><td>Yes</td><td>Must be <code>true</code>. Confirms you own or have authorization to scan this site. Required for legal compliance — see <a href="/terms.html">Terms of Service</a>.</td></tr>
             </tbody>
           </table>
           <h3>Example request</h3>
           <pre><code>curl -X POST https://vibeqa.io/api/scan \
   -H "Authorization: Bearer vqa_abc123..." \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://yoursite.com/checkout"}'</code></pre>
+  -d '{"url": "https://yoursite.com/checkout", "ownership_confirmed": true}'</code></pre>
           <h3>Response</h3>
           <pre><code>{
   "scanId": "scan_abc123xyz",
