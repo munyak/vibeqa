@@ -798,9 +798,9 @@
   <!-- ─── HERO ─── -->
   <section class="hero">
     <div class="container">
-      <div class="hero-badge">First scan free — no signup required</div>
-      <h1>Your AI writes the code.<br /><span class="grad-text">VibeQA catches what it misses.</span></h1>
-      <p class="hero-sub">Stop shipping broken vibe-coded apps. Paste your URL and get a full QA report in under 60 seconds — no test-writing, no setup, no engineers needed.</p>
+      <div class="hero-badge">First security scan free — no signup required</div>
+      <h1>Your AI writes the code.<br /><span class="grad-text">VibeQA finds the vulnerabilities.</span></h1>
+      <p class="hero-sub">Stop shipping insecure vibe-coded apps. Paste your URL and get a security + quality report in under 60 seconds — missing headers, exposed data, XSS vectors, and more.</p>
       <p class="hero-vibe-line">// Built for Cursor · Copilot · Lovable · Windsurf · Claude Code</p>
 
       <div class="scan-form">
@@ -813,7 +813,11 @@
         />
         <button class="scan-btn" id="scan-btn" onclick="startScan()">Scan Now</button>
       </div>
-      <p class="scan-hint">// We'll check for broken links, mobile issues, performance, and more.</p>
+      <label id="ownership-check" style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px;font-size:12px;color:var(--gray-500);cursor:pointer;user-select:none">
+        <input type="checkbox" id="own-site-checkbox" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer" />
+        <span>I confirm I own or have authorization to scan this site. <a href="/terms.html" style="color:var(--teal);text-decoration:none" onclick="event.stopPropagation()">Terms apply.</a></span>
+      </label>
+      <p class="scan-hint">// Security + UX + performance + SEO checks. Results in 60 seconds.</p>
 
       <!-- Loading state -->
       <div id="loading" class="loading">
@@ -834,7 +838,7 @@
 
       <!-- Upgrade nudge -->
       <div id="upgrade-cta" class="upgrade-cta">
-        <p>Want <strong>deeper insights?</strong> Upgrade to Pro for Claude-powered Vibe Score, conversion analysis, and actionable AI fix suggestions.</p>
+        <p>Want <strong>deeper security analysis?</strong> Upgrade to Pro for AI-powered vulnerability detection, Vibe Score, dependency scanning, and actionable fix suggestions.</p>
         <button class="btn-primary" onclick="selectPlan('pro')">See Plans →</button>
       </div>
 
@@ -1089,6 +1093,18 @@
 
       let url = urlInput.value.trim();
       if (!url) { alert('Please enter a URL'); return; }
+
+      // Ownership verification — legal requirement
+      const ownershipCheckbox = document.getElementById('own-site-checkbox');
+      if (!ownershipCheckbox.checked) {
+        alert('You must confirm you own or have authorization to scan this site before proceeding.');
+        ownershipCheckbox.parentElement.style.outline = '2px solid #EF4444';
+        ownershipCheckbox.parentElement.style.outlineOffset = '4px';
+        ownershipCheckbox.parentElement.style.borderRadius = '8px';
+        setTimeout(() => { ownershipCheckbox.parentElement.style.outline = 'none'; }, 3000);
+        return;
+      }
+
       if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; urlInput.value = url; }
 
       scanBtn.disabled = true; scanBtn.textContent = 'Scanning...';
@@ -1096,7 +1112,7 @@
       results.classList.remove('visible');
       upgradeCta.classList.remove('visible');
 
-      const messages = ['Starting scan...','Loading page...','Checking mobile responsiveness...','Analyzing performance...','Running accessibility checks...','Almost done...'];
+      const messages = ['Starting security scan...','Loading page...','Checking security headers...','Scanning for exposed data...','Analyzing cookie security...','Checking for mixed content...','Running accessibility checks...','Analyzing performance...','Almost done...'];
       let msgIndex = 0;
       const loadingInterval = setInterval(() => { msgIndex = (msgIndex + 1) % messages.length; loadingText.textContent = messages[msgIndex]; }, 3000);
 
@@ -1105,9 +1121,19 @@
         const authToken = localStorage.getItem('vibeqa_token');
         if (authToken) scanHeaders['Authorization'] = `Bearer ${authToken}`;
 
-        const scanRes = await fetch(`${API_URL}/api/scan`, { method: 'POST', headers: scanHeaders, body: JSON.stringify({ url }) });
+        const scanRes = await fetch(`${API_URL}/api/scan`, { method: 'POST', headers: scanHeaders, body: JSON.stringify({ url, ownership_confirmed: true }) });
         const scanStart = await scanRes.json();
-        if (!scanRes.ok) throw new Error(scanStart.error || scanStart.message || 'Scan failed');
+        if (!scanRes.ok) {
+          // Handle paywall / upgrade prompts
+          if (scanRes.status === 402 || scanStart.upgrade) {
+            const upgradeCta = document.getElementById('upgrade-cta');
+            upgradeCta.innerHTML = `<p><strong>${escapeHtml(scanStart.message || 'Upgrade required')}</strong></p><button class="btn-primary" onclick="selectPlan('${scanStart.suggestedPlan || 'pro'}')">Upgrade Now →</button>`;
+            upgradeCta.classList.add('visible');
+            upgradeCta.scrollIntoView({ behavior: 'smooth' });
+            throw new Error(scanStart.message || 'Scan limit reached');
+          }
+          throw new Error(scanStart.error || scanStart.message || 'Scan failed');
+        }
 
         const scanId = scanStart.scanId;
         let scan = scanStart, attempts = 0;

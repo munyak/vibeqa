@@ -81,8 +81,8 @@ const activeScans = new Map();
 
 // Main scan endpoint
 app.post('/api/scan', async (req, res) => {
-  const { url, projectId } = req.body;
-  
+  const { url, projectId, ownership_confirmed } = req.body;
+
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
@@ -92,6 +92,14 @@ app.post('/api/scan', async (req, res) => {
     new URL(url);
   } catch {
     return res.status(400).json({ error: 'Invalid URL format' });
+  }
+
+  // Ownership verification — legal requirement for security scanning
+  if (!ownership_confirmed) {
+    return res.status(403).json({
+      error: 'Ownership confirmation required',
+      message: 'You must confirm you own or have authorization to scan this site. VibeQA performs security analysis and scanning unauthorized sites may violate computer fraud laws.'
+    });
   }
 
   // Check scan limits for authenticated users
@@ -150,6 +158,25 @@ app.post('/api/scan', async (req, res) => {
       // Store this session for abuse detection
       await db.storeSession(req.user.id, { ip: clientIp, user_agent_hash: userAgentHash, timestamp: Date.now() });
     }
+  } else {
+    // ANONYMOUS USER RATE LIMITING
+    // No account = 1 free scan per IP per 24 hours, then must sign up
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+    const ipHash = require('crypto').createHash('md5').update(clientIp).digest('hex');
+
+    const canScan = await db.canAnonymousScan(ipHash);
+    if (!canScan) {
+      return res.status(402).json({
+        error: 'Free scan limit reached',
+        message: 'Sign up for free to get your first scan, or upgrade to Pro ($49/mo) for 1,000 scans/month with AI-powered security analysis.',
+        upgrade: true,
+        suggestedPlan: 'free',
+        callToAction: 'Create a free account to continue scanning'
+      });
+    }
+
+    // Track this anonymous scan
+    await db.trackAnonymousScan(ipHash);
   }
 
   // Create scan record in database
@@ -790,6 +817,257 @@ if (location.protocol !== 'https:') {
     }
 
     // ============================================
+    // SECURITY SCANNING — Light Pentest Checks
+    // The CORE value of VibeQA — security-first analysis
+    // ============================================
+
+    // 1. Comprehensive Security Headers Check
+    const secHeaders = response?.headers() || {};
+    const missingCriticalHeaders = [];
+
+    if (!secHeaders['strict-transport-security']) {
+      missingCriticalHeaders.push({
+        header: 'Strict-Transport-Security (HSTS)',
+        risk: 'Browsers can be tricked into loading HTTP version, enabling man-in-the-middle attacks',
+        fix: `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+      });
+    }
+    if (!secHeaders['content-security-policy']) {
+      missingCriticalHeaders.push({
+        header: 'Content-Security-Policy (CSP)',
+        risk: 'No protection against XSS attacks — malicious scripts can run freely',
+        fix: `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'`
+      });
+    }
+    if (!secHeaders['x-xss-protection']) {
+      missingCriticalHeaders.push({
+        header: 'X-XSS-Protection',
+        risk: 'Legacy browsers have no XSS filtering enabled',
+        fix: `X-XSS-Protection: 1; mode=block`
+      });
+    }
+    if (!secHeaders['referrer-policy']) {
+      missingCriticalHeaders.push({
+        header: 'Referrer-Policy',
+        risk: 'Full URLs (including query params with tokens/IDs) are leaked to external sites',
+        fix: `Referrer-Policy: strict-origin-when-cross-origin`
+      });
+    }
+    if (!secHeaders['permissions-policy'] && !secHeaders['feature-policy']) {
+      missingCriticalHeaders.push({
+        header: 'Permissions-Policy',
+        risk: 'Third-party scripts can access camera, microphone, geolocation without restriction',
+        fix: `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+      });
+    }
+
+    if (missingCriticalHeaders.length > 0) {
+      const severity = missingCriticalHeaders.length >= 3 ? 'critical' : 'warning';
+      issues.push({
+        type: severity,
+        category: 'Security',
+        title: `${missingCriticalHeaders.length} critical security headers missing`,
+        description: `Missing headers expose your site to attacks:\n${missingCriticalHeaders.map(h => `• **${h.header}** — ${h.risk}`).join('\n')}`,
+        suggestion: `**Add these headers to your server configuration:**\n\n${missingCriticalHeaders.map(h => `\`${h.fix}\``).join('\n\n')}\n\n**Express.js (add all at once):**\n\`\`\`javascript\nconst helmet = require('helmet');\napp.use(helmet());\n\`\`\`\n\n**Netlify (netlify.toml):**\n\`\`\`toml\n[[headers]]\n  for = "/*"\n  [headers.values]\n${missingCriticalHeaders.map(h => `    ${h.fix.split(':')[0]} = "${h.fix.split(': ').slice(1).join(': ')}"`).join('\n')}\n\`\`\``
+      });
+    }
+
+    // 2. Server Information Disclosure
+    const serverHeader = secHeaders['server'] || '';
+    const poweredBy = secHeaders['x-powered-by'] || '';
+    if (serverHeader || poweredBy) {
+      const disclosed = [];
+      if (serverHeader) disclosed.push(`Server: ${serverHeader}`);
+      if (poweredBy) disclosed.push(`X-Powered-By: ${poweredBy}`);
+      issues.push({
+        type: 'warning',
+        category: 'Security',
+        title: 'Server technology exposed in headers',
+        description: `Your server reveals its technology stack: ${disclosed.join(', ')}. Attackers use this to find known vulnerabilities for your specific server version.`,
+        suggestion: `**Remove identifying headers:**\n\n**Express.js:**\n\`\`\`javascript\napp.disable('x-powered-by');\n\`\`\`\n\n**Nginx:**\n\`\`\`nginx\nserver_tokens off;\n\`\`\`\n\n**Apache:**\n\`\`\`apache\nServerTokens Prod\nServerSignature Off\n\`\`\``
+      });
+    }
+
+    // 3. Cookie Security Analysis
+    const setCookieHeaders = response?.headers()?.['set-cookie'] || '';
+    if (setCookieHeaders) {
+      const cookieIssues = [];
+      const cookies = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+      cookies.forEach(cookie => {
+        const name = cookie.split('=')[0].trim();
+        if (!cookie.toLowerCase().includes('httponly')) cookieIssues.push(`${name}: missing HttpOnly flag (accessible to JavaScript/XSS)`);
+        if (!cookie.toLowerCase().includes('secure')) cookieIssues.push(`${name}: missing Secure flag (sent over HTTP)`);
+        if (!cookie.toLowerCase().includes('samesite')) cookieIssues.push(`${name}: missing SameSite flag (CSRF vulnerable)`);
+      });
+      if (cookieIssues.length > 0) {
+        issues.push({
+          type: 'critical',
+          category: 'Security',
+          title: 'Insecure cookie configuration',
+          description: `Cookie security flags missing:\n${cookieIssues.map(c => `• ${c}`).join('\n')}`,
+          suggestion: `**Set secure cookie flags:**\n\`\`\`javascript\nres.cookie('session', token, {\n  httpOnly: true,  // Prevents XSS access\n  secure: true,    // HTTPS only\n  sameSite: 'Lax', // CSRF protection\n  maxAge: 86400000 // 24 hours\n});\n\`\`\``
+        });
+      }
+    }
+
+    // 4. Mixed Content Detection (in-page check)
+    const mixedContentIssues = await page.evaluate(() => {
+      const mixed = [];
+      // Check for HTTP resources on HTTPS pages
+      if (location.protocol === 'https:') {
+        document.querySelectorAll('script[src^="http://"], link[href^="http://"], img[src^="http://"], iframe[src^="http://"]').forEach(el => {
+          mixed.push({ tag: el.tagName, src: el.src || el.href });
+        });
+      }
+      return mixed.slice(0, 10);
+    });
+
+    if (mixedContentIssues.length > 0) {
+      issues.push({
+        type: 'critical',
+        category: 'Security',
+        title: `${mixedContentIssues.length} mixed content resource(s) detected`,
+        description: `HTTPS page loads resources over insecure HTTP — browsers may block these and show security warnings:\n${mixedContentIssues.map(m => `• <${m.tag}> ${m.src}`).join('\n')}`,
+        suggestion: `**Update all resource URLs to use HTTPS:**\n\`\`\`html\n<!-- Change this: -->\n<script src="http://cdn.example.com/lib.js"></script>\n<!-- To this: -->\n<script src="https://cdn.example.com/lib.js"></script>\n\`\`\`\nOr use protocol-relative URLs: \`//cdn.example.com/lib.js\``
+      });
+    }
+
+    // 5. Exposed Sensitive Data in Page Source
+    const exposedData = await page.evaluate(() => {
+      const html = document.documentElement.outerHTML;
+      const findings = [];
+
+      // Check for exposed API keys / tokens (common patterns)
+      const apiKeyPatterns = [
+        { pattern: /(?:api[_-]?key|apikey|api_secret)\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]/gi, label: 'API key' },
+        { pattern: /(?:sk|pk)_(test|live)_[a-zA-Z0-9]{20,}/g, label: 'Stripe key' },
+        { pattern: /AIza[a-zA-Z0-9_\-]{35}/g, label: 'Google API key' },
+        { pattern: /(?:aws_access_key_id|aws_secret)\s*[:=]\s*['"][A-Z0-9]{16,}['"]/gi, label: 'AWS credential' },
+        { pattern: /ghp_[a-zA-Z0-9]{36}/g, label: 'GitHub token' },
+      ];
+
+      apiKeyPatterns.forEach(({ pattern, label }) => {
+        const matches = html.match(pattern);
+        if (matches) findings.push(`${label} found (${matches.length} instance${matches.length > 1 ? 's' : ''})`);
+      });
+
+      // Check for exposed email addresses in source
+      const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+      const emails = [...new Set(html.match(emailPattern) || [])];
+      if (emails.length > 3) findings.push(`${emails.length} email addresses exposed in page source (spam target)`);
+
+      // Check for HTML comments containing sensitive info
+      const comments = html.match(/<!--[\s\S]*?-->/g) || [];
+      const sensitiveComments = comments.filter(c => /(?:password|secret|todo|fixme|hack|debug|token|key)/i.test(c));
+      if (sensitiveComments.length > 0) findings.push(`${sensitiveComments.length} HTML comment(s) with potentially sensitive content`);
+
+      return findings;
+    });
+
+    if (exposedData.length > 0) {
+      issues.push({
+        type: 'critical',
+        category: 'Security',
+        title: 'Sensitive data exposed in page source',
+        description: `Found potential data leaks in your page HTML:\n${exposedData.map(d => `• ${d}`).join('\n')}`,
+        suggestion: `**Never embed secrets in frontend code.** Use environment variables and server-side API calls instead.\n\n**Remove HTML comments in production:**\n\`\`\`javascript\n// In your build process:\nhtml.replace(/<!--[\\s\\S]*?-->/g, '')\n\`\`\`\n\n**Use .env for API keys:**\n\`\`\`bash\n# .env (never commit this)\nSTRIPE_KEY=sk_live_...\n\`\`\``
+      });
+    }
+
+    // 6. Form Security Analysis
+    const formSecurityIssues = await page.evaluate(() => {
+      const findings = [];
+      const forms = document.querySelectorAll('form');
+
+      forms.forEach((form, i) => {
+        // Check for missing CSRF tokens
+        const hasCSRF = form.querySelector('input[name*="csrf"], input[name*="token"], input[name*="_token"]');
+        if (!hasCSRF && form.method?.toLowerCase() === 'post') {
+          findings.push(`Form ${i + 1}: No CSRF token on POST form`);
+        }
+
+        // Check for password fields with autocomplete
+        const passwordFields = form.querySelectorAll('input[type="password"]');
+        passwordFields.forEach(pw => {
+          if (pw.autocomplete !== 'off' && pw.autocomplete !== 'new-password' && pw.autocomplete !== 'current-password') {
+            findings.push(`Form ${i + 1}: Password field should set autocomplete attribute`);
+          }
+        });
+
+        // Check for forms submitting to HTTP
+        if (form.action && form.action.startsWith('http://')) {
+          findings.push(`Form ${i + 1}: Submits data over insecure HTTP`);
+        }
+      });
+
+      return findings;
+    });
+
+    if (formSecurityIssues.length > 0) {
+      issues.push({
+        type: 'warning',
+        category: 'Security',
+        title: 'Form security issues detected',
+        description: `Found potential form vulnerabilities:\n${formSecurityIssues.map(f => `• ${f}`).join('\n')}`,
+        suggestion: `**Add CSRF protection:**\n\`\`\`javascript\n// Express + csurf middleware\nconst csrf = require('csurf');\napp.use(csrf({ cookie: true }));\n\`\`\`\n\n**Set autocomplete on password fields:**\n\`\`\`html\n<input type="password" autocomplete="current-password">\n\`\`\``
+      });
+    }
+
+    // 7. Open Redirect Detection
+    const openRedirectRisk = await page.evaluate(() => {
+      const params = new URLSearchParams(window.location.search);
+      const suspiciousParams = ['redirect', 'url', 'next', 'return', 'returnTo', 'goto', 'redirect_uri', 'callback'];
+      const found = [];
+      suspiciousParams.forEach(p => {
+        if (params.has(p)) found.push(p);
+      });
+      // Also check links with redirect params
+      const linksWithRedirects = document.querySelectorAll('a[href*="redirect="], a[href*="url="], a[href*="next="]');
+      return { params: found, links: linksWithRedirects.length };
+    });
+
+    if (openRedirectRisk.params.length > 0 || openRedirectRisk.links > 0) {
+      issues.push({
+        type: 'warning',
+        category: 'Security',
+        title: 'Potential open redirect vectors',
+        description: `Found URL redirect parameters that could be exploited for phishing${openRedirectRisk.params.length > 0 ? `: ${openRedirectRisk.params.join(', ')}` : ''}. ${openRedirectRisk.links > 0 ? `Plus ${openRedirectRisk.links} link(s) with redirect parameters.` : ''}`,
+        suggestion: `**Validate redirect URLs server-side:**\n\`\`\`javascript\nfunction safeRedirect(url) {\n  const allowed = ['yourdomain.com'];\n  try {\n    const parsed = new URL(url);\n    return allowed.includes(parsed.hostname) ? url : '/';\n  } catch { return '/'; }\n}\n\`\`\``
+      });
+    }
+
+    // 8. JavaScript Library Vulnerability Check (basic)
+    const jsLibraries = await page.evaluate(() => {
+      const libs = [];
+      if (window.jQuery) libs.push({ name: 'jQuery', version: window.jQuery.fn?.jquery || 'unknown' });
+      if (window.angular) libs.push({ name: 'AngularJS', version: window.angular.version?.full || 'unknown' });
+      if (window.React) libs.push({ name: 'React', version: window.React.version || 'unknown' });
+      if (window.Vue) libs.push({ name: 'Vue', version: window.Vue.version || 'unknown' });
+      if (window.Lodash || window._?.VERSION) libs.push({ name: 'Lodash', version: window._?.VERSION || 'unknown' });
+      if (window.Bootstrap) libs.push({ name: 'Bootstrap', version: 'detected' });
+      return libs;
+    });
+
+    const outdatedLibs = jsLibraries.filter(lib => {
+      if (lib.name === 'jQuery' && lib.version !== 'unknown') {
+        const major = parseInt(lib.version.split('.')[0]);
+        return major < 3;
+      }
+      if (lib.name === 'AngularJS') return true; // AngularJS is EOL
+      return false;
+    });
+
+    if (outdatedLibs.length > 0) {
+      issues.push({
+        type: 'warning',
+        category: 'Security',
+        title: 'Outdated JavaScript libraries detected',
+        description: `Found potentially vulnerable libraries:\n${outdatedLibs.map(l => `• ${l.name} v${l.version}`).join('\n')}\n\nOutdated libraries often have known security vulnerabilities.`,
+        suggestion: `**Update to latest versions:**\n- jQuery < 3.x has known XSS vulnerabilities → Update to 3.7+\n- AngularJS is end-of-life → Migrate to Angular 17+ or another framework\n\n**Use npm audit:**\n\`\`\`bash\nnpm audit\nnpm audit fix\n\`\`\``
+      });
+    }
+
+    // ============================================
     // CLAUDE AI ANALYSIS (Pro/Team/Enterprise)
     // The core value engine — this is what makes VibeQA worth paying for
     // ============================================
@@ -1060,21 +1338,33 @@ async function sendSlackNotification(userId, scanId, url, summary, issues) {
 async function analyzeWithClaude(model, url, desktopScreenshot, mobileScreenshot, pageContext, existingIssues, seoData, loadTime, consoleErrors, failedRequests, brokenLinks, plan) {
   const isPremium = (plan === 'team' || plan === 'enterprise');
 
-  const systemPrompt = `You are VibeQA, an expert website quality analyst combining the skills of a senior UX designer, conversion rate optimizer, frontend developer, SEO specialist, and accessibility consultant.
+  const systemPrompt = `You are VibeQA, an expert website security analyst and quality auditor combining the skills of a penetration tester, application security engineer, senior UX designer, conversion rate optimizer, and SEO specialist.
 
-You analyze websites holistically — not just technical checks, but whether the site actually WORKS for its business goals. Your analysis should be the kind of insight a $200/hr consultant would give.
+You perform a LIGHT PENTEST and holistic quality analysis — security is your PRIMARY focus, followed by UX and conversion. Your analysis should be the kind of insight a $300/hr security consultant would give.
+
+SECURITY ANALYSIS PRIORITIES (check these FIRST):
+1. **Attack Surface** — Visible entry points: forms, login pages, API endpoints exposed in JS, URL parameters
+2. **Data Exposure** — API keys, tokens, credentials, emails, internal paths leaked in source/comments/JS
+3. **Injection Vectors** — Forms without CSRF, unescaped user input, inline event handlers, eval() usage
+4. **Authentication Weaknesses** — Weak password policies, missing rate limiting signs, session management
+5. **Transport Security** — HTTPS enforcement, mixed content, insecure form actions
+6. **Client-side Security** — Inline scripts, third-party script risks, postMessage usage, localStorage of sensitive data
+7. **Information Disclosure** — Server headers, error pages, stack traces, debug modes, source maps
+8. **Dependency Risks** — Outdated libraries with known CVEs visible in page source
 
 IMPORTANT RULES:
 - Only report issues NOT already covered in the existing findings
-- Every issue must have a specific, copy-paste-ready fix (code snippet, copy suggestion, or step-by-step action)
-- Prioritize issues by business impact (conversion, revenue, trust) over minor technical nits
-- Be direct and specific — "Your CTA button is lost in the visual noise" not "Consider improving button visibility"
+- Every issue must have a specific, copy-paste-ready fix (code snippet or step-by-step action)
+- ALWAYS lead with security findings — they are the most valuable
+- Prioritize by risk: critical security > warnings > UX/conversion improvements
+- Be direct and specific — "Your login form has no CSRF protection" not "Consider improving form security"
 - Reference exact elements you see in the screenshots
 
 Return a JSON object with this exact structure:
 {
   "vibeScore": {
     "overall": <0-100>,
+    "security": <0-100>,
     "design": <0-100>,
     "ux": <0-100>,
     "conversion": <0-100>,
@@ -1085,31 +1375,34 @@ Return a JSON object with this exact structure:
     "seo": <0-100>
   },
   "insights": {
-    "headline": "<One-line verdict, e.g. 'Clean design but weak conversion path — visitors don't know what to do next'>",
+    "headline": "<One-line security verdict, e.g. 'Multiple XSS vectors and missing CSP — this site is vulnerable to injection attacks'>",
     "strengths": ["<What's working well — max 3>"],
-    "quickWins": ["<High-impact, low-effort fixes — max 3>"],
-    "topPriority": "<The single most impactful thing to fix>"
+    "quickWins": ["<High-impact security and UX fixes — max 3>"],
+    "topPriority": "<The single most critical security or UX issue to fix>"
   },
   "issues": [
     {
       "type": "critical|warning|info",
-      "category": "Conversion|UX|Design|Content|Trust|Mobile|Code Quality",
+      "category": "Security|Vulnerability|Data Exposure|Conversion|UX|Design|Content|Trust|Mobile|Code Quality",
       "title": "<Clear, specific issue title>",
-      "description": "<What's wrong AND why it matters for the business>",
-      "suggestion": "<Specific fix with code/copy example>"
+      "description": "<What's wrong AND the security/business risk>",
+      "suggestion": "<Specific fix with code example>"
     }
   ]
 }
 
-${isPremium ? `PREMIUM ANALYSIS — go deeper:
+${isPremium ? `PREMIUM SECURITY ANALYSIS — go deeper:
+- Deep scan: Look for hidden API endpoints in JavaScript bundles
+- Analyze authentication flow security (if login page visible)
+- Check for client-side data validation bypass opportunities
+- Evaluate third-party script trust chain
 - Analyze the page copy: Is the value proposition clear in the first 5 seconds?
 - Conversion funnel gaps: What stops a visitor from becoming a customer?
-- Competitive positioning: Does this page stand out or look generic?
-- Emotional design: Does the page build trust and reduce anxiety?
 - Content strategy: Is the messaging hierarchy effective?
-- Provide up to 8 issues max.` : `STANDARD ANALYSIS:
-- Focus on the highest-impact UX, conversion, and design issues
-- Provide up to 5 issues max.`}`;
+- Provide up to 10 issues max (at least 5 security-focused).` : `STANDARD SECURITY + UX ANALYSIS:
+- Focus on the most critical security issues and highest-impact UX problems
+- At least 3 issues should be security-focused
+- Provide up to 6 issues max.`}`;
 
   const contextSummary = `
 WEBSITE: ${url}

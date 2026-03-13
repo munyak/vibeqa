@@ -1050,6 +1050,84 @@ function fallbackGetUserIntegrations(userId) {
 }
 
 // ============================================
+// SESSION TRACKING (Anti-Abuse)
+// ============================================
+
+// In-memory session store for abuse detection (persists per server instance)
+const sessionTracker = new Map();
+// In-memory anonymous scan tracker (IP-based)
+const anonymousScanTracker = new Map();
+
+async function getLastSession(userId) {
+  // Try Supabase first
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('scan_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('timestamp', { ascending: false })
+        .limit(1)
+        .single();
+      if (!error && data) return data;
+    } catch (err) {
+      // Table may not exist yet — fall through to in-memory
+    }
+  }
+  // Fallback to in-memory
+  return sessionTracker.get(userId) || null;
+}
+
+async function storeSession(userId, sessionData) {
+  // Always store in memory
+  sessionTracker.set(userId, sessionData);
+
+  // Try Supabase
+  if (supabase) {
+    try {
+      await supabase
+        .from('scan_sessions')
+        .upsert({
+          user_id: userId,
+          ip: sessionData.ip,
+          user_agent_hash: sessionData.user_agent_hash,
+          timestamp: sessionData.timestamp
+        }, { onConflict: 'user_id' });
+    } catch (err) {
+      // Table may not exist yet — in-memory is sufficient
+    }
+  }
+}
+
+// Anonymous (unauthenticated) scan rate limiting by IP
+async function canAnonymousScan(ipHash) {
+  const record = anonymousScanTracker.get(ipHash);
+  if (!record) return true; // First scan ever from this IP
+
+  // Allow 1 scan per 24 hours for anonymous users
+  const twentyFourHoursAgo = Date.now() - 86400000;
+  return record.lastScan < twentyFourHoursAgo;
+}
+
+async function trackAnonymousScan(ipHash) {
+  anonymousScanTracker.set(ipHash, {
+    lastScan: Date.now(),
+    count: (anonymousScanTracker.get(ipHash)?.count || 0) + 1
+  });
+}
+
+// Clean up old entries every hour
+setInterval(() => {
+  const oneDayAgo = Date.now() - 86400000;
+  for (const [key, val] of anonymousScanTracker.entries()) {
+    if (val.lastScan < oneDayAgo) anonymousScanTracker.delete(key);
+  }
+  for (const [key, val] of sessionTracker.entries()) {
+    if (val.timestamp < oneDayAgo) sessionTracker.delete(key);
+  }
+}, 3600000);
+
+// ============================================
 // EXPORTS
 // ============================================
 
@@ -1115,7 +1193,13 @@ module.exports = {
   // Password Reset
   createPasswordReset,
   verifyPasswordResetToken,
-  completePasswordReset
+  completePasswordReset,
+
+  // Session Tracking (Anti-Abuse)
+  getLastSession,
+  storeSession,
+  canAnonymousScan,
+  trackAnonymousScan,
 };
 
 // ============================================
