@@ -811,12 +811,12 @@
           placeholder="https://your-site.com"
           autocomplete="off"
         />
-        <button class="scan-btn" id="scan-btn" onclick="startScan()">Scan Now</button>
+        <button class="scan-btn" id="scan-btn" onclick="startScan()" title="VibeQA runs automated security & performance checks on your live website. Read-only, no code modifications. Results encrypted and stored securely.">Scan Now (Free)</button>
       </div>
-      <label id="ownership-check" style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px;font-size:12px;color:var(--gray-500);cursor:pointer;user-select:none">
-        <input type="checkbox" id="own-site-checkbox" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer" />
-        <span>I confirm I own or have authorization to scan this site. <a href="/terms.html" style="color:var(--teal);text-decoration:none" onclick="event.stopPropagation()">Terms apply.</a></span>
-      </label>
+      <div class="scan-disclosure" style="margin-top:16px;padding:12px 16px;background:var(--bg-secondary);border-radius:8px;font-size:13px;color:var(--gray-700);display:flex;align-items:center;gap:8px;justify-content:center">
+        <span style="color:var(--teal);font-weight:bold">✓</span>
+        <span>We'll check your app for common security & performance issues (read-only, no modifications)</span>
+      </div>
       <p class="scan-hint">// Security + UX + performance + SEO checks. Results in 60 seconds.</p>
 
       <!-- Loading state -->
@@ -1033,6 +1033,9 @@
         </div>
         <div class="footer-copy">© 2026 VibeQA</div>
       </div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-200);font-size:11px;color:var(--gray-600);line-height:1.5">
+        <strong>Legal Disclaimer:</strong> By using VibeQA, you confirm that you own or have authorization to scan the website(s) you submit. VibeQA performs read-only security and performance scans and does not modify any code or data. All scan results are encrypted and stored securely. You accept our <a href="/terms.html" style="color:var(--teal)">Terms</a> and <a href="/privacy.html" style="color:var(--teal)">Privacy Policy</a>.
+      </div>
     </div>
   </footer>
 
@@ -1094,17 +1097,6 @@
       let url = urlInput.value.trim();
       if (!url) { alert('Please enter a URL'); return; }
 
-      // Ownership verification — legal requirement
-      const ownershipCheckbox = document.getElementById('own-site-checkbox');
-      if (!ownershipCheckbox.checked) {
-        alert('You must confirm you own or have authorization to scan this site before proceeding.');
-        ownershipCheckbox.parentElement.style.outline = '2px solid #EF4444';
-        ownershipCheckbox.parentElement.style.outlineOffset = '4px';
-        ownershipCheckbox.parentElement.style.borderRadius = '8px';
-        setTimeout(() => { ownershipCheckbox.parentElement.style.outline = 'none'; }, 3000);
-        return;
-      }
-
       if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; urlInput.value = url; }
 
       scanBtn.disabled = true; scanBtn.textContent = 'Scanning...';
@@ -1151,7 +1143,7 @@
         console.error(err); alert('Error: ' + err.message);
       } finally {
         clearInterval(loadingInterval);
-        scanBtn.disabled = false; scanBtn.textContent = 'Scan Now';
+        scanBtn.disabled = false; scanBtn.textContent = 'Scan Now (Free)';
         loading.classList.remove('visible');
       }
     }
