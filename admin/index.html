@@ -2,208 +2,148 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>VibeQA â Admin</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
-  /* ââ Config note: fill in SUPABASE_URL + SUPABASE_ANON_KEY below ââ */
-  :root {
-    --bg:       #09090b;
-    --surface:  #111113;
-    --surface2: #18181b;
-    --border:   #27272a;
-    --accent:   #6366f1;
-    --green:    #22c55e;
-    --yellow:   #eab308;
-    --red:      #ef4444;
-    --orange:   #f97316;
-    --purple:   #a855f7;
-    --text:     #fafafa;
-    --text2:    #a1a1aa;
-    --text3:    #52525b;
-    --r:        10px;
-    --rs:       6px;
-    --font:     'Inter', 'Segoe UI', system-ui, sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; }
-
-  /* ââ Auth Screen ââ */
-  #auth-screen {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;
-  }
-  .auth-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
-    padding: 40px; width: 380px; text-align: center;
-  }
-  .auth-logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
-  .auth-logo span { color: var(--accent); }
-  .auth-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
-  .google-btn {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; padding: 11px 20px; background: #fff; color: #111; border: none;
-    border-radius: var(--rs); font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
-  }
-  .google-btn:hover { opacity: 0.92; }
-  .auth-note { font-size: 11px; color: var(--text3); margin-top: 14px; }
-  .error-msg { color: var(--red); font-size: 12px; margin-top: 12px; }
-
-  /* ââ Layout ââ */
-  #app { display: none; }
-  #app.visible { display: flex; min-height: 100vh; }
-
-  /* ââ Sidebar ââ */
-  #sidebar {
-    width: 210px; min-width: 210px; background: var(--surface); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto;
-  }
-  .logo-wrap { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
-  .logo-wrap .name { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; }
-  .logo-wrap .name span { color: var(--accent); }
-  .logo-wrap .badge { font-size: 10px; background: rgba(99,102,241,0.15); color: var(--accent); padding: 2px 7px; border-radius: 4px; font-weight: 600; margin-top: 3px; display: inline-block; }
-  nav { padding: 10px 0; flex: 1; }
-  .nav-group { font-size: 10px; font-weight: 700; color: var(--text3); padding: 14px 18px 5px; text-transform: uppercase; letter-spacing: 0.08em; }
-  nav a {
-    display: flex; align-items: center; gap: 9px; padding: 8px 18px;
-    color: var(--text2); text-decoration: none; font-size: 13px;
-    border-left: 2px solid transparent; transition: all 0.12s; cursor: pointer;
-  }
-  nav a:hover { background: var(--surface2); color: var(--text); }
-  nav a.active { background: var(--surface2); color: var(--accent); border-left-color: var(--accent); }
-  .sidebar-user { padding: 14px 18px; border-top: 1px solid var(--border); }
-  .sidebar-user .email { font-size: 11px; color: var(--text3); word-break: break-all; }
-  .signout-btn { font-size: 11px; color: var(--red); cursor: pointer; background: none; border: none; padding: 4px 0; margin-top: 4px; }
-  .signout-btn:hover { text-decoration: underline; }
-
-  /* ââ Main ââ */
-  #main { flex: 1; overflow-y: auto; }
-  .topbar {
-    position: sticky; top: 0; z-index: 10;
-    background: rgba(9,9,11,0.85); backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border); padding: 14px 28px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .topbar-title { font-size: 15px; font-weight: 700; }
-  .topbar-right { display: flex; gap: 10px; align-items: center; }
-  .refresh-btn {
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
-    padding: 6px 14px; border-radius: var(--rs); font-size: 12px; cursor: pointer; transition: all 0.12s;
-  }
-  .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
-  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  #content { padding: 28px; }
-
-  /* ââ KPI Cards ââ */
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-bottom: 28px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; }
-  .kpi-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
-  .kpi-val { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
-  .kpi-delta { font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
-  .delta-up { color: var(--green); }
-  .delta-dn { color: var(--red); }
-  .delta-neu { color: var(--text3); }
-
-  /* ââ Section ââ */
-  .section { margin-bottom: 28px; }
-  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .section-title { font-size: 14px; font-weight: 700; }
-  .section-sub { font-size: 12px; color: var(--text3); }
-
-  /* ââ Table ââ */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { padding: 10px 16px; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface2); }
-  tbody td { padding: 11px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: var(--surface2); }
-
-  /* ââ Badges ââ */
-  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-  .badge-green { background: rgba(34,197,94,0.12); color: var(--green); }
-  .badge-yellow { background: rgba(234,179,8,0.12); color: var(--yellow); }
-  .badge-red { background: rgba(239,68,68,0.12); color: var(--red); }
-  .badge-purple { background: rgba(168,85,247,0.12); color: var(--purple); }
-  .badge-blue { background: rgba(99,102,241,0.15); color: var(--accent); }
-  .badge-gray { background: rgba(82,82,91,0.2); color: var(--text3); }
-
-  /* ââ Chart Bars ââ */
-  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
-  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .bar { width: 100%; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.4s; }
-  .bar-label { font-size: 9px; color: var(--text3); white-space: nowrap; }
-
-  /* ââ Mini Sparkline ââ */
-  .spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; }
-  .spark-bar { width: 4px; background: var(--accent); border-radius: 1px; min-height: 2px; }
-
-  /* ââ User Detail ââ */
-  .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
-
-  /* ââ Activity Feed ââ */
-  .feed { display: flex; flex-direction: column; gap: 0; }
-  .feed-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
-  .feed-item:last-child { border-bottom: none; }
-  .feed-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-  .feed-body { flex: 1; }
-  .feed-text { font-size: 13px; }
-  .feed-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
-
-  /* ââ Funnel ââ */
-  .funnel { display: flex; flex-direction: column; gap: 8px; }
-  .funnel-step { display: flex; align-items: center; gap: 12px; }
-  .funnel-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 28px; overflow: hidden; position: relative; }
-  .funnel-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 600; color: #fff; transition: width 0.5s; }
-  .funnel-label { width: 120px; font-size: 12px; color: var(--text2); text-align: right; flex-shrink: 0; }
-  .funnel-count { width: 60px; font-size: 12px; font-weight: 700; color: var(--text); flex-shrink: 0; text-align: right; }
-
-  /* ââ Retention Grid ââ */
-  .retention-grid { display: grid; gap: 3px; }
-  .r-row { display: flex; gap: 3px; align-items: center; }
-  .r-cell { width: 40px; height: 28px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
-  .r-label { width: 60px; font-size: 11px; color: var(--text3); flex-shrink: 0; }
-
-  /* ââ Loading ââ */
-  .loading { text-align: center; padding: 48px; color: var(--text3); font-size: 13px; }
-  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ââ Scrollbar ââ */
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* ââ Search ââ */
-  .search-input {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--rs);
-    color: var(--text); padding: 7px 12px; font-size: 13px; width: 220px; outline: none;
-  }
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--text3); }
-
-  /* ââ Plan filters ââ */
-  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-  .filter-chip { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); transition: all 0.12s; }
-  .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-  /* ââ Config Banner ââ */
-  .config-banner { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.25); border-radius: var(--r); padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: var(--yellow); display: none; }
-  .config-banner.show { display: block; }
-
-  /* ââ Empty State ââ */
-  .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
-
-  @media (max-width: 900px) {
-    #sidebar { display: none; }
-  }
+:root{
+  --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a38;
+  --text:#e8e8f0;--text2:#9898b0;--text3:#5a5a78;
+  --accent:#6366f1;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--purple:#a855f7;--orange:#f97316;
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100vh;overflow:hidden}
+#auth-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:100}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px;width:360px;text-align:center}
+.auth-logo{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.auth-logo span{color:var(--accent)}
+.auth-sub{color:var(--text2);font-size:13px;margin-bottom:32px}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}
+.google-btn:hover{border-color:var(--accent);background:#1e1e2e}
+.auth-note{color:var(--text3);font-size:11px;margin-top:20px}
+.error-msg{color:var(--red);font-size:12px;margin-top:12px;min-height:16px}
+#app{display:none;height:100vh}
+#app.visible{display:flex}
+#sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.logo-wrap{padding:20px 16px 12px;border-bottom:1px solid var(--border)}
+.logo-wrap .name{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.logo-wrap .name span{color:var(--accent)}
+.logo-wrap .badge{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+nav{padding:12px 8px;flex:1}
+.nav-group{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;padding:8px 8px 4px}
+nav a{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;transition:all .1s;text-decoration:none;margin-bottom:1px}
+nav a:hover{background:var(--surface2);color:var(--text)}
+nav a.active{background:rgba(99,102,241,.12);color:var(--accent)}
+.sidebar-user{padding:12px 16px;border-top:1px solid var(--border)}
+.sidebar-user .email{font-size:11px;color:var(--text3);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.signout-btn{width:100%;padding:7px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:11px;cursor:pointer}
+.signout-btn:hover{border-color:var(--red);color:var(--red)}
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.topbar-title{font-weight:700;font-size:16px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.refresh-btn{padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
+#content{flex:1;overflow-y:auto;padding:20px 24px}
+.loading{display:flex;align-items:center;gap:12px;color:var(--text3);padding:40px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.kpi-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.kpi-val{font-size:26px;font-weight:800;letter-spacing:-1px;margin-bottom:4px}
+.kpi-delta{font-size:11px;color:var(--text3)}
+.delta-up{color:var(--green)}
+.delta-neu{color:var(--text3)}
+.delta-down{color:var(--red)}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;overflow:hidden}
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)}
+.section-title{font-weight:700;font-size:13px}
+.section-sub{font-size:11px;color:var(--text3)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 16px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 16px;border-bottom:1px solid rgba(42,42,56,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(26,26,36,.5)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge-gray{background:rgba(88,88,110,.15);color:var(--text3)}
+.badge-blue{background:rgba(99,102,241,.15);color:var(--accent)}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-purple{background:rgba(168,85,247,.15);color:var(--purple)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-yellow{background:rgba(234,179,8,.15);color:var(--yellow)}
+.badge-orange{background:rgba(249,115,22,.15);color:var(--orange)}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filter-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;cursor:pointer;transition:all .1s}
+.filter-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.08)}
+.search-input{padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;outline:none;width:280px}
+.search-input:focus{border-color:var(--accent)}
+.empty{text-align:center;padding:40px;color:var(--text3)}
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:80px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.bar{width:100%;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px;transition:height .3s}
+.bar-label{font-size:8px;color:var(--text3);text-align:center}
+.feed{display:flex;flex-direction:column;gap:0}
+.feed-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(42,42,56,.4)}
+.feed-item:last-child{border-bottom:none}
+.feed-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.feed-body{flex:1;min-width:0}
+.feed-text{font-size:12px;line-height:1.5;color:var(--text2)}
+.feed-time{font-size:10px;color:var(--text3);margin-top:3px}
+.funnel{display:flex;flex-direction:column;gap:12px}
+.funnel-step{display:flex;flex-direction:column;gap:6px}
+.funnel-label{font-size:11px;color:var(--text3);font-weight:600}
+.funnel-bar-wrap{background:var(--surface2);border-radius:4px;height:28px;overflow:hidden}
+.funnel-fill{height:100%;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:700;color:#fff;border-radius:4px;transition:width .5s;min-width:32px}
+.funnel-count{font-size:11px;font-weight:600}
+/* Stripe setup */
+.stripe-setup{padding:24px;display:flex;flex-direction:column;gap:16px}
+.stripe-input-row{display:flex;gap:12px;align-items:flex-end}
+.form-group{display:flex;flex-direction:column;gap:6px;flex:1}
+.form-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.form-input{padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;outline:none;font-family:monospace}
+.form-input:focus{border-color:var(--accent)}
+.btn-primary{padding:9px 20px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-primary:hover{background:#5254cc}
+.btn-secondary{padding:9px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.info-box{padding:12px 16px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:var(--r);font-size:12px;color:var(--text2);line-height:1.6}
+.success-box{padding:10px 14px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);font-size:12px;color:var(--green)}
+.scan-results-preview{font-size:11px;color:var(--text3);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-ring{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;font-size:13px;font-weight:800}
+.score-good{background:rgba(34,197,94,.15);color:var(--green)}
+.score-warn{color:var(--yellow)}
+.score-bad{background:rgba(239,68,68,.15);color:var(--red)}
+.score-none{background:var(--surface2);color:var(--text3)}
+.expandable-row{cursor:pointer}
+.expandable-row:hover td{background:rgba(99,102,241,.04)!important}
+.detail-row td{background:var(--surface2)!important;padding:0}
+.detail-content{padding:16px 20px;border-top:1px solid var(--border)}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.detail-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px}
+.detail-item label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;display:block;margin-bottom:4px}
+.detail-item value{font-size:14px;font-weight:700;display:block}
+.issues-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+.issue-item{padding:8px 12px;background:var(--surface);border-radius:6px;font-size:11px;border-left:3px solid var(--border)}
+.issue-critical{border-left-color:var(--red)}
+.issue-warn{border-left-color:var(--yellow)}
+.issue-pass{border-left-color:var(--green)}
 </style>
 </head>
 <body>
 
-<!-- ââ Auth Screen âââââââââââââââââââââââââââââââââââââââââââ -->
+<!-- âââ Auth âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
+<div iââââââ -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">Vibe<span>QA</span></div>
-    <div class="auth-sub">Admin Portal â restricted access</div>
+    <div class="auth-sub">Admin Portal Â· restricted access</div>
     <button class="google-btn" onclick="signInWithGoogle()">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continue with Google
@@ -213,9 +153,8 @@
   </div>
 </div>
 
-<!-- ââ App ââââââââââââââââââââââââââââââââââââââââââââââââââ -->
+<!-- âââ App âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
 <div id="app">
-  <!-- Sidebar -->
   <div id="sidebar">
     <div class="logo-wrap">
       <div class="name">Vibe<span>QA</span></div>
@@ -236,15 +175,19 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
         Signups
       </a>
+      <div class="nav-group">QA Activity</div>
+      <a onclick="showView('scans')" id="nav-scans">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Scans & Results
+      </a>
+      <a onclick="showView('activity')" id="nav-activity">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Activity Feed
+      </a>
       <div class="nav-group">Revenue</div>
       <a onclick="showView('revenue')" id="nav-revenue">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         Revenue
-      </a>
-      <div class="nav-group">Product</div>
-      <a onclick="showView('activity')" id="nav-activity">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Activity
       </a>
       <a onclick="showView('funnel')" id="nav-funnel">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -257,7 +200,6 @@
     </div>
   </div>
 
-  <!-- Main -->
   <div id="main">
     <div class="topbar">
       <div class="topbar-title" id="view-title">Dashboard</div>
@@ -274,24 +216,30 @@
 </div>
 
 <script>
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-//  âï¸  CONFIG â fill these in with your vibeqa.io Supabase details
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+//   CONFIG
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const SUPABASE_URL      = 'https://rvtemuvxifmzcmnerrrh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2dGVtdXZ4aWZtemNtbmVycnJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MzU0MTcsImV4cCI6MjA4ODAxMTQxN30.B0-bon1ANdFwQZjAGB08qirGjGki1AFkr0hGQv-Pd18';
 const ADMIN_EMAIL       = 'mkanaventi@gmail.com';
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const STRIPE_FN_URL     = SUPABASE_URL + '/functions/v1/vibeqa-stripe';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentView = 'overview';
-let allUsers = [];
-let userFilter = 'all';
-let userSearch = '';
+let allUsers    = [];
+let allScans    = [];
+let userFilter  = 'all';
+let userSearch  = '';
+let scanFilter  = 'all';
+let stripeData  = null;
+let expandedScanId = null;
+let _sessionToken = null;
 
-// âââ Auth âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+//   AUTH
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function signInWithGoogle() {
   const { error } = await db.auth.signInWithOAuth({
     provider: 'google',
@@ -314,87 +262,67 @@ async function initAuth() {
       document.getElementById('auth-error').textContent = `Access denied for ${email}. Admin only.`;
       return;
     }
+    _sessionToken = session.access_token;
     document.getElementById('user-email').textContent = email;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').classList.add('visible');
-
-    if (SUPABASE_URL.includes('YOUR_')) {
-      showConfigBanner();
-      showMockData();
-    } else {
-      loadData();
-    }
+    loadData();
   }
-
   db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN') initAuth();
+    if (event === 'SIGNED_IN') { _sessionToken = session?.access_token; initAuth(); }
   });
 }
 
-function showConfigBanner() {
-  const b = document.createElement('div');
-  b.className = 'config-banner show';
-  b.innerHTML = `âï¸ <strong>Config needed:</strong> Open admin.html and set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> at the top of the script. Showing demo data for now.`;
-  document.getElementById('content').prepend(b);
-}
-
-// âââ Data âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+//   DATA
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function loadData() {
   document.getElementById('last-refresh').textContent = 'Loadingâ¦';
   try {
-    const [usersRes] = await Promise.all([
-      db.from('users').select('*').order('created_at', { ascending: false })
+    const [usersRes, scansRes] = await Promise.all([
+      db.rpc('get_admin_users'),
+      db.rpc('get_admin_scans'),
     ]);
-
     if (usersRes.error) throw usersRes.error;
+    if (scansRes.error) throw scansRes.error;
     allUsers = usersRes.data || [];
+    allScans = scansRes.data || [];
     document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
     renderCurrentView();
   } catch(e) {
-    console.error(e);
-    // Fall back to mock data
-    allUsers = generateMockUsers(40);
-    document.getElementById('last-refresh').textContent = 'Demo data (DB error)';
-    renderCurrentView();
+    console.error('Load error:', e);
+    document.getElementById('last-refresh').textContent = 'Error: ' + e.message;
+    document.getElementById('content').innerHTML = `<div class="loading" style="color:var(--red)">â  ${e.message}</div>`;
   }
 }
 
-function showMockData() {
-  allUsers = generateMockUsers(40);
-  document.getElementById('last-refresh').textContent = 'Demo data';
-  renderCurrentView();
-}
-
-// âââ Mock Data Generator âââââââââââââââââââââââââââââââââââââ
-
-function generateMockUsers(n) {
-  const plans = ['free','pro','pro','pro','team','team','enterprise'];
-  const domains = ['gmail.com','outlook.com','company.io','techco.com','startup.ai','corp.dev'];
-  const names = ['Alex','Sam','Jordan','Casey','Morgan','Taylor','Riley','Jamie','Quinn','Avery','Blake','Drew'];
-  const users = [];
-  const now = Date.now();
-  for (let i = 0; i < n; i++) {
-    const daysAgo = Math.floor(Math.random() * 90);
-    const name = names[i % names.length] + ' ' + String.fromCharCode(65 + (i % 26));
-    users.push({
-      id: 'u' + i,
-      email: name.toLowerCase().replace(' ', '.') + '@' + domains[i % domains.length],
-      full_name: name,
-      plan: plans[Math.floor(Math.random() * plans.length)],
-      created_at: new Date(now - daysAgo * 86400000).toISOString(),
-      last_seen_at: new Date(now - Math.floor(Math.random() * daysAgo) * 86400000).toISOString(),
-      is_active: Math.random() > 0.2,
-      tests_run: Math.floor(Math.random() * 500),
-      projects: Math.floor(Math.random() * 8) + 1,
+async function callStripe(path, params) {
+  if (!_sessionToken) return null;
+  try {
+    const url = STRIPE_FN_URL + '?path=' + encodeURIComponent(path) + (params ? '&params=' + encodeURIComponent(params) : '');
+    const res = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + _sessionToken }
     });
+    return await res.json();
+  } catch(e) {
+    return { error: e.message };
   }
-  return users;
 }
 
-// âââ Views ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function saveStripeKey(key) {
+  if (!_sessionToken) return { error: 'Not authenticated' };
+  const res = await fetch(STRIPE_FN_URL + '?action=save_stripe_key', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + _sessionToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stripe_key: key })
+  });
+  return await res.json();
+}
 
-const VIEW_TITLES = { overview:'Dashboard', users:'All Users', signups:'Signups', revenue:'Revenue', activity:'Activity', funnel:'Funnel' };
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+//   VIEWS
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const VIEW_TITLES = { overview:'Dashboard', users:'All Users', signups:'Signups', scans:'Scans & Results', activity:'Activity Feed', revenue:'Revenue', funnel:'Funnel' };
 
 function showView(v) {
   currentView = v;
@@ -410,20 +338,20 @@ function renderCurrentView() {
     case 'overview':  renderOverview(); break;
     case 'users':     renderUsers(); break;
     case 'signups':   renderSignups(); break;
-    case 'revenue':   renderRevenue(); break;
+    case 'scans':     renderScans(); break;
     case 'activity':  renderActivity(); break;
+    case 'revenue':   renderRevenue(); break;
     case 'funnel':    renderFunnel(); break;
   }
 }
 
-// âââ Helpers âââââââââââââââââââââââââââââââââââââââââââââââââ
-
+// âââ Helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1)+'K' : n; }
 function fmtDate(d) { return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function fmtTime(d) { return new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
 function daysAgo(d) {
   const diff = Date.now() - new Date(d).getTime();
-  const days = Math.floor(diff / 86400000);
+  const days = Math.floor(diff/86400000);
   if (days === 0) return 'Today';
   if (days === 1) return 'Yesterday';
   return days + 'd ago';
@@ -433,13 +361,26 @@ function planBadge(p) {
   const map = { free:'badge-gray', pro:'badge-blue', team:'badge-purple', enterprise:'badge-green' };
   return `<span class="badge ${map[p]||'badge-gray'}">${p||'free'}</span>`;
 }
+function statusBadge(s) {
+  const map = { completed:'badge-green', pending:'badge-yellow', failed:'badge-red', running:'badge-blue' };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s||'pending'}</span>`;
+}
 function initials(name) { return (name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
-
+function strColor(str) {
+  const colors = ['#6366f1','#a855f7','#22c55e','#f97316','#ef4444','#0ea5e9','#eab308'];
+  let h = 0; for (let c of (str||'')) h = (h*31 + c.charCodeAt(0)) % colors.length;
+  return colors[h];
+}
+function scoreClass(s) {
+  if (s === null || s === undefined) return 'score-none';
+  if (s >= 80) return 'score-good';
+  if (s >= 50) return 'score-warn';
+  return 'score-bad';
+}
 function signupsInRange(days) { return allUsers.filter(u => withinDays(u.created_at, days)).length; }
 function activeInRange(days) { return allUsers.filter(u => u.is_active && u.last_seen_at && withinDays(u.last_seen_at, days)).length; }
 
-// âââ Overview âââââââââââââââââââââââââââââââââââââââââââââââââ
-
+// âââ Overview ââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderOverview() {
   const total = allUsers.length;
   const today = signupsInRange(1);
@@ -449,15 +390,17 @@ function renderOverview() {
   const mau   = activeInRange(30);
   const paid  = allUsers.filter(u => u.plan && u.plan !== 'free').length;
   const convRate = total > 0 ? ((paid/total)*100).toFixed(1) : 0;
+  const totalScans = allScans.length;
+  const scansToday = allScans.filter(s => withinDays(s.created_at, 1)).length;
+  const avgScore = allScans.filter(s => s.score !== null).length > 0
+    ? Math.round(allScans.filter(s => s.score !== null).reduce((a,s) => a + s.score, 0) / allScans.filter(s => s.score !== null).length)
+    : null;
+  const criticalIssues = allScans.reduce((a,s) => a + (s.critical_issues||0), 0);
 
-  // Signups per day last 14 days
   const days14 = Array.from({length:14},(_,i)=>{
     const d = new Date(); d.setDate(d.getDate()-13+i);
     return { label: d.toLocaleDateString('en-US',{month:'short',day:'numeric'}),
-      count: allUsers.filter(u => {
-        const c = new Date(u.created_at);
-        return c.toDateString() === d.toDateString();
-      }).length };
+      count: allUsers.filter(u => { const c = new Date(u.created_at); return c.toDateString()===d.toDateString(); }).length };
   });
   const maxBar = Math.max(...days14.map(d=>d.count), 1);
 
@@ -467,13 +410,15 @@ function renderOverview() {
     <div class="kpi"><div class="kpi-label">New Today</div><div class="kpi-val">${today}</div><div class="kpi-delta delta-neu">${week} this week</div></div>
     <div class="kpi"><div class="kpi-label">New (30d)</div><div class="kpi-val">${month}</div><div class="kpi-delta delta-up">â vs prev month</div></div>
     <div class="kpi"><div class="kpi-label">DAU</div><div class="kpi-val" style="color:var(--green)">${dau}</div><div class="kpi-delta delta-neu">${mau} MAU</div></div>
-    <div class="kpi"><div class="kpi-label">Paid Users</div><div class="kpi-val" style="color:var(--purple)">${paid}</div><div class="kpi-delta ${convRate>5?'delta-up':'delta-neu'}">${convRate}% conversion</div></div>
-    <div class="kpi"><div class="kpi-label">DAU/MAU</div><div class="kpi-val">${mau>0?((dau/mau)*100).toFixed(0):0}%</div><div class="kpi-delta delta-neu">stickiness</div></div>
+    <div class="kpi"><div class="kpi-label">Total Scans</div><div class="kpi-val" style="color:var(--purple)">${fmt(totalScans)}</div><div class="kpi-delta delta-neu">${scansToday} today</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Score</div><div class="kpi-val" style="color:${avgScore>=80?'var(--green)':avgScore>=50?'var(--yellow)':'var(--red)'}">${avgScore !== null ? avgScore : 'â'}</div><div class="kpi-delta delta-neu">across all scans</div></div>
+    <div class="kpi"><div class="kpi-label">Critical Issues</div><div class="kpi-val" style="color:var(--red)">${criticalIssues}</div><div class="kpi-delta delta-neu">total found</div></div>
+    <div class="kpi"><div class="kpi-label">Paid Users</div><div class="kpi-val" style="color:var(--purple)">${paid}</div><div class="kpi-delta delta-${convRate>5?'up':'neu'}">${convRate}% conversion</div></div>
   </div>
 
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px">
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px">
     <div class="section">
-      <div class="section-head"><div class="section-title">Signups â Last 14 Days</div></div>
+      <div class="section-head"><div class="section-title">Signups Â· Last 14 Days</div></div>
       <div class="table-wrap" style="padding:20px 20px 12px">
         <div class="bar-chart">
           ${days14.map(d=>`<div class="bar-col">
@@ -502,27 +447,50 @@ function renderOverview() {
   </div>
 
   <div class="section">
-    <div class="section-head"><div class="section-title">Recent Signups</div><a onclick="showView('users')" style="font-size:12px;color:var(--accent);cursor:pointer">View all â</a></div>
+    <div class="section-head"><div class="section-title">Recent Users</div><a onclick="showView('users')" style="font-size:12px;color:var(--accent);cursor:pointer">View all â</a></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Joined</th><th>Last Seen</th><th>Tests Run</th></tr></thead>
+        <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Joined</th><th>Last Seen</th><th>Scans</th></tr></thead>
         <tbody>
-          ${allUsers.slice(0,8).map(u=>`<tr>
-            <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar">${initials(u.full_name||u.email)}</div><span style="font-weight:500">${u.full_name||u.email.split('@')[0]}</span></div></td>
-            <td style="color:var(--text2)">${u.email}</td>
-            <td>${planBadge(u.plan)}</td>
-            <td style="color:var(--text2)">${daysAgo(u.created_at)}</td>
-            <td style="color:var(--text2)">${u.last_seen_at?daysAgo(u.last_seen_at):'â'}</td>
-            <td style="font-weight:600">${(u.tests_run||0).toLocaleString()}</td>
+          ${allUsers.slice(0,8).map(u=>{
+            const userScans = allScans.filter(s => s.user_id === u.id).length;
+            return `<tr>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="background:${strColor(u.email)}">${u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentNode.textContent='${initials(u.full_name||u.email)}'"/>`:initials(u.full_name||u.email)}</div><span style="font-weight:500">${u.full_name||u.email.split('@')[0]}</span></div></td>
+              <td style="color:var(--text2)">${u.email}</td>
+              <td>${planBadge(u.plan)}</td>
+              <td style="color:var(--text2)">${daysAgo(u.created_at)}</td>
+              <td style="color:var(--text2)">${u.last_seen_at?daysAgo(u.last_seen_at):'â'}</td>
+              <td style="font-weight:600">${userScans}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  ${allScans.length > 0 ? `
+  <div class="section">
+    <div class="section-head"><div class="section-title">Recent Scans</div><a onclick="showView('scans')" style="font-size:12px;color:var(--accent);cursor:pointer">View all â</a></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>URL</th><th>User</th><th>Type</th><th>Score</th><th>Issues</th><th>Status</th><th>When</th></tr></thead>
+        <tbody>
+          ${allScans.slice(0,6).map(s=>`<tr>
+            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${s.url}" target="_blank" style="color:var(--accent);text-decoration:none">${s.url}</a></td>
+            <td style="color:var(--text2);font-size:11px">${s.user_name||s.user_email}</td>
+            <td><span class="badge badge-gray">${s.scan_type||'scan'}</span></td>
+            <td><div class="score-ring ${scoreClass(s.score)}">${s.score !== null ? s.score : 'â'}</div></td>
+            <td><span style="color:var(--red);font-weight:600">${s.critical_issues||0}</span> crit Â· <span style="color:var(--yellow)">${s.warnings||0}</span> warn</td>
+            <td>${statusBadge(s.status)}</td>
+            <td style="color:var(--text2);font-size:11px">${daysAgo(s.created_at)}</td>
           </tr>`).join('')}
         </tbody>
       </table>
     </div>
-  </div>`;
+  </div>` : `<div class="section"><div style="padding:32px;text-align:center;color:var(--text3)">No scans recorded yet â they'll appear here as users run QA checks.</div></div>`}`;
 }
 
-// âââ Users ââââââââââââââââââââââââââââââââââââââââââââââââââââ
-
+// âââ Users ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderUsers() {
   let filtered = allUsers;
   if (userFilter !== 'all') filtered = filtered.filter(u => (u.plan||'free') === userFilter);
@@ -530,12 +498,11 @@ function renderUsers() {
     (u.email||'').toLowerCase().includes(userSearch) ||
     (u.full_name||'').toLowerCase().includes(userSearch)
   );
-
   document.getElementById('content').innerHTML = `
   <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
     <input class="search-input" placeholder="Search by email or nameâ¦" value="${userSearch}"
       oninput="userSearch=this.value.toLowerCase();renderUsers()">
-    <span style="font-size:12px;color:var(--text3)">${filtered.length} users</span>
+    <span style="font-size:12px;color:var(--text3)">${filtered.length} user${filtered.length!==1?'s':''}</span>
   </div>
   <div class="filter-row">
     ${['all','free','pro','team','enterprise'].map(p=>`
@@ -543,125 +510,227 @@ function renderUsers() {
         ${p==='all'?'All plans':p.charAt(0).toUpperCase()+p.slice(1)}
       </button>`).join('')}
   </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Joined</th><th>Last Seen</th><th>Projects</th><th>Tests Run</th><th>Status</th></tr></thead>
-      <tbody>
-        ${filtered.length === 0 ? `<tr><td colspan="8"><div class="empty">No users match this filter.</div></td></tr>` :
-          filtered.map(u=>`<tr>
-            <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="background:${strColor(u.email)}">${initials(u.full_name||u.email)}</div><span style="font-weight:500">${u.full_name||u.email.split('@')[0]}</span></div></td>
-            <td style="color:var(--text2);font-size:12px">${u.email}</td>
-            <td>${planBadge(u.plan)}</td>
-            <td style="color:var(--text2);font-size:12px">${fmtDate(u.created_at)}</td>
-            <td style="color:var(--text2);font-size:12px">${u.last_seen_at?daysAgo(u.last_seen_at):'â'}</td>
-            <td style="font-weight:600">${u.projects||0}</td>
-            <td style="font-weight:600">${(u.tests_run||0).toLocaleString()}</td>
-            <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'Active':'Inactive'}</span></td>
-          </tr>`).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-
-function strColor(str) {
-  const colors = ['#6366f1','#a855f7','#22c55e','#f97316','#ef4444','#0ea5e9','#eab308'];
-  let h = 0; for (let c of (str||'')) h = (h*31 + c.charCodeAt(0)) % colors.length;
-  return colors[h];
-}
-
-// âââ Signups ââââââââââââââââââââââââââââââââââââââââââââââââââ
-
-function renderSignups() {
-  const ranges = [1,7,14,30,60,90];
-  const cohorts = ranges.map(d=>({ label: d===1?'Today':`${d}d`, count: signupsInRange(d) }));
-
-  // Daily signups for 30 days
-  const days30 = Array.from({length:30},(_,i)=>{
-    const d = new Date(); d.setDate(d.getDate()-29+i);
-    return {
-      label: d.toLocaleDateString('en-US',{month:'short',day:'numeric'}),
-      count: allUsers.filter(u => new Date(u.created_at).toDateString()===d.toDateString()).length
-    };
-  });
-  const maxD = Math.max(...days30.map(d=>d.count),1);
-
-  // Monthly cohort table
-  const months = [];
-  for (let i=5;i>=0;i--) {
-    const d = new Date(); d.setMonth(d.getMonth()-i);
-    const label = d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
-    const count = allUsers.filter(u=>{
-      const c=new Date(u.created_at);
-      return c.getMonth()===d.getMonth()&&c.getFullYear()===d.getFullYear();
-    }).length;
-    months.push({label,count});
-  }
-  const maxM = Math.max(...months.map(m=>m.count),1);
-
-  document.getElementById('content').innerHTML = `
-  <div class="kpi-grid" style="margin-bottom:24px">
-    ${cohorts.map(c=>`<div class="kpi"><div class="kpi-label">${c.label}</div><div class="kpi-val">${c.count}</div><div class="kpi-delta delta-neu">signups</div></div>`).join('')}
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div class="section">
-      <div class="section-head"><div class="section-title">Daily Signups â Last 30 Days</div></div>
-      <div class="table-wrap" style="padding:20px 20px 12px">
-        <div class="bar-chart" style="height:100px">
-          ${days30.map(d=>`<div class="bar-col">
-            <div class="bar" style="height:${Math.max(2,(d.count/maxD)*88)}px;opacity:${d.count>0?1:0.15}" title="${d.count} â ${d.label}"></div>
-            <div class="bar-label">${d.count>0?d.count:''}</div>
-          </div>`).join('')}
-        </div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section-head"><div class="section-title">Monthly Cohorts</div></div>
-      <div class="table-wrap" style="padding:16px 20px">
-        ${months.map(m=>`<div style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-            <span style="font-size:12px;font-weight:600">${m.label}</span>
-            <span style="font-size:12px;font-weight:700;color:var(--accent)">${m.count}</span>
-          </div>
-          <div style="height:6px;background:var(--surface2);border-radius:3px"><div style="height:6px;width:${m.count/maxM*100}%;border-radius:3px;background:var(--accent)"></div></div>
-        </div>`).join('')}
-      </div>
-    </div>
-  </div>
-
-  <div class="section" style="margin-top:20px">
-    <div class="section-head"><div class="section-title">New Users</div><span class="section-sub">Last 30 days</span></div>
+  <div class="section">
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Signed Up</th></tr></thead>
+        <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Stripe</th><th>Joined</th><th>Last Seen</th><th>Scans</th><th>Status</th></tr></thead>
         <tbody>
-          ${allUsers.filter(u=>withinDays(u.created_at,30)).map(u=>`<tr>
-            <td style="font-size:12px">${u.email}</td>
-            <td>${u.full_name||'â'}</td>
-            <td>${planBadge(u.plan)}</td>
-            <td style="color:var(--text2);font-size:12px">${fmtTime(u.created_at)}</td>
-          </tr>`).join('') || '<tr><td colspan="4"><div class="empty">No signups in the last 30 days.</div></td></tr>'}
+          ${filtered.length === 0 ? `<tr><td colspan="8"><div class="empty">No users match this filter.</div></td></tr>` :
+            filtered.map(u => {
+              const userScans = allScans.filter(s => s.user_id === u.id).length;
+              return `<tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="background:${strColor(u.email)}">${u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentNode.textContent='${initials(u.full_name||u.email)}'"/>`:initials(u.full_name||u.email)}</div><span style="font-weight:500">${u.full_name||u.email.split('@')[0]}</span></div></td>
+                <td style="color:var(--text2);font-size:12px">${u.email}</td>
+                <td>${planBadge(u.plan)}</td>
+                <td style="font-size:11px;color:${u.stripe_customer_id?'var(--green)':'var(--text3)'}">${u.stripe_customer_id?'<span style="color:var(--green)'>â linked</span>':'â'}</td>
+                <td style="color:var(--text2);font-size:12px">${fmtDate(u.created_at)}</td>
+                <td style="color:var(--text2);font-size:12px">${u.last_seen_at?daysAgo(u.last_seen_at):'â'}</td>
+                <td style="font-weight:600">${userScans}</td>
+                <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'Active':'Inactive'}</span></td>
+              </tr>`;
+            }).join('')}
         </tbody>
       </table>
     </div>
   </div>`;
 }
 
-// âââ Revenue ââââââââââââââââââââââââââââââââââââââââââââââââââ
+// âââ Signups âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function renderSignups() {
+  const ranges = [1,7,14,30,60,90];
+  const cohorts = ranges.map(d=>({ label: d===1?'Today':`${d}d`, count: signupsInRange(d) }));
+  const days30 = Array.from({length:30},(_,i)=>{
+    const d = new Date(); d.setDate(d.getDate()-29+i);
+    return { label: d.toLocaleDateString('en-US',{month:'short',day:'numeric'}),
+      count: allUsers.filter(u => new Date(u.created_at).toDateString()===d.toDateString()).length };
+  });
+  const maxD = Math.max(...days30.map(d=>d.count), 1);
+  document.getElementById('content').innerHTML = `
+  <div class="kpi-grid" style="margin-bottom:24px">
+    ${cohorts.map(c=>`<div class="kpi"><div class="kpi-label">${c.label}</div><div class="kpi-val">${c.count}</div><div class="kpi-delta delta-neu">signups</div></div>`).join('')}
+  </div>
+  <div class="section">
+    <div class="section-head"><div class="section-title">Daily Signups Â· Last 30 Days</div></div>
+    <div class="table-wrap" style="padding:20px 20px 12px">
+      <div class="bar-chart" style="height:100px">
+        ${days30.map(d=>`<div class="bar-col">
+          <div class="bar" style="height:${Math.max(2,(d.count/maxD)*88)}px;opacity:${d.count>0?1:0.15}" title="${d.count} Â· ${d.label}"></div>
+          <div class="bar-label">${d.count>0?d.count:''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="section" style="margin-top:20px">
+    <div class="section-head"><div class="section-title">All Signups</div><span class="section-sub">${allUsers.length} total</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Signed Up</th><th>Last Seen</th><th>Scans</th></tr></thead>
+        <tbody>
+          ${allUsers.map(u=>{
+            const userScans = allScans.filter(s => s.user_id === u.id).length;
+            return `<tr>
+              <td style="font-size:12px">${u.email}</td>
+              <td>${u.full_name||'â'}</td>
+              <td>${planBadge(u.plan)}</td>
+              <td style="color:var(--text2);font-size:12px">${fmtTime(u.created_at)}</td>
+              <td style="color:var(--text2);font-size:12px">${u.last_seen_at?daysAgo(u.last_seen_at):'â'}</td>
+              <td style="font-weight:600">${userScans}</td>
+            </tr>`;
+          }).join('') || `<tr><td colspan="6"><div class="empty">No signups yet.</div></td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
 
-function renderRevenue() {
+// âââ Scans & Results âââââââââââââââââââââââââââââââââââââââââââââ
+function renderScans() {
+  let filtered = allScans;
+  if (scanFilter !== 'all') filtered = filtered.filter(s => s.status === scanFilter);
+  document.getElementById('content').innerHTML = `
+  <div class="filter-row" style="margin-bottom:16px">
+    ${['all','completed','pending','failed'].map(s=>`
+      <button class="filter-chip ${scanFilter===s?'active':''}" onclick="scanFilter='${s}';renderScans()">
+        ${s.charAt(0).toUpperCase()+s.slice(1)}${s==='all'?' ('+allScans.length+')':' ('+allScans.filter(x=>x.status===s).length+')'}
+      </button>`).join('')}
+  </div>
+  <div class="section">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>URL</th><th>Project</th><th>User</th><th>Type</th><th>Score</th><th>Critical</th><th>Warnings</th><th>Passed</th><th>Status</th><th>Scanned</th></tr></thead>
+        <tbody id="scans-tbody">
+          ${filtered.length === 0 ? `<tr><td colspan="10"><div class="empty">No scans recorded yet. They'll appear here as users run QA checks through VibeQA.</div></td></tr>` :
+            filtered.map(s => renderScanRow(s)).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderScanRow(s) {
+  const isExpanded = expandedScanId === s.id;
+  const results = s.scan_results || {};
+  const issuesList = results.issues || [];
+  return `<tr class="expandable-row" onclick="toggleScan('${s.id}')">
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+      <span style="color:var(--text3);margin-right:4px">${isExpanded?'â¼':'â¶'}</span>
+      <a href="${s.url}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;font-size:12px">${s.url}</a>
+    </td>
+    <td style="color:var(--text2);font-size:11px">${s.project_name||'â'}</td>
+    <td><div style="display:flex;flex-direction:column"><span style="font-size:11px;font-weight:500">${s.user_name||'â'}</span><span style="font-size:10px;color:var(--text3)">${s.user_email||''}</span></div></td>
+    <td><span class="badge badge-gray">${s.scan_type||'scan'}</span></td>
+    <td><div class="score-ring ${scoreClass(s.score)}">${s.score !== null ? s.score : 'â'}</div></td>
+    <td style="color:var(--red);font-weight:700">${s.critical_issues||0}</td>
+    <td style="color:var(--yellow);font-weight:600">${s.warnings||0}</td>
+    <td style="color:var(--green);font-weight:600">${s.passed_checks||0}</td>
+    <td>${statusBadge(s.status)}</td>
+    <td style="color:var(--text2);font-size:11px;white-space:nowrap">${fmtTime(s.created_at)}</td>
+  </tr>
+  ${isExpanded ? `<tr class="detail-row"><td colspan="10"><div class="detail-content">
+    <div class="detail-grid">
+      <div class="detail-item"><label>Score</label><value style="color:${s.score>=80?'var(--green)':s.score>=50?'var(--yellow)':'var(--red)'}">${s.score !== null ? s.score+'/100' : 'â'}</value></div>
+      <div class="detail-item"><label>Critical Issues</label><value style="color:var(--red)">${s.critical_issues||0}</value></div>
+      <div class="detail-item"><label>Warnings</label><value style="color:var(--yellow)">${s.warnings||0}</value></div>
+      <div class="detail-item"><label>Passed Checks</label><value style="color:var(--green)">${s.passed_checks||0}</value></div>
+      <div class="detail-item"><label>Total Issues</label><value>${s.issues_found||0}</value></div>
+      <div class="detail-item"><label>Duration</label><value>${s.completed_at&&s.created_at?((new Date(s.completed_at)-new Date(s.created_at))/1000).toFixed(1)+'s':'â'}</value></div>
+      <div class="detail-item"><label>Scan Type</label><value>${s.scan_type||'â'}</value></div>
+      <div class="detail-item"><label>Status</label><value>${s.status||'â'}</value></div>
+    </div>
+    ${s.error_message ? `<div style="padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;font-size:12px;color:var(--red);margin-bottom:12px">â  Error: ${s.error_message}</div>` : ''}
+    ${issuesList.length > 0 ? `
+    <div style="margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Issues Found</div>
+    <div class="issues-list">
+      ${issuesList.map(issue=>`<div class="issue-item ${issue.severity==='critical'?'issue-critical':issue.severity==='warning'?'issue-warn':'issue-pass'}">
+        <div style="font-weight:600;font-size:11px">${issue.title||issue.rule||'Issue'}</div>
+        ${issue.description?`<div style="color:var(--text3);margin-top:2px">${issue.description}</div>`:''}
+        ${issue.selector?`<div style="color:var(--accent);font-family:monospace;font-size:10px;margin-top:2px">${issue.selector}</div>`:''}
+      </div>`).join('')}
+    </div>` : `<div style="color:var(--text3);font-size:12px">${s.status==='completed'?'No detailed issue data stored for this scan.':'Scan details not yet available.'}</div>`}
+    ${Object.keys(results).length > 0 && !issuesList.length ? `
+    <details style="margin-top:12px"><summary style="cursor:pointer;font-size:11px;color:var(--text3)">Raw scan data (JSON)</summary>
+    <pre style="margin-top:8px;padding:12px;background:var(--surface2);border-radius:6px;font-size:10px;overflow:auto;max-height:200px;color:var(--text2)">${JSON.stringify(results, null, 2)}</pre>
+    </details>` : ''}
+  </div></td></tr>` : ''}`;
+}
+
+function toggleScan(id) {
+  expandedScanId = expandedScanId === id ? null : id;
+  renderScans();
+}
+
+// âââ Activity âââââââââââââââââââââââââââââââââââââââââââââââââââ
+function renderActivity() {
+  const events = [];
+  allUsers.forEach(u => {
+    events.push({ type:'signup', email:u.email, name:u.full_name, ts:u.created_at, plan:u.plan });
+    if (u.plan && u.plan !== 'free') events.push({ type:'upgrade', email:u.email, name:u.full_name, ts:u.created_at, plan:u.plan });
+  });
+  allScans.forEach(s => {
+    events.push({ type:'scan', email:s.user_email, name:s.user_name, ts:s.created_at, url:s.url, score:s.score, status:s.status });
+  });
+  events.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const typeCfg = {
+    signup:  { color:'var(--green)',  label:'signed up',   icon:'ð¤' },
+    upgrade: { color:'var(--purple)', label:'upgraded to', icon:'â­' },
+    scan:    { color:'var(--accent)', label:'ran a scan on',icon:'ð' },
+  };
+  document.getElementById('content').innerHTML = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="section">
+      <div class="section-head"><div class="section-title">Live Activity Feed</div><span class="live-dot"></span></div>
+      <div class="table-wrap" style="padding:4px 16px">
+        <div class="feed">
+          ${events.slice(0,30).map(e=>{
+            const cfg = typeCfg[e.type]||{color:'var(--text3)',label:e.type,icon:'Â·'};
+            return `<div class="feed-item">
+              <div class="feed-dot" style="background:${cfg.color}"></div>
+              <div class="feed-body">
+                <div class="feed-text">${cfg.icon} <strong>${e.name||e.email}</strong> â ${cfg.label}${e.type==='upgrade'?' '+e.plan:e.type==='scan'?' <a href="'+e.url+'" target="_blank" style="color:var(--accent);text-decoration:none">'+e.url+'</a>':''}</div>
+                ${e.type==='scan'&&e.score!==null?`<div style="font-size:10px;margin-top:2px;color:${e.score>=80?'var(--green)':e.score>=50?'var(--yellow)':'var(--red)'}">Score: ${e.score}/100</div>`:''}
+                <div class="feed-time">${fmtTime(e.ts)}</div>
+              </div>
+            </div>`;
+          }).join('') || '<div class="empty">No activity yet.</div>'}
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><div class="section-title">Top Users by Scans</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Plan</th><th>Scans</th><th>Avg Score</th></tr></thead>
+          <tbody>
+            ${allUsers.map(u => {
+              const userScans = allScans.filter(s => s.user_id === u.id);
+              const avg = userScans.filter(s=>s.score!==null).length > 0
+                ? Math.round(userScans.filter(s=>s.score!==null).reduce((a,s)=>a+s.score,0)/userScans.filter(s=>s.score!==null).length)
+                : null;
+              return { u, count: userScans.length, avg };
+            }).sort((a,b)=>b.count-a.count).slice(0,10).map(({u,count,avg})=>`<tr>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="background:${strColor(u.email)}">${initials(u.full_name||u.email)}</div><div><div style="font-weight:500;font-size:12px">${u.full_name||u.email.split('@')[0]}</div><div style="font-size:10px;color:var(--text3)">${u.email}</div></div></div></td>
+              <td>${planBadge(u.plan)}</td>
+              <td style="font-weight:700;color:var(--accent)">${count}</td>
+              <td><span class="${scoreClass(avg)}" style="font-weight:700">${avg!==null?avg:'â'}</span></td>
+            </tr>`).join('') || '<tr><td colspan="4"><div class="empty">No activity yet.</div></td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// âââ Revenue âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function renderRevenue() {
   const PRICES = { free:0, pro:29, team:89, enterprise:299 };
   const paid = allUsers.filter(u=>u.plan&&u.plan!=='free');
-  const mrr = paid.reduce((s,u)=>s+(PRICES[u.plan]||0),0);
-  const arr = mrr*12;
+  const mrr  = paid.reduce((s,u)=>s+(PRICES[u.plan]||0),0);
+  const arr  = mrr*12;
   const arpu = paid.length>0?(mrr/paid.length).toFixed(0):0;
   const total = allUsers.length;
   const convRate = total>0?((paid.length/total)*100).toFixed(1):0;
 
   document.getElementById('content').innerHTML = `
-  <div style="margin-bottom:16px;padding:12px 16px;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:var(--r);font-size:12px;color:var(--text2)">
-    ð¡ <strong>Stripe integration:</strong> Connect your Stripe secret key via your Railway backend to pull live MRR, churn, and payment events here. Showing plan-based estimates for now.
-  </div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-label">MRR (Est.)</div><div class="kpi-val" style="color:var(--green)">$${mrr.toLocaleString()}</div><div class="kpi-delta delta-neu">plan estimates</div></div>
     <div class="kpi"><div class="kpi-label">ARR (Est.)</div><div class="kpi-val">$${fmt(arr)}</div><div class="kpi-delta delta-neu">annualised</div></div>
@@ -670,9 +739,27 @@ function renderRevenue() {
     <div class="kpi"><div class="kpi-label">ARPU</div><div class="kpi-val">$${arpu}</div><div class="kpi-delta delta-neu">avg rev/user</div></div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div id="stripe-section">
     <div class="section">
-      <div class="section-head"><div class="section-title">Revenue by Plan</div></div>
+      <div class="section-head"><div class="section-title">ð Stripe Integration</div></div>
+      <div class="stripe-setup">
+        <div class="info-box">Connect your Stripe account to see live MRR, customer subscriptions, charges, and payment events here. Enter a <strong>Restricted Key</strong> (read-only: Customers, Subscriptions, Charges, Invoices) â it's stored securely in your Supabase database.</div>
+        <div class="stripe-input-row">
+          <div class="form-group">
+            <label class="form-label">Stripe Secret or Restricted Key</label>
+            <input class="form-input" id="stripe-key-input" type="password" placeholder="sk_live_â¦ or rk_live_â¦" autocomplete="off"/>
+          </div>
+          <button class="btn-primary" onclick="handleSaveStripeKey()">Save & Connect</button>
+        </div>
+        <div id="stripe-save-status" style="min-height:20px"></div>
+      </div>
+    </div>
+    <div id="stripe-live-data"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:0">
+    <div class="section">
+      <div class="section-head"><div class="section-title">Revenue by Plan (Est.)</div></div>
       <div class="table-wrap" style="padding:16px 20px">
         ${['enterprise','team','pro'].map(p=>{
           const users = allUsers.filter(u=>(u.plan||'free')===p);
@@ -693,98 +780,131 @@ function renderRevenue() {
       <div class="section-head"><div class="section-title">Paid Users</div></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Email</th><th>Plan</th><th>MRR</th></tr></thead>
+          <thead><tr><th>Email</th><th>Plan</th><th>MRR</th><th>Stripe</th></tr></thead>
           <tbody>
             ${paid.slice(0,12).map(u=>`<tr>
               <td style="font-size:12px">${u.email}</td>
               <td>${planBadge(u.plan)}</td>
-              <td style="font-weight:700;color:var(--green)">$${PRICES[u.plan||'free']}/mo</td>
-            </tr>`).join('') || '<tr><td colspan="3"><div class="empty">No paid users yet.</div></td></tr>'}
+              <td style="font-weight:700;color:var(--green)">$${PRICES[u.plan]||0}/mo</td>
+              <td style="font-size:11px">${u.stripe_customer_id?`<span style="color:var(--green)">â</span>`:'-'}</td>
+            </tr>`).join('') || `<tr><td colspan="4"><div class="empty">No paid users yet.</div></td></tr>`}
           </tbody>
         </table>
       </div>
     </div>
   </div>`;
+
+  // Try to load live Stripe data
+  loadStripeData();
 }
 
-// âââ Activity âââââââââââââââââââââââââââââââââââââââââââââââââ
+async function handleSaveStripeKey() {
+  const key = document.getElementById('stripe-key-input')?.value?.trim();
+  if (!key) return;
+  const statusEl = document.getElementById('stripe-save-status');
+  statusEl.innerHTML = '<span style="color:var(--text3)">Savingâ¦</span>';
+  const result = await saveStripeKey(key);
+  if (result.success) {
+    statusEl.innerHTML = '<div class="success-box">â Stripe key saved. Loading dataâ¦</div>';
+    setTimeout(loadStripeData, 500);
+  } else {
+    statusEl.innerHTML = `<span style="color:var(--red)">Error: ${result.error||'Failed to save'}</span>`;
+  }
+}
 
-function renderActivity() {
-  // Simulate activity feed from user data
-  const events = [];
-  allUsers.slice(0,20).forEach(u => {
-    events.push({ type:'signup', email:u.email, name:u.full_name, ts:u.created_at, plan:u.plan });
-    if (u.plan && u.plan !== 'free') {
-      events.push({ type:'upgrade', email:u.email, name:u.full_name, ts:u.created_at, plan:u.plan });
-    }
-    if (u.tests_run > 0) {
-      events.push({ type:'tests', email:u.email, name:u.full_name, ts:u.last_seen_at||u.created_at, count:u.tests_run });
-    }
-  });
-  events.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+async function loadStripeData() {
+  const container = document.getElementById('stripe-live-data');
+  if (!container) return;
+  container.innerHTML = '<div class="loading" style="padding:20px"><div class="spinner"></div>Loading Stripe dataâ¦</div>';
 
-  const typeConfig = {
-    signup:  { color:'var(--green)',  label:'New signup',  icon:'ð¤' },
-    upgrade: { color:'var(--purple)', label:'Upgraded',    icon:'â¬ï¸' },
-    tests:   { color:'var(--accent)', label:'Tests run',   icon:'ð§ª' },
-  };
+  const [balance, customers, subs, charges] = await Promise.all([
+    callStripe('/v1/balance'),
+    callStripe('/v1/customers', 'limit=100&expand[]=data.subscriptions'),
+    callStripe('/v1/subscriptions', 'limit=100&status=active'),
+    callStripe('/v1/charges', 'limit=20'),
+  ]);
 
-  document.getElementById('content').innerHTML = `
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div class="section">
-      <div class="section-head"><div class="section-title">Live Activity Feed</div><span class="live-dot"></span></div>
-      <div class="table-wrap" style="padding:4px 16px">
-        <div class="feed">
-          ${events.slice(0,20).map(e=>{
-            const cfg = typeConfig[e.type]||{color:'var(--text3)',label:e.type,icon:'â¢'};
-            return `<div class="feed-item">
-              <div class="feed-dot" style="background:${cfg.color}"></div>
-              <div class="feed-body">
-                <div class="feed-text">${cfg.icon} <strong>${e.name||e.email}</strong> â ${cfg.label}${e.plan&&e.type!=='signup'?' to '+e.plan:''}${e.count?' ('+e.count+' tests)':''}</div>
-                <div class="feed-time">${fmtTime(e.ts)}</div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
+  if (balance?.error === 'Stripe key not configured' || balance?.needs_setup) {
+    container.innerHTML = '';
+    return;
+  }
+  if (balance?.error) {
+    container.innerHTML = `<div style="padding:12px 16px;color:var(--red);font-size:12px">â  Stripe error: ${balance.error}</div>`;
+    return;
+  }
+
+  const avail = (balance?.available||[]).reduce((s,b)=>s+b.amount,0)/100;
+  const pending = (balance?.pending||[]).reduce((s,b)=>s+b.amount,0)/100;
+  const activeSubs = subs?.data?.length || 0;
+  const liveCustomers = customers?.data?.length || 0;
+  const recentRevenue = (charges?.data||[]).filter(c=>c.status==='succeeded').reduce((s,c)=>s+c.amount,0)/100;
+
+  container.innerHTML = `
+  <div style="padding:12px 0 4px"><div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:12px">Live Stripe Data</div></div>
+  <div class="kpi-grid" style="margin-bottom:20px">
+    <div class="kpi"><div class="kpi-label">Balance (Available)</div><div class="kpi-val" style="color:var(--green)">$${avail.toFixed(2)}</div><div class="kpi-delta delta-neu">Stripe account</div></div>
+    <div class="kpi"><div class="kpi-label">Pending</div><div class="kpi-val">$${pending.toFixed(2)}</div><div class="kpi-delta delta-neu">in transit</div></div>
+    <div class="kpi"><div class="kpi-label">Active Subs</div><div class="kpi-val" style="color:var(--purple)">${activeSubs}</div><div class="kpi-delta delta-neu">paying customers</div></div>
+    <div class="kpi"><div class="kpi-label">Customers</div><div class="kpi-val">${liveCustomers}</div><div class="kpi-delta delta-neu">in Stripe</div></div>
+    <div class="kpi"><div class="kpi-label">Recent Revenue</div><div class="kpi-val" style="color:var(--green)">$${recentRevenue.toFixed(2)}</div><div class="kpi-delta delta-neu">last 20 charges</div></div>
+  </div>
+  <div class="section">
+    <div class="section-head"><div class="section-title">Recent Charges</div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customer</th><th>Amount</th><th>Status</th><th>Description</th><th>Date</th></tr></thead>
+        <tbody>
+          ${(charges?.data||[]).slice(0,15).map(c=>`<tr>
+            <td style="font-size:12px">${c.billing_details?.email||c.customer||'â'}</td>
+            <td style="font-weight:700;color:var(--green)">$${(c.amount/100).toFixed(2)} ${c.currency?.toUpperCase()}</td>
+            <td><span class="badge ${c.status==='succeeded'?'badge-green':c.status==='failed'?'badge-red':'badge-yellow'}">${c.status}</span></td>
+            <td style="color:var(--text2);font-size:11px">${c.description||c.statement_descriptor||'â'}</td>
+            <td style="color:var(--text2);font-size:11px">${fmtTime(new Date(c.created*1000))}</td>
+          </tr>`).join('') || '<tr><td colspan="5"><div class="empty">No charges found.</div></td></tr>'}
+        </tbody>
+      </table>
     </div>
-    <div class="section">
-      <div class="section-head"><div class="section-title">Top Users by Tests Run</div></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>User</th><th>Plan</th><th>Tests</th><th>Projects</th></tr></thead>
-          <tbody>
-            ${[...allUsers].sort((a,b)=>(b.tests_run||0)-(a.tests_run||0)).slice(0,10).map(u=>`<tr>
-              <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="background:${strColor(u.email)}">${initials(u.full_name||u.email)}</div><div><div style="font-weight:500;font-size:12px">${u.full_name||u.email.split('@')[0]}</div><div style="font-size:11px;color:var(--text3)">${u.email}</div></div></div></td>
-              <td>${planBadge(u.plan)}</td>
-              <td style="font-weight:700;color:var(--accent)">${(u.tests_run||0).toLocaleString()}</td>
-              <td>${u.projects||0}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
+  </div>
+  <div class="section">
+    <div class="section-head"><div class="section-title">Active Subscriptions</div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customer</th><th>Plan</th><th>Amount</th><th>Status</th><th>Since</th><th>Next Bill</th></tr></thead>
+        <tbody>
+          ${(subs?.data||[]).slice(0,15).map(s=>{
+            const item = s.items?.data?.[0];
+            const amt = item ? (item.price?.unit_amount||0)/100 : 0;
+            const interval = item?.price?.recurring?.interval || '';
+            return `<tr>
+              <td style="font-size:12px">${s.customer_email||s.customer||'â'}</td>
+              <td style="font-size:12px">${item?.price?.nickname||item?.price?.id||'â'}</td>
+              <td style="font-weight:700;color:var(--green)">$${amt.toFixed(2)}/${interval}</td>
+              <td><span class="badge ${s.status==='active'?'badge-green':s.status==='past_due'?'badge-red':'badge-yellow'}">${s.status}</span></td>
+              <td style="color:var(--text2);font-size:11px">${fmtTime(new Date(s.start_date*1000))}</td>
+              <td style="color:var(--text2);font-size:11px">${s.current_period_end?fmtTime(new Date(s.current_period_end*1000)):'â'}</td>
+            </tr>`;
+          }).join('') || '<tr><td colspan="6"><div class="empty">No active subscriptions.</div></td></tr>'}
+        </tbody>
+      </table>
     </div>
   </div>`;
 }
 
-// âââ Funnel âââââââââââââââââââââââââââââââââââââââââââââââââââ
-
+// âââ Funnel ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderFunnel() {
-  const total = allUsers.length;
-  const activated = allUsers.filter(u=>(u.tests_run||0)>0).length;
+  const total     = allUsers.length;
+  const scanned   = [...new Set(allScans.map(s=>s.user_id))].length;
   const retained  = allUsers.filter(u=>u.last_seen_at && withinDays(u.last_seen_at,14)).length;
   const paid      = allUsers.filter(u=>u.plan&&u.plan!=='free').length;
-  const churned   = Math.floor(paid * 0.08); // estimate
-
+  const churned   = Math.floor(paid * 0.08);
   const steps = [
-    { label:'Visited / Signed Up', count:total,     color:'var(--accent)' },
-    { label:'Activated (ran test)',count:activated,  color:'var(--purple)' },
-    { label:'Retained (14d)',      count:retained,   color:'var(--green)'  },
-    { label:'Converted (paid)',    count:paid,       color:'var(--yellow)' },
-    { label:'Churned (est.)',      count:churned,    color:'var(--red)'    },
+    { label:'Visited / Signed Up', count:total,    color:'var(--accent)'  },
+    { label:'Ran a Scan',          count:scanned,   color:'var(--purple)'  },
+    { label:'Retained (14d)',      count:retained,  color:'var(--green)'   },
+    { label:'Converted (paid)',    count:paid,      color:'var(--yellow)'  },
+    { label:'Churned (est.)',      count:churned,   color:'var(--red)'     },
   ];
   const max = total || 1;
-
   document.getElementById('content').innerHTML = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
     <div class="section">
@@ -794,11 +914,10 @@ function renderFunnel() {
           ${steps.map((s,i)=>{
             const pct = (s.count/max*100).toFixed(0);
             const vsTop = i>0 ? ((s.count/total)*100).toFixed(1)+'% of signups' : '100%';
-            const vsPrev = i>0 ? ((s.count/steps[i-1].count)*100).toFixed(1)+'% of prev' : '';
             return `<div class="funnel-step">
               <div class="funnel-label">${s.label}</div>
               <div class="funnel-bar-wrap">
-                <div class="funnel-fill" style="width:${pct}%;background:${s.color};opacity:0.85">${s.count}</div>
+                <div class="funnel-fill" style="width:${pct}%;background:${s.color};opacity:.85">${s.count}</div>
               </div>
               <div class="funnel-count" style="color:${s.color}">${vsTop}</div>
             </div>`;
@@ -808,24 +927,22 @@ function renderFunnel() {
     </div>
     <div class="section">
       <div class="section-head"><div class="section-title">Key Ratios</div></div>
-      <div class="kpi-grid" style="grid-template-columns:1fr 1fr">
-        <div class="kpi"><div class="kpi-label">Activation</div><div class="kpi-val">${total>0?((activated/total)*100).toFixed(0):0}%</div><div class="kpi-delta delta-neu">signups â first test</div></div>
+      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;padding:16px">
+        <div class="kpi"><div class="kpi-label">Scan Rate</div><div class="kpi-val">${total>0?((scanned/total)*100).toFixed(0):0}%</div><div class="kpi-delta delta-neu">signups â first scan</div></div>
         <div class="kpi"><div class="kpi-label">Retention</div><div class="kpi-val">${total>0?((retained/total)*100).toFixed(0):0}%</div><div class="kpi-delta delta-neu">active 14d</div></div>
         <div class="kpi"><div class="kpi-label">Conversion</div><div class="kpi-val">${total>0?((paid/total)*100).toFixed(1):0}%</div><div class="kpi-delta delta-neu">free â paid</div></div>
         <div class="kpi"><div class="kpi-label">Churn (Est.)</div><div class="kpi-val" style="color:var(--red)">${paid>0?((churned/paid)*100).toFixed(0):0}%</div><div class="kpi-delta delta-neu">monthly</div></div>
       </div>
-      <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:var(--r);font-size:12px;color:var(--text2);line-height:1.7">
-        <strong style="color:var(--text)">Benchmarks for B2B SaaS QA tools:</strong><br>
-        Activation: 40â60% is good<br>
-        Retention (14d): 25â40% is healthy<br>
-        FreeâPaid: 2â5% is typical, 5%+ is strong<br>
-        Monthly churn: under 5% is good, under 2% is great
+      <div style="margin:0 16px 16px;padding:14px;background:var(--surface2);border-radius:var(--r);font-size:12px;color:var(--text2);line-height:1.7">
+        <strong style="color:var(--text)">B2B SaaS QA benchmarks:</strong><br>
+        Scan rate: 40â60% is good Â· Retention (14d): 25â40% is healthy<br>
+        FreeâPaid: 2â5% is typical, 5%+ is strong Â· Monthly churn: &lt;5% is good
       </div>
     </div>
   </div>`;
 }
 
-// âââ Init âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 initAuth();
 </script>
 </body>
