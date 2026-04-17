@@ -12,8 +12,8 @@ SUPABASE_SERVICE_KEY=your-service-key
 ```
 APP_URL=https://vibeqa.app (or your Railway URL)
 PASSWORD_SALT=your-random-salt-string
-ADMIN_SECRET=your-admin-secret-for-plan-upgrades
-CRON_SECRET=your-cron-secret-for-scheduled-scans
+ADMIN_SECRET=your-long-random-admin-secret-for-plan-upgrades
+CRON_SECRET=your-long-random-cron-secret-for-scheduled-scans
 ```
 
 ## Optional Features
@@ -71,6 +71,8 @@ On Railway, set these variables in your project's Variables tab.
 - `SUPABASE_SERVICE_KEY`
 - `APP_URL` (your Railway app URL, e.g., `https://vibeqa-production.up.railway.app`)
 - `PASSWORD_SALT` (any random string)
+- `ADMIN_SECRET` (required for the protected admin plan-upgrade endpoint)
+- `CRON_SECRET` (required if you want scheduled scans)
 
 ### For scheduled scans:
 Set up a Railway cron job to call:

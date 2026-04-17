@@ -522,9 +522,9 @@ function renderUsers() {
                 <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="background:${strColor(u.email)}">${u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentNode.textContent='${initials(u.full_name||u.email)}'"/>`:initials(u.full_name||u.email)}</div><span style="font-weight:500">${u.full_name||u.email.split('@')[0]}</span></div></td>
                 <td style="color:var(--text2);font-size:12px">${u.email}</td>
                 <td>${planBadge(u.plan)}</td>
-                <td style="font-size:11px;color:${u.stripe_customer_id?'var(--green)':'var(--text3)'}">${u.stripe_customer_id?'<span style="color:var(--green)'>â linked</span>':'â'}</td>
+                <td style="font-size:11px;color:${u.stripe_customer_id?'var(--green)':'var(--text3)'}">${u.stripe_customer_id?'<span style="color:var(--green)">✓ linked</span>':'—'}</td>
                 <td style="color:var(--text2);font-size:12px">${fmtDate(u.created_at)}</td>
-                <td style="color:var(--text2);font-size:12px">${u.last_seen_at?daysAgo(u.last_seen_at):'â'}</td>
+                <td style="color:var(--text2);font-size:12px">${u.last_seen_at?daysAgo(u.last_seen_at):'—'}</td>
                 <td style="font-weight:600">${userScans}</td>
                 <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'Active':'Inactive'}</span></td>
               </tr>`;
@@ -535,7 +535,7 @@ function renderUsers() {
   </div>`;
 }
 
-// âââ Signups âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// --- Signups ---------------------------------------------------------
 function renderSignups() {
   const ranges = [1,7,14,30,60,90];
   const cohorts = ranges.map(d=>({ label: d===1?'Today':`${d}d`, count: signupsInRange(d) }));

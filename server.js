@@ -15,6 +15,11 @@ const db = require('./src/db/supabase');
 
 const app = express();
 
+function requireConfiguredSecret(envVarName) {
+  const value = process.env[envVarName];
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -47,9 +52,13 @@ app.use('/api/scans', reportRoutes);
 // Admin endpoint to set user plan (protected by secret)
 app.post('/api/admin/set-plan', async (req, res) => {
   const { email, plan, secret } = req.body;
+  const adminSecret = requireConfiguredSecret('ADMIN_SECRET');
   
-  // Simple secret protection - in production use proper auth
-  if (secret !== process.env.ADMIN_SECRET && secret !== 'vibeqa-admin-2026') {
+  if (!adminSecret) {
+    return res.status(503).json({ error: 'Admin endpoint is not configured' });
+  }
+
+  if (secret !== adminSecret) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   
@@ -1756,7 +1765,13 @@ app.delete('/api/schedules/:id', requireAuth, async (req, res) => {
 app.post('/api/cron/run-scheduled-scans', async (req, res) => {
   // Verify cron secret
   const cronSecret = req.headers['x-cron-secret'] || req.query.secret;
-  if (cronSecret !== process.env.CRON_SECRET && cronSecret !== 'vibeqa-cron-2026') {
+  const configuredCronSecret = requireConfiguredSecret('CRON_SECRET');
+
+  if (!configuredCronSecret) {
+    return res.status(503).json({ error: 'Scheduled scans are not configured' });
+  }
+
+  if (cronSecret !== configuredCronSecret) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   
