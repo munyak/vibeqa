@@ -345,9 +345,9 @@ function generateReportHTML(scan, user, isPaidUser) {
       <div class="key-findings">
         <h3>Key Findings</h3>
         <ul>
-          ${topIssues.slice(0, 3).map(issue => \`
-            <li><strong>\${issue.title}:</strong> \${issue.description}</li>
-          \`).join('')}
+          ${topIssues.slice(0, 3).map(issue => `
+            <li><strong>${issue.title}:</strong> ${issue.description}</li>
+          `).join('')}
         </ul>
       </div>
 
@@ -401,16 +401,16 @@ function generateReportHTML(scan, user, isPaidUser) {
       
       <div class="recommendations">
         <h3>Priority Actions (Quick Wins)</h3>
-        ${recommendations.quickWins.map(rec => \`
-          <div class="rec-item">\${rec}</div>
-        \`).join('')}
+        ${recommendations.quickWins.map(rec => `
+          <div class="rec-item">${rec}</div>
+        `).join('')}
       </div>
 
       <div class="recommendations" style="margin-top: 20px;">
         <h3>Strategic Improvements</h3>
-        ${recommendations.strategic.map(rec => \`
-          <div class="rec-item">\${rec}</div>
-        \`).join('')}
+        ${recommendations.strategic.map(rec => `
+          <div class="rec-item">${rec}</div>
+        `).join('')}
       </div>
 
       <div style="margin-top: 40px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
@@ -537,38 +537,38 @@ function generateMetricsHTML(categories, results) {
   const linkHealthPercent = results.total_links > 0 ? 
     Math.round(((results.total_links - (results.broken_links || []).length) / results.total_links) * 100) : 100;
 
-  return \`
+  return `
     <div class="metric-card">
       <div class="metric-label">Link Health</div>
-      <div class="metric-value">\${linkHealthPercent}%</div>
+      <div class="metric-value">${linkHealthPercent}%</div>
       <div class="metric-status">Working links</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Mobile Experience</div>
-      <div class="metric-value \${results.mobile?.responsive ? 'status-pass' : 'status-fail'}">\${results.mobile?.responsive ? 'Pass' : 'Fail'}</div>
+      <div class="metric-value ${results.mobile?.responsive ? 'status-pass' : 'status-fail'}">${results.mobile?.responsive ? 'Pass' : 'Fail'}</div>
       <div class="metric-status">Mobile responsive</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Performance Score</div>
-      <div class="metric-value">\${results.performance?.score || 'N/A'}</div>
+      <div class="metric-value">${results.performance?.score || 'N/A'}</div>
       <div class="metric-status">Page load optimized</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Accessibility</div>
-      <div class="metric-value">\${results.accessibility?.score || 'Scan'}</div>
+      <div class="metric-value">${results.accessibility?.score || 'Scan'}</div>
       <div class="metric-status">WCAG compliance</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">SEO Score</div>
-      <div class="metric-value">\${results.seo?.score || 'Scan'}</div>
+      <div class="metric-value">${results.seo?.score || 'Scan'}</div>
       <div class="metric-status">Search optimization</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Security Issues</div>
-      <div class="metric-value \${(results.security || []).length > 0 ? 'status-fail' : 'status-pass'}">\${(results.security || []).length}</div>
+      <div class="metric-value ${(results.security || []).length > 0 ? 'status-fail' : 'status-pass'}">${(results.security || []).length}</div>
       <div class="metric-status">Found</div>
     </div>
-  \`;
+  `;
 }
 
 function generateDetailedFindingsHTML(results, categories) {
@@ -576,65 +576,65 @@ function generateDetailedFindingsHTML(results, categories) {
 
   // Links
   if (categories.links.length > 0) {
-    html += \`
+    html += `
       <div class="page">
         <div class="content">
           <h2 class="section-title">Link Health Analysis</h2>
           <p style="color: #666; margin-bottom: 20px;">
-            Found \${categories.links.length} broken or redirecting links out of \${results.total_links || 'N/A'} total links.
+            Found ${categories.links.length} broken or redirecting links out of ${results.total_links || 'N/A'} total links.
           </p>
-          \${categories.links.map(link => \`
+          ${categories.links.map(link => `
             <div class="issue high">
               <span class="issue-severity high">broken</span>
-              <div class="issue-title">\${escapeHTML(link.url)}</div>
-              <div class="issue-description">Status: \${link.status_code || 'Connection error'}</div>
+              <div class="issue-title">${escapeHTML(link.url)}</div>
+              <div class="issue-description">Status: ${link.status_code || 'Connection error'}</div>
             </div>
-          \`).join('')}
+          `).join('')}
         </div>
       </div>
-    \`;
+    `;
   }
 
   // Accessibility
   if (categories.accessibility.length > 0) {
-    html += \`
+    html += `
       <div class="page">
         <div class="content">
           <h2 class="section-title">Accessibility Findings</h2>
           <p style="color: #666; margin-bottom: 20px;">
-            \${categories.accessibility.length} accessibility issues found. Improving these increases your reach and SEO.
+            ${categories.accessibility.length} accessibility issues found. Improving these increases your reach and SEO.
           </p>
-          \${categories.accessibility.map(issue => \`
-            <div class="issue \${issue.severity || 'medium'}">
-              <span class="issue-severity \${issue.severity || 'medium'}">\${issue.severity || 'medium'}</span>
-              <div class="issue-title">\${escapeHTML(issue.type)}</div>
-              <div class="issue-description">\${escapeHTML(issue.message || 'See WCAG guidelines for recommended fixes')}</div>
+          ${categories.accessibility.map(issue => `
+            <div class="issue ${issue.severity || 'medium'}">
+              <span class="issue-severity ${issue.severity || 'medium'}">${issue.severity || 'medium'}</span>
+              <div class="issue-title">${escapeHTML(issue.type)}</div>
+              <div class="issue-description">${escapeHTML(issue.message || 'See WCAG guidelines for recommended fixes')}</div>
             </div>
-          \`).join('')}
+          `).join('')}
         </div>
       </div>
-    \`;
+    `;
   }
 
   // Security
   if (categories.security.length > 0) {
-    html += \`
+    html += `
       <div class="page">
         <div class="content">
           <h2 class="section-title">Security Assessment</h2>
           <p style="color: #666; margin-bottom: 20px;">
-            \${categories.security.length} security concerns identified.
+            ${categories.security.length} security concerns identified.
           </p>
-          \${categories.security.map(issue => \`
-            <div class="issue \${issue.severity || 'high'}">
-              <span class="issue-severity \${issue.severity || 'high'}">\${issue.severity || 'high'}</span>
-              <div class="issue-title">\${escapeHTML(issue.title)}</div>
-              <div class="issue-description">\${escapeHTML(issue.description || 'Review security best practices and remediate')}</div>
+          ${categories.security.map(issue => `
+            <div class="issue ${issue.severity || 'high'}">
+              <span class="issue-severity ${issue.severity || 'high'}">${issue.severity || 'high'}</span>
+              <div class="issue-title">${escapeHTML(issue.title)}</div>
+              <div class="issue-description">${escapeHTML(issue.description || 'Review security best practices and remediate')}</div>
             </div>
-          \`).join('')}
+          `).join('')}
         </div>
       </div>
-    \`;
+    `;
   }
 
   return html;
